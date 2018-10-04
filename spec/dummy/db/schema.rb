@@ -18,6 +18,8 @@ ActiveRecord::Schema.define(version: 2018_10_03_195235) do
   create_table "kithe_models", force: :cascade do |t|
     t.string "title", null: false
     t.string "type", null: false
+    t.integer "position"
+    t.jsonb "json_attributes"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.bigint "parent_id"
