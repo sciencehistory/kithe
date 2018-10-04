@@ -6,3 +6,4 @@ spec/dummy/node_modules/
 spec/dummy/yarn-error.log
 spec/dummy/storage/
 spec/dummy/tmp/
+.byebug_history
