@@ -149,6 +149,9 @@ GEM
     websocket-driver (0.7.0)
       websocket-extensions (>= 0.1.0)
     websocket-extensions (0.1.3)
+    yard (0.9.16)
+    yard-activesupport-concern (0.0.1)
+      yard (>= 0.8)
 
 PLATFORMS
   ruby
@@ -159,6 +162,7 @@ DEPENDENCIES
   pg
   pry-byebug (~> 3.6)
   rspec-rails (~> 3.8)
+  yard-activesupport-concern
 
 BUNDLED WITH
    1.16.2
