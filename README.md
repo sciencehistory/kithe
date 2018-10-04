@@ -1,6 +1,7 @@
 # Kithe
 An in-progress experiment in shareable tools/components for building a digital collections app in Rails.  Being used for the Science History Institute's digital collections rewrite.
 
+[![Build Status](https://travis-ci.org/sciencehistory/kithe.svg?branch=master)](https://travis-ci.org/sciencehistory/kithe)
 
 ## Development
 
