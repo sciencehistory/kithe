@@ -36,4 +36,27 @@ RSpec.describe Kithe::Work, type: :model do
       collection.save!
     }.to raise_error(ActiveRecord::RecordInvalid)
   end
+
+  describe "sub-class with attr_json" do
+    let(:subclass_name) { "TestWorkSubclass" }
+    let(:subclass) do
+      # ordinary tricky ruby Class.new(Kithe::Work) breaks Rails STI since it
+      # needs a name to put in the db, so we need to assign it to const
+      stub_const(subclass_name, Class.new(Kithe::Work)  do
+        attr_json :authors, :string, array: true
+      end)
+    end
+
+    let(:instance) { subclass.new }
+
+    it "works and persists" do
+      instance.assign_attributes(title: "title", authors: ["Bob", "Joe"])
+
+      instance.tap(&:save!).tap(&:reload)
+
+      expect(instance.type).to eq(subclass_name)
+      expect(instance.title).to eq("title")
+      expect(instance.authors).to eq(["Bob", "Joe"])
+    end
+  end
 end
