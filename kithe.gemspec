@@ -18,6 +18,7 @@ Gem::Specification.new do |s|
   s.test_files = Dir["spec/**/*"]
 
   s.add_dependency "rails", "~> 5.2.1"
+  s.add_dependency "attr_json", "< 2.0.0"
 
   s.add_development_dependency "pg"
 end

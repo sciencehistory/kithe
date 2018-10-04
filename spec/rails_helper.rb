@@ -45,6 +45,16 @@ RSpec.configure do |config|
   # instead of true.
   config.use_transactional_fixtures = true
 
+  # Look for factories here in engine, not in dummy app please.
+  # A bit hacky, factorybot is insisting on loading other ones too, factory-girl-rails
+  # doesn't really assume engines and it's confusing. See:
+  # https://github.com/thoughtbot/factory_bot_rails/issues/302
+  #
+  # We may later use lib/ to make it easier for client apps to re-use factories in their tests.
+  FactoryBot.definition_file_paths = ['spec/factories', 'lib/testing_support/factories']
+  FactoryBot.find_definitions
+
+
   # RSpec Rails can automatically mix in different behaviours to your tests
   # based on their file location, for example enabling you to call `get` and
   # `post` in specs under `spec/controllers`.

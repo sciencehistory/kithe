@@ -2,6 +2,7 @@ PATH
   remote: .
   specs:
     kithe (0.1.0)
+      attr_json (< 2.0.0)
       rails (~> 5.2.1)
 
 GEM
@@ -49,6 +50,8 @@ GEM
       minitest (~> 5.1)
       tzinfo (~> 1.1)
     arel (9.0.0)
+    attr_json (0.3.0)
+      activerecord (>= 5.0.0, < 5.3)
     builder (3.2.3)
     byebug (10.0.2)
     coderay (1.1.2)
