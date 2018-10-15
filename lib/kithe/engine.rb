@@ -6,5 +6,8 @@ module Kithe
       g.assets false
       g.helper false
     end
+
+    # should only affect kithe development
+    config.active_record.schema_format = :sql
   end
 end

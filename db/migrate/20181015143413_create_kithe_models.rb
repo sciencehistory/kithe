@@ -1,6 +1,6 @@
 class CreateKitheModels < ActiveRecord::Migration[5.2]
   def change
-    create_table :kithe_models do |t|
+    create_table :kithe_models, id: :uuid do |t|
       t.string :title, null: false
 
       # Rails STI
@@ -15,6 +15,6 @@ class CreateKitheModels < ActiveRecord::Migration[5.2]
     end
 
     # self-referential work children/members
-    add_reference :kithe_models, :parent, foreign_key: {to_table: :kithe_models}
+    add_reference :kithe_models, :parent, type: :uuid, foreign_key: {to_table: :kithe_models}
   end
 end

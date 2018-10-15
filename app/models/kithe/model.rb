@@ -25,4 +25,22 @@ class Kithe::Model < ActiveRecord::Base
     raise TypeError.new("Kithe::Model is abstract and cannot be initialized") if self.class == ::Kithe::Model
     super
   end
+
+
+  # Due to rails bug, we don't immediately have the database-provided value after create. :(
+  # If we ask for it and it's empty, go to the db to get it
+  # https://github.com/rails/rails/issues/21627
+  def friendlier_id(*_)
+    in_memory = super
+
+    if !in_memory && persisted? && !@friendlier_id_retrieved
+      in_memory = self.class.where(id: id).limit(1).pluck(:friendlier_id).first
+      write_attribute(:friendlier_id, in_memory)
+      clear_attribute_change(:friendlier_id)
+      # just to avoid doing it multiple times if it's still unset in db for some reason
+      @friendlier_id_retrieved = true
+    end
+
+    in_memory
+  end
 end
