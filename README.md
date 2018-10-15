@@ -3,6 +3,12 @@ An in-progress experiment in shareable tools/components for building a digital c
 
 [![Build Status](https://travis-ci.org/sciencehistory/kithe.svg?branch=master)](https://travis-ci.org/sciencehistory/kithe)
 
+Kithe requires you use postgres as your db, 9.5+.
+
+## App setup notes
+
+* You need `config.active_record.schema_format = :sql`, for friendlier_id postgres stored procedure to be recorded in a structure.sql rather than a schema.rb.
+
 ## Development
 
 This is a Rails 'engine' whose template was created with: `rails plugin new kithe --full --skip-test-unit --dummy-path=spec/dummy --database=postgresql`
