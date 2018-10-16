@@ -26,6 +26,10 @@ class Kithe::Model < ActiveRecord::Base
     super
   end
 
+  # We want friendlier_id to be in URLs, not id
+  def to_param
+    friendlier_id
+  end
 
   # Due to rails bug, we don't immediately have the database-provided value after create. :(
   # If we ask for it and it's empty, go to the db to get it

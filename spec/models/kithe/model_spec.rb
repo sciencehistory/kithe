@@ -20,6 +20,10 @@ module Kithe
         expect(work.friendlier_id).to be_present
         expect(work.friendlier_id.length).to eq(7)
       end
+
+      it "uses friendlier_id for to_param for routing" do
+        expect(work.to_param).to eq(work.friendlier_id)
+      end
     end
   end
 end
