@@ -19,6 +19,7 @@ Gem::Specification.new do |s|
 
   s.add_dependency "rails", "~> 5.2.1"
   s.add_dependency "attr_json", "< 2.0.0"
+  s.add_dependency "simple_form", "~> 4.0"
 
   s.add_development_dependency "pg"
   s.add_development_dependency "yard-activesupport-concern"
