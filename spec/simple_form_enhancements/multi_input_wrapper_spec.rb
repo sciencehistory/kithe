@@ -17,23 +17,16 @@ describe "multi_input_wrapper", type: :helper do
       end
     end
 
-    SimpleForm.setup do |config|
-      Kithe::MultiInputWrapper.register(config)
-    end
-
     suite.run
 
     Object.send(:remove_const, :TestModel)
-
-    # way to remove an installed wrapper stolen from simple_form's own testing
-    SimpleForm.wrappers.delete("multi_input")
   end
 
   let(:model_instance) { TestModel.new }
 
   it "displays with no hint or error" do
     result_html_str = helper.simple_form_for(model_instance, url: "") do |f|
-      f.input :author, wrapper: :multi_input
+      f.input :author, wrapper: :kithe_multi_input
     end
 
     result_html = Nokogiri::HTML.fragment(result_html_str)
@@ -46,7 +39,7 @@ describe "multi_input_wrapper", type: :helper do
   it "displays with hint and error" do
     model_instance.tap(&:validate)
     result_html_str = helper.simple_form_for(model_instance, url: "") do |f|
-      f.input :author_error, wrapper: :multi_input, hint: "author error hint"
+      f.input :author_error, wrapper: :kithe_multi_input, hint: "author error hint"
     end
 
     result_html = Nokogiri::HTML.fragment(result_html_str)

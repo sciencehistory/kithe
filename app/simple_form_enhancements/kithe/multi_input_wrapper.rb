@@ -5,12 +5,7 @@
 #
 # Will display hint and error messages for top-level containing attribute properly.
 #
-# Register with simple_form in your app by putting in your simple_form initializer:
-#
-#     SimpleForm.setup do |config|
-#       # ...
-#       Kithe::MultiInputWrapper.register(config)
-#     end
+# This is automatically registered with simpleform as kithe_multi_input by our engine railtie.
 #
 # If you have an attr_json defined to be an Author model, with a :first_name and
 # :last_name, you might use this wrapper like this (always with a block arg):
@@ -27,7 +22,7 @@
 module Kithe::MultiInputWrapper
   # FUTURE: Could provide optional keyword args to customize classes involved.
   def self.register(simple_form_config)
-    simple_form_config.wrappers :multi_input, tag: 'fieldset', class: 'form-group', error_class: 'form-group-invalid', valid_class: 'form-group-valid' do |b|
+    simple_form_config.wrappers :kithe_multi_input, tag: 'fieldset', class: 'form-group', error_class: 'form-group-invalid', valid_class: 'form-group-valid' do |b|
       b.use :html5
 
       b.use :label_text, wrap_with: { tag: "legend", class: 'form-control-label col-form-label pt-0' }
