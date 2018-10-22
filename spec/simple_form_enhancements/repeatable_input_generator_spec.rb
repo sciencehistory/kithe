@@ -90,6 +90,31 @@ describe Kithe::RepeatableInputGenerator, type: :helper do
           end
         end
       end
+
+      describe "new record" do
+        let(:instance) { TestWork.new }
+
+        it "produces form with good HTML" do
+          assert_select("fieldset.form-group") do
+            assert_select("legend", text: "Multi model", count: 1)
+
+            assert_select("div.nested-fields.form-row", count: 0)
+
+            assert_select("div.repeatable-add-link") do
+              link = assert_select('a.add_fields', count: 1).first
+
+               # data attributes Cocoon JS wants
+               expect(link["data-association"]).to eq("multi_model")
+               expect(link["data-associations"]).to eq("multi_models")
+
+               template = link["data-association-insertion-template"]
+               expect(template).to be_present
+               expect(Nokogiri::HTML.fragment(template).at_css('input[name="test_work[multi_model_attributes][new_multi_model][value]"]')).to be_present
+            end
+          end
+        end
+      end
+
     end
   end
 end

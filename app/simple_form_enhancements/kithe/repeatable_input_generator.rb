@@ -20,6 +20,12 @@ class Kithe::RepeatableInputGenerator
   end
 
   def render
+    # Rails form_builder doesn't create the right input names on nil,
+    # we need an empty array so it knows it's a to-many.
+    if base_model.send(attribute_name).nil?
+      base_model.send("#{attribute_name}=", [])
+    end
+
     # simple_form #input method, with a block for custom input content.
     form_builder.input(attribute_name, wrapper: :kithe_multi_input) do
       template.safe_join([
