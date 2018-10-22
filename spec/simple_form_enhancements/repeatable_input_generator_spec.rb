@@ -19,27 +19,21 @@ require 'simple_form'
 # There might be better ways to test this func, not sure.
 describe Kithe::RepeatableInputGenerator, type: :helper do
   describe "for a repeated model" do
-    before(:all) do
-      TestNestedModel = Class.new do
+    temporary_class "TestNestedModel" do
+      Class.new do
         include AttrJson::Model
 
         attr_json :value, :string
       end
     end
-    after(:all) do
-      Object.send(:remove_const, :TestNestedModel)
-    end
 
-    before(:all) do
-      TestWork = Class.new(Kithe::Work) do
+    temporary_class "TestWork" do
+      Class.new(Kithe::Work) do
 
         attr_json :multi_model, TestNestedModel.to_type, array: true
 
         attr_json_accepts_nested_attributes_for :multi_model
       end
-    end
-    after(:all) do
-      Object.send(:remove_const, :TestWork)
     end
 
     let(:block) {
