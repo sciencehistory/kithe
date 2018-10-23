@@ -30,7 +30,9 @@ class Kithe::RepeatableInputGenerator
     form_builder.input(attribute_name, wrapper: :kithe_multi_input) do
       template.safe_join([
         form_builder.fields_for(attribute_name) do |sub_form|
-          repeatable_unit(sub_form)
+          wrap_with_repeatable_ui do
+            caller_content_block.call(sub_form)
+          end
         end,
         template.content_tag(:div, class: "repeatable-add-link") do
           add_another_link
@@ -55,16 +57,17 @@ class Kithe::RepeatableInputGenerator
     @attr_json_registration ||= base_model.class.attr_json_registry[attribute_name]
   end
 
-  # The caller-provided repeatable content, wrapped in our the right DOM
-  # for JS, including the 'remove' ui.
-  #
-  # form_builder is passed in, becuase it may be a sub-form created with `fields_for`,
-  # for nested models.
-  def repeatable_unit(form_builder)
+  def attribute_model_class
+    attr_json_registration&.type&.base_type&.model
+  end
+
+  # Wraps with the proper DOM for cocooon JS, along with the remove button.
+  # @yield pass block with content to wrap
+  def wrap_with_repeatable_ui
     # cocoon JS wants "nested-fields"
     template.content_tag(:div, class: "nested-fields form-row") do
       template.content_tag(:div, class: "col") do
-        caller_content_block.call(form_builder)
+        yield
       end +
       template.content_tag(:div, class: "col-auto") do
         remove_link
@@ -80,20 +83,13 @@ class Kithe::RepeatableInputGenerator
     # to pass to `fields_for` to create a sub-form-builder, to pass to the caller-provided
     # block, to generate the HTML for 'empty' object.
 
-    new_object = new_template_model
-
-    label = generate_label(new_object)
 
     # child index gets replaced by cocoon JS, to make sure multiple additions have
     # different paths in the submitted form data.
     #
     # We do not need to CGI.escape, because rails link_to genereator will do that for us.
-    insertion_template = form_builder.fields_for(attribute_name, new_object, :child_index => "new_#{attribute_name}") do |sub_form|
-      repeatable_unit(sub_form)
-    end
 
-
-    template.link_to(label, "#",
+    template.link_to(add_another_text, "#",
       # cocoon JS needs add_fields class
       class: "add_fields",
       # these are just copied from what cocoon does/wants
@@ -104,13 +100,23 @@ class Kithe::RepeatableInputGenerator
       })
   end
 
-  def generate_label(new_object)
+  def insertion_template
+    new_object = new_template_model
+
+    form_builder.fields_for(attribute_name, new_object, :child_index => "new_#{attribute_name}") do |sub_form|
+      wrap_with_repeatable_ui do
+        caller_content_block.call(sub_form)
+      end
+    end
+  end
+
+  def add_another_text
     label = "Add another"
 
     if base_model.class.respond_to?(:human_attribute_name)
       label += " #{base_model.class.human_attribute_name(attribute_name)}"
-    elsif new_object.respond_to?(:model_name)
-      label += " #{c}"
+    elsif attribute_model_class&.model_name
+      label += " #{attribute_model_class.model_name.human}"
     end
 
     label
