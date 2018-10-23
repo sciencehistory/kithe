@@ -140,15 +140,13 @@ class Kithe::RepeatableInputGenerator
   end
 
   def add_another_text
-    label = "Add another"
-
     if base_model.class.respond_to?(:human_attribute_name)
-      label += " #{base_model.class.human_attribute_name(attribute_name)}"
+      I18n.t("kithe.repeatable_input.add_a", name: base_model.class.human_attribute_name(attribute_name))
     elsif repeatable_type_class.respond_to?(:model_name)
-      label += " #{attribute_model_class.model_name.human}"
+      I18n.t("kithe.repeatable_input.add_a", name: attribute_model_class.model_name.human)
+    else
+      I8n.t("kithe.repeatable_input.add_bare")
     end
-
-    label
   end
 
 
@@ -159,7 +157,7 @@ class Kithe::RepeatableInputGenerator
   def remove_link
     # cocoon JS needs class remove_fields.dynamic, just treat em all
     # like dynamic, it seems okay.
-    template.link_to("Remove", '#', class: "remove_fields dynamic btn btn-warning")
+    template.link_to(I18n.t("kithe.repeatable_input.remove"), '#', class: "remove_fields dynamic btn btn-warning")
   end
 
   def insertion_template

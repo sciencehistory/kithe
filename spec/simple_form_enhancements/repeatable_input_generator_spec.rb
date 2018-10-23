@@ -75,6 +75,10 @@ describe Kithe::RepeatableInputGenerator, type: :helper do
             assert_select("input[name=?][value=?]", "test_work[multi_model_attributes][1][value]", "two")
           end
 
+          assert_select("div.nested-fields.form-row") do
+            assert_select(".remove_fields.dynamic", text: "Remove")
+          end
+
           assert_select("div.repeatable-add-link") do
             link = assert_select('a.add_fields', count: 1).first
 
@@ -85,6 +89,8 @@ describe Kithe::RepeatableInputGenerator, type: :helper do
              template = link["data-association-insertion-template"]
              expect(template).to be_present
              expect(Nokogiri::HTML.fragment(template).at_css('input[name="test_work[multi_model_attributes][new_multi_model][value]"]')).to be_present
+
+             expect(link.text).to eq("Add another Multi model")
           end
         end
       end
