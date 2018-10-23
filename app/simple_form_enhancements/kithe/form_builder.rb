@@ -29,7 +29,12 @@ class Kithe::FormBuilder < SimpleForm::FormBuilder
   # Note that it _requires_ a block, consisting of the HTML for a single element of
   # the repeatable entry -- using the yielded sub_form parameter as a form builder.
   #
-  # repeatable_model_input generates HTML with data attributes that will be used by
+  # repeatable_attr_input can also be used with repeatable _primitive_ values, like
+  # `attr_json :additional_titles, :string, array: true`. For these, do _not_ pass a block,
+  # and it'll do what is right for that case -- generating input names that will turn into
+  # an array of strings in the `additional_titles` param.
+  #
+  # Either way, repeatable_model_input generates HTML with data attributes that will be used by
   # Javascript to make the field repeatable. Currently we are using the cocoon javascript
   # (although not the cocoon generator methods), so you'll need to `//= require cocoon` in your
   # app JS.
