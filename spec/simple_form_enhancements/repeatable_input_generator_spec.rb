@@ -128,7 +128,7 @@ describe Kithe::RepeatableInputGenerator, type: :helper do
     let(:generator) do
       generator = nil
       helper.simple_form_for(instance, url: "http://example/target") do |form|
-        generator = Kithe::RepeatableInputGenerator.new(form, :string_array, nil, primitive: true)
+        generator = Kithe::RepeatableInputGenerator.new(form, :string_array, nil)
       end
       generator
     end

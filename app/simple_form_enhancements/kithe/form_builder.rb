@@ -46,8 +46,8 @@ class Kithe::FormBuilder < SimpleForm::FormBuilder
   # Note: Need attr_json_accepts_nested_attributes_for
   #
   # FUTURE: Provide options to customize classes and labels on generated wrapping UI apparatus.
-  def repeatable_attr_input(attr_name, primitive: false, &block)
+  def repeatable_attr_input(attr_name, &block)
     #repeatable_main_content(attr_name, &block)
-    Kithe::RepeatableInputGenerator.new(self, attr_name, block, primitive: primitive).render
+    Kithe::RepeatableInputGenerator.new(self, attr_name, block).render
   end
 end

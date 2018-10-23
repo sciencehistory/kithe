@@ -9,11 +9,10 @@ class Kithe::RepeatableInputGenerator
   # the block that captures what the caller wants to be repeatable content.
   # It should take one block arg, a form_builder.
   attr_reader :caller_content_block
-  def initialize(form_builder, attribute_name, caller_content_block, primitive: false)
+  def initialize(form_builder, attribute_name, caller_content_block)
     @form_builder = form_builder
     @attribute_name = attribute_name
     @caller_content_block = caller_content_block
-    @primitive = primitive
 
     unless attr_json_registration && attr_json_registration.type.is_a?(AttrJson::Type::Array)
       raise ArgumentError, "can only be used with attr_json-registered attributes"
@@ -38,8 +37,9 @@ class Kithe::RepeatableInputGenerator
     end
   end
 
+  # If they passed no content block, assume primitive mode
   def primitive?
-    !!@primitive
+    @caller_content_block.nil?
   end
 
   private
