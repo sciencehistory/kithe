@@ -29,7 +29,7 @@ class Kithe::RepeatableInputGenerator
     # simple_form #input method, with a block for custom input content.
     form_builder.input(attribute_name, wrapper: :kithe_multi_input) do
       template.safe_join([
-        repeated_fields,
+        existing_value_inputs,
         template.content_tag(:div, class: "repeatable-add-link") do
           add_another_link
         end
@@ -44,7 +44,15 @@ class Kithe::RepeatableInputGenerator
 
   private
 
-  def repeated_fields
+  # The concatenated inputs for any existing values, for either primitive mode or model mode.
+  #
+  # For primitive mode, the inputs will end up with `name` attributes like `work[attribute_name][]` -- which will
+  # end up in submitted params as an array of strings.
+  #
+  # For models, it'll be proper nested hashes.
+  #
+  # In either case, wrapped in proper DOM for Cocoon JS to target, including the 'remove' button.
+  def existing_value_inputs
     if primitive?
       # We can't use fields_for, and in fact we don't (currently) yield at all,
       # we do clever things with arrays.
@@ -67,18 +75,29 @@ class Kithe::RepeatableInputGenerator
     form_builder.template
   end
 
-  # The one that is current in our top-level (as far as is known to us here)
+  # The actual instance that the form is editing in the top-level (as far as is known to us here)
   # form builder.
   def base_model
     form_builder.object
   end
 
+
+  # @return [AttrJson::AttributeDefinition] for the `attribute_name` passed in on the model passed in.
+  #   Or nil if there is none -- in which case this component can't do it's thing.
   def attr_json_registration
     @attr_json_registration ||= base_model.class.attr_json_registry[attribute_name]
   end
 
-  def attribute_model_class
-    attr_json_registration&.type&.base_type&.model
+  # Either an AttrJson::Model class, or the symbol representing the type of the primitive class, like
+  # `:string`.
+  def repeatable_thing_class
+    base_type = attr_json_registration.type.base_type
+    if base_type.is_a?(AttrJson::Model)
+      base_type
+    else
+      # Will return a symbol name, confusingly
+      base_type.type
+    end
   end
 
   # Wraps with the proper DOM for cocooon JS, along with the remove button.
@@ -120,28 +139,12 @@ class Kithe::RepeatableInputGenerator
       })
   end
 
-  def insertion_template
-    if primitive?
-      wrap_with_repeatable_ui do
-        form_builder.text_field(attribute_name, multiple: true, value: nil, class: "form-control mb-2")
-      end
-    else
-      new_object = new_template_model
-
-      form_builder.fields_for(attribute_name, new_object, :child_index => "new_#{attribute_name}") do |sub_form|
-        wrap_with_repeatable_ui do
-          caller_content_block.call(sub_form)
-        end
-      end
-    end
-  end
-
   def add_another_text
     label = "Add another"
 
     if base_model.class.respond_to?(:human_attribute_name)
       label += " #{base_model.class.human_attribute_name(attribute_name)}"
-    elsif attribute_model_class&.model_name
+    elsif repeatable_type_class.respond_to?(:model_name)
       label += " #{attribute_model_class.model_name.human}"
     end
 
@@ -158,6 +161,24 @@ class Kithe::RepeatableInputGenerator
     # like dynamic, it seems okay.
     template.link_to("Remove", '#', class: "remove_fields dynamic btn btn-warning")
   end
+
+  def insertion_template
+    if primitive?
+      wrap_with_repeatable_ui do
+        form_builder.text_field(attribute_name, multiple: true, value: nil, class: "form-control mb-2")
+      end
+    else
+      new_object = new_template_model
+
+      form_builder.fields_for(attribute_name, new_object, :child_index => "new_#{attribute_name}") do |sub_form|
+        wrap_with_repeatable_ui do
+          caller_content_block.call(sub_form)
+        end
+      end
+    end
+  end
+
+
 
   # When we generate the repeatable unit, it needs to have a model, so
   # it can generate based on model. If the relevant object is an AttrJson::Model,
