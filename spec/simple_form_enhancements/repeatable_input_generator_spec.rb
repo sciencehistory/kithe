@@ -18,6 +18,16 @@ require 'simple_form'
 #
 # There might be better ways to test this func, not sure.
 describe Kithe::RepeatableInputGenerator, type: :helper do
+    let(:output) { generator.render }
+    before do
+      # total hack to let us use assert_select
+      # https://coderwall.com/p/fkh-fq/right-way-to-stub-views-in-helper-specs
+      #
+      # This is how I'm trying to keep HTML production tests reasonable, may be a better
+      # way?
+      concat output
+    end
+
   describe "for a repeated model" do
     temporary_class "TestNestedModel" do
       Class.new do
@@ -47,18 +57,6 @@ describe Kithe::RepeatableInputGenerator, type: :helper do
       end
       generator
     end
-
-    let(:output) { generator.render }
-
-    before do
-      # total hack to let us use assert_select
-      # https://coderwall.com/p/fkh-fq/right-way-to-stub-views-in-helper-specs
-      #
-      # This is how I'm trying to keep HTML production tests reasonable, may be a better
-      # way?
-      concat output
-    end
-
 
     describe "existing record" do
       let(:instance) { TestWork.create!(title: "test", multi_model: [{value: "one"}, {value: "two"}])}
@@ -114,7 +112,51 @@ describe Kithe::RepeatableInputGenerator, type: :helper do
           end
         end
       end
+    end
+  end
 
+  describe "for a repeated string" do
+    temporary_class "TestWork" do
+      Class.new(Kithe::Work) do
+
+        attr_json :string_array, :string, array: true
+      end
+    end
+
+    let(:instance) { TestWork.create!(title: "foo", string_array: ["one", "two"]) }
+
+    let(:generator) do
+      generator = nil
+      helper.simple_form_for(instance, url: "http://example/target") do |form|
+        generator = Kithe::RepeatableInputGenerator.new(form, :string_array, nil, primitive: true)
+      end
+      generator
+    end
+
+    it "produces form with good HTML" do
+      assert_select("fieldset.form-group") do
+        assert_select("legend", text: "String array", count: 1)
+
+        assert_select("div.nested-fields.form-row", count: 2)
+
+        assert_select("div.nested-fields.form-row") do
+          assert_select("input[name=?][value=?]", "test_work[string_array][]", "one")
+        end
+
+        assert_select("div.nested-fields.form-row") do
+          assert_select("input[name=?][value=?]", "test_work[string_array][]", "two")
+        end
+
+        link = assert_select('a.add_fields', count: 1).first
+
+        # data attributes Cocoon JS wants
+        expect(link["data-association"]).to eq("string_array")
+        expect(link["data-associations"]).to eq("string_arrays")
+
+        template = link["data-association-insertion-template"]
+        expect(template).to be_present
+        expect(Nokogiri::HTML.fragment(template).at_css('input[name="test_work[string_array][]"]')).to be_present
+      end
     end
   end
 end

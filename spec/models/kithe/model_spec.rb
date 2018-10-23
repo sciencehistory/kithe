@@ -24,6 +24,12 @@ module Kithe
       it "uses friendlier_id for to_param for routing" do
         expect(work.to_param).to eq(work.friendlier_id)
       end
+
+      it "has indexed friendlier_ids column" do
+        expect(
+          ActiveRecord::Base.connection.index_exists?(:kithe_models, :friendlier_id, unique: true)
+        ).to be(true)
+      end
     end
   end
 end

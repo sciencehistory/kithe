@@ -9,10 +9,11 @@ class Kithe::RepeatableInputGenerator
   # the block that captures what the caller wants to be repeatable content.
   # It should take one block arg, a form_builder.
   attr_reader :caller_content_block
-  def initialize(form_builder, attribute_name, caller_content_block)
+  def initialize(form_builder, attribute_name, caller_content_block, primitive: false)
     @form_builder = form_builder
     @attribute_name = attribute_name
     @caller_content_block = caller_content_block
+    @primitive = primitive
 
     unless attr_json_registration && attr_json_registration.type.is_a?(AttrJson::Type::Array)
       raise ArgumentError, "can only be used with attr_json-registered attributes"
@@ -29,11 +30,7 @@ class Kithe::RepeatableInputGenerator
     # simple_form #input method, with a block for custom input content.
     form_builder.input(attribute_name, wrapper: :kithe_multi_input) do
       template.safe_join([
-        form_builder.fields_for(attribute_name) do |sub_form|
-          wrap_with_repeatable_ui do
-            caller_content_block.call(sub_form)
-          end
-        end,
+        repeated_fields,
         template.content_tag(:div, class: "repeatable-add-link") do
           add_another_link
         end
@@ -41,7 +38,30 @@ class Kithe::RepeatableInputGenerator
     end
   end
 
+  def primitive?
+    !!@primitive
+  end
+
   private
+
+  def repeated_fields
+    if primitive?
+      # We can't use fields_for, and in fact we don't (currently) yield at all,
+      # we do clever things with arrays.
+      (base_model.send(attribute_name) || []).collect do |str|
+        wrap_with_repeatable_ui do
+          form_builder.text_field(attribute_name, multiple: true, value: str, class: "form-control mb-2")
+        end
+      end
+    else
+      # we use fields_for, which will repeatedly yield on repeating existing content
+      form_builder.fields_for(attribute_name) do |sub_form|
+        wrap_with_repeatable_ui do
+          caller_content_block.call(sub_form)
+        end
+      end
+    end
+  end
 
   def template
     form_builder.template
@@ -101,11 +121,17 @@ class Kithe::RepeatableInputGenerator
   end
 
   def insertion_template
-    new_object = new_template_model
-
-    form_builder.fields_for(attribute_name, new_object, :child_index => "new_#{attribute_name}") do |sub_form|
+    if primitive?
       wrap_with_repeatable_ui do
-        caller_content_block.call(sub_form)
+        form_builder.text_field(attribute_name, multiple: true, value: nil, class: "form-control mb-2")
+      end
+    else
+      new_object = new_template_model
+
+      form_builder.fields_for(attribute_name, new_object, :child_index => "new_#{attribute_name}") do |sub_form|
+        wrap_with_repeatable_ui do
+          caller_content_block.call(sub_form)
+        end
       end
     end
   end
