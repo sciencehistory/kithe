@@ -18,7 +18,7 @@ module Kithe
 
       it "has friendlier_id assigned by db on insert" do
         expect(work.friendlier_id).to be_present
-        expect(work.friendlier_id.length).to eq(7)
+        expect(work.friendlier_id.length).to eq(9)
       end
 
       it "uses friendlier_id for to_param for routing" do

@@ -38,68 +38,6 @@ COMMENT ON EXTENSION pgcrypto IS 'cryptographic functions';
 SET search_path = public, pg_catalog;
 
 --
--- Name: foo(); Type: FUNCTION; Schema: public; Owner: -
---
-
-CREATE FUNCTION foo() RETURNS text
-    LANGUAGE plpgsql
-    AS $$
-DECLARE
-  myint bigint := 78364164094;
-  mystr character varying := '';
-
-  alphabet char[] := ARRAY['0','1','2','3','4','5','6','7','8','9',
-    'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'm', 'n',
-    'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'];
-  alphabet_length integer := array_length(alphabet, 1) + 1;
-BEGIN
-  WHILE myint != 0 LOOP
-    mystr := alphabet[(myint % 36)+1] || mystr;
-    myint := myint / 36;
-  END LOOP;
-  RETURN mystr;
-END
-$$;
-
-
---
--- Name: getit(); Type: FUNCTION; Schema: public; Owner: -
---
-
-CREATE FUNCTION getit() RETURNS text
-    LANGUAGE plpgsql
-    AS $$
-DECLARE
-  myint bigint := 78364164095;
-  mystr character varying := '';
-
-  alphabet char[] := ARRAY['0','1','2','3','4','5','6','7','8','9',
-    'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n',
-    'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'];
-  alphabet_length integer := array_length(alphabet, 1);
-BEGIN
-  WHILE myint != 0 LOOP
-    mystr := alphabet[(myint % alphabet_length)+1] || mystr;
-    myint := myint / alphabet_length;
-  END LOOP;
-  RETURN mystr;
-END
-$$;
-
-
---
--- Name: inc(integer); Type: FUNCTION; Schema: public; Owner: -
---
-
-CREATE FUNCTION inc(val integer) RETURNS integer
-    LANGUAGE plpgsql
-    AS $$
-BEGIN
-RETURN val + 1;
-END; $$;
-
-
---
 -- Name: kithe_models_friendlier_id_gen(bigint, bigint); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -142,34 +80,6 @@ CREATE FUNCTION kithe_models_friendlier_id_gen(min_value bigint, max_value bigin
   $$;
 
 
---
--- Name: kithe_models_pk_gen(bigint); Type: FUNCTION; Schema: public; Owner: -
---
-
-CREATE FUNCTION kithe_models_pk_gen(max_value bigint) RETURNS bigint
-    LANGUAGE plpgsql
-    AS $$
-  DECLARE
-    new_id bigint;
-    done bool;
-    tries integer;
-  BEGIN
-    done := false;
-    tries := 0;
-    WHILE (NOT done) LOOP
-      tries := tries + 1;
-      IF (tries > 10) THEN
-        RAISE 'Could not find non-conflicting id in 10 tries';
-      END IF;
-
-      new_id = trunc(random() * (max_value) + 1);
-      done := NOT exists(SELECT 1 FROM kithe_models WHERE id=new_id);
-    END LOOP;
-    RETURN new_id;
-  END;
-  $$;
-
-
 SET default_tablespace = '';
 
 SET default_with_oids = false;
@@ -199,7 +109,7 @@ CREATE TABLE kithe_models (
     created_at timestamp without time zone NOT NULL,
     updated_at timestamp without time zone NOT NULL,
     parent_id uuid,
-    friendlier_id character varying DEFAULT kithe_models_friendlier_id_gen('2176782336'::bigint, '78364164095'::bigint) NOT NULL
+    friendlier_id character varying DEFAULT kithe_models_friendlier_id_gen('2821109907456'::bigint, '101559956668415'::bigint) NOT NULL
 );
 
 

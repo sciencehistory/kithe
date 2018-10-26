@@ -43,10 +43,10 @@ class KitheModelsFriendlierId < ActiveRecord::Migration[5.2]
             $$ LANGUAGE plpgsql;
         EOSQL
 
-        # min 2176782336 ('1000000') to max 78364164095 ('zzzzzzz') with our 36 char encoding alphabet.
-        # 76 billion possible values will hopefully be enough to not run into collisions, if it is not, increase
-        # number of chars and/or alphabet to increase keyspace.
-        add_column :kithe_models, :friendlier_id, :string, null: false, unique: true, default: -> {'kithe_models_friendlier_id_gen(2176782336, 78364164095)'}
+        # min 2821109907456 ('100000000') to max 101559956668415 ('zzzzzzzzz') with our 36 char encoding alphabet.
+        # So with 9-char IDs, we have 98 trillion possible values will should be enough to not run into collisions,
+        # if it is not, increase number of chars and/or alphabet to increase keyspace.
+        add_column :kithe_models, :friendlier_id, :string, null: false, unique: true, default: -> {'kithe_models_friendlier_id_gen(2821109907456, 101559956668415)'}
         add_index :kithe_models, :friendlier_id, unique: true
       end
 
