@@ -1,6 +1,6 @@
 language: ruby
 rvm:
- - 2.5
+ - 2.5.3
 addons:
   postgresql: "9.6"
 services:
