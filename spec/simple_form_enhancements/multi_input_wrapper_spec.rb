@@ -4,8 +4,9 @@ require 'simple_form'
 # Kind of hacky way we figured out to test simple form generation, it works!
 # Might abstract out into something that can be shared with other specs later.
 describe "multi_input_wrapper", type: :helper do
-  around(:all) do |suite|
-    TestModel = Class.new do
+
+  temporary_class "TestModel" do
+    Class.new do
       include ActiveModel::Model
 
       attr_accessor :author_error, :author
@@ -16,10 +17,6 @@ describe "multi_input_wrapper", type: :helper do
         errors.add(:author_error, "cannot be blank")
       end
     end
-
-    suite.run
-
-    Object.send(:remove_const, :TestModel)
   end
 
   let(:model_instance) { TestModel.new }

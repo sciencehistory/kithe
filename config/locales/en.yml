@@ -1,0 +1,6 @@
+en:
+  kithe:
+    repeatable_input:
+      remove: "Remove"
+      add_bare: "Add another"
+      add_a: "Add another %{name}"
