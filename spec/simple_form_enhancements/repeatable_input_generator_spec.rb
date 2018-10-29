@@ -140,17 +140,18 @@ describe Kithe::RepeatableInputGenerator, type: :helper do
     end
 
     it "produces form with good HTML" do
+      # puts Nokogiri::HTML.fragment(output).to_xml(indent: 2)
       assert_select("fieldset.form-group") do
         assert_select("legend", text: "String array", count: 1)
 
         assert_select("div.nested-fields.form-row", count: 2)
 
         assert_select("div.nested-fields.form-row") do
-          assert_select("input[name=?][value=?]", "test_work[string_array][]", "one")
+          assert_select("input[name=?][value=?]", "test_work[string_array_attributes][]", "one")
         end
 
         assert_select("div.nested-fields.form-row") do
-          assert_select("input[name=?][value=?]", "test_work[string_array][]", "two")
+          assert_select("input[name=?][value=?]", "test_work[string_array_attributes][]", "two")
         end
 
         link = assert_select('a.add_fields', count: 1).first
@@ -161,7 +162,7 @@ describe Kithe::RepeatableInputGenerator, type: :helper do
 
         template = link["data-association-insertion-template"]
         expect(template).to be_present
-        expect(Nokogiri::HTML.fragment(template).at_css('input[name="test_work[string_array][]"]')).to be_present
+        expect(Nokogiri::HTML.fragment(template).at_css('input[name="test_work[string_array_attributes][]"]')).to be_present
       end
     end
   end

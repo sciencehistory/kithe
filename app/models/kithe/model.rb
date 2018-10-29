@@ -5,6 +5,8 @@ class Kithe::Model < ActiveRecord::Base
   include AttrJson::NestedAttributes
   include AttrJson::Record::Dirty
 
+  attr_json_config(default_accepts_nested_attributes: { reject_if: :all_blank })
+
   validates_presence_of :title
 
   # this should only apply to Works, but we define it here so we can preload it

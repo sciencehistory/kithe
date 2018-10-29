@@ -17,6 +17,10 @@ class Kithe::RepeatableInputGenerator
     unless attr_json_registration && attr_json_registration.type.is_a?(AttrJson::Type::Array)
       raise ArgumentError, "can only be used with attr_json-registered attributes"
     end
+
+    unless base_model.class.method_defined?("#{attribute_name}_attributes=".to_sym)
+      raise ArgumentError, "Needs a '#{attribute_name}_attributes=' method, usually from attr_json_accepts_nested_attributes_for"
+    end
   end
 
   def render
@@ -29,6 +33,7 @@ class Kithe::RepeatableInputGenerator
     # simple_form #input method, with a block for custom input content.
     form_builder.input(attribute_name, wrapper: :kithe_multi_input) do
       template.safe_join([
+        placeholder_hidden_input,
         existing_value_inputs,
         template.content_tag(:div, class: "repeatable-add-link") do
           add_another_link
@@ -44,6 +49,23 @@ class Kithe::RepeatableInputGenerator
 
   private
 
+  # Hidden input is to make sure that if the user in UI deletes _all_ instances of a repeatable block,
+  # server-side code still gets something submitted to know to blank it out.
+  #
+  # For primitive types, that's just making sure there is an array submitted (with an empty string
+  # value in it, we rely on the attributes= method to strip out.
+  #
+  # For hash/model values, it's a bit trickier with an empty hash with a destroy value, which
+  # the *_attributes= method will also strip out, as it ignores destroy values -- relies on
+  # `reject_if: :all_blank` being set on nested attributes call.
+  def placeholder_hidden_input
+    if primitive?
+      template.hidden_field_tag "#{form_builder.object_name}[#{attribute_name}_attributes][]", ""
+    else
+      template.hidden_field_tag "#{form_builder.object_name}[#{attribute_name}_attributes][_kithe_placeholder][_destroy]", 1
+    end
+  end
+
   # The concatenated inputs for any existing values, for either primitive mode or model mode.
   #
   # For primitive mode, the inputs will end up with `name` attributes like `work[attribute_name][]` -- which will
@@ -58,7 +80,7 @@ class Kithe::RepeatableInputGenerator
       # we do clever things with arrays.
       (base_model.send(attribute_name) || []).collect do |str|
         wrap_with_repeatable_ui do
-          form_builder.text_field(attribute_name, multiple: true, value: str, class: "form-control mb-2")
+          default_primitive_input(str)
         end
       end
     else
@@ -69,6 +91,17 @@ class Kithe::RepeatableInputGenerator
         end
       end
     end
+  end
+
+
+  def default_primitive_input(value=nil)
+    # Counting on the _attributes= method added by AttrJson::NestedAttributes, with handling
+    # for primitives that removes empty strings from value before writing.
+    #
+    # multiple:true tells rails to put a `[]` on end of name; also seems to add an HTML input
+    # attribute which is silly and possibly incorrect, but that seems to be Rails.
+    # https://github.com/rails/rails/blob/bdc581616b760d1e2be3795c6f0f3ab4b1e125a5/actionview/lib/action_view/helpers/tags/base.rb#L110-L114
+    form_builder.text_field("#{attribute_name}_attributes", multiple: true, value: value, class: "form-control mb-2")
   end
 
   def template
@@ -163,7 +196,7 @@ class Kithe::RepeatableInputGenerator
   def insertion_template
     if primitive?
       wrap_with_repeatable_ui do
-        form_builder.text_field(attribute_name, multiple: true, value: nil, class: "form-control mb-2")
+        default_primitive_input
       end
     else
       new_object = new_template_model
