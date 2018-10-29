@@ -9,6 +9,10 @@ Kithe requires you use postgres as your db, 9.5+.
 
 * You need `config.active_record.schema_format = :sql`, for friendlier_id postgres stored procedure to be recorded in a structure.sql rather than a schema.rb.
 
+* rake kithe_engine:install:migrations
+
+* Views assume bootstrap 4 is in your app, and simple form has been configured with bootstrap settings. https://github.com/plataformatec/simple_form#bootstrap
+
 ## Development
 
 This is a Rails 'engine' whose template was created with: `rails plugin new kithe --full --skip-test-unit --dummy-path=spec/dummy --database=postgresql`
