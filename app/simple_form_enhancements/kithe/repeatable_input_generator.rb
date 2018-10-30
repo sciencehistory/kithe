@@ -9,10 +9,11 @@ class Kithe::RepeatableInputGenerator
   # the block that captures what the caller wants to be repeatable content.
   # It should take one block arg, a form_builder.
   attr_reader :caller_content_block
-  def initialize(form_builder, attribute_name, caller_content_block)
+  def initialize(form_builder, attribute_name, caller_content_block, primitive: nil)
     @form_builder = form_builder
     @attribute_name = attribute_name
     @caller_content_block = caller_content_block
+    @primitive = primitive
 
     unless attr_json_registration && attr_json_registration.type.is_a?(AttrJson::Type::Array)
       raise ArgumentError, "can only be used with attr_json-registered attributes"
@@ -44,7 +45,13 @@ class Kithe::RepeatableInputGenerator
 
   # If they passed no content block, assume primitive mode
   def primitive?
-    @caller_content_block.nil?
+    if @primitive.nil?
+      # Guess, if they passed in no block, they gotta get primitive, or else
+      # if the attr_json registration looks primitive.
+      @caller_content_block.nil? || attr_json_registration.type.base_type_primitive?
+    else
+      @primitive
+    end
   end
 
   private
@@ -80,7 +87,11 @@ class Kithe::RepeatableInputGenerator
       # we do clever things with arrays.
       (base_model.send(attribute_name) || []).collect do |str|
         wrap_with_repeatable_ui do
-          default_primitive_input(str)
+          if caller_content_block.nil?
+            default_primitive_input(str)
+          else
+            caller_content_block.call(primitive_input_name, str)
+          end
         end
       end
     else
@@ -98,10 +109,15 @@ class Kithe::RepeatableInputGenerator
     # Counting on the _attributes= method added by AttrJson::NestedAttributes, with handling
     # for primitives that removes empty strings from value before writing.
     #
-    # multiple:true tells rails to put a `[]` on end of name; also seems to add an HTML input
-    # attribute which is silly and possibly incorrect, but that seems to be Rails.
-    # https://github.com/rails/rails/blob/bdc581616b760d1e2be3795c6f0f3ab4b1e125a5/actionview/lib/action_view/helpers/tags/base.rb#L110-L114
-    form_builder.text_field("#{attribute_name}_attributes", multiple: true, value: value, class: "form-control mb-2")
+    # For now we disable rails automatic generation of `id` attribute, becuase it
+    # would not be unique. FUTURE: perhaps we'll generate unique IDs, need to deal
+    # with cocoon JS for added elements.
+    template.text_field_tag(primitive_input_name, value, id: nil, class: "form-control input-primitive")
+  end
+
+  # We use _attributes setter, and make sure to set to array value.
+  def primitive_input_name
+    "#{form_builder.object_name}[#{attribute_name}_attributes][]"
   end
 
   def template
@@ -196,7 +212,11 @@ class Kithe::RepeatableInputGenerator
   def insertion_template
     if primitive?
       wrap_with_repeatable_ui do
-        default_primitive_input
+        if caller_content_block
+          caller_content_block.call(primitive_input_name, nil)
+        else
+          default_primitive_input
+        end
       end
     else
       new_object = new_template_model
