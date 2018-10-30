@@ -105,7 +105,7 @@ class Kithe::RepeatableInputGenerator
     # For now we disable rails automatic generation of `id` attribute, becuase it
     # would not be unique. FUTURE: perhaps we'll generate unique IDs, need to deal
     # with cocoon JS for added elements.
-    template.text_field_tag(primitive_input_name, value, id: nil, class: "form-control mb-2")
+    template.text_field_tag(primitive_input_name, value, id: nil, class: "form-control input-primitive")
   end
 
   # We use _attributes setter, and make sure to set to array value.
