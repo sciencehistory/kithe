@@ -121,7 +121,7 @@ describe Kithe::RepeatableInputGenerator, type: :helper do
     end
   end
 
-  describe "for a repeated string" do
+  describe "for a repeated primitive string" do
     temporary_class "TestWork" do
       Class.new(Kithe::Work) do
 
@@ -163,6 +163,39 @@ describe Kithe::RepeatableInputGenerator, type: :helper do
         template = link["data-association-insertion-template"]
         expect(template).to be_present
         expect(Nokogiri::HTML.fragment(template).at_css('input[name="test_work[string_array_attributes][]"]')).to be_present
+      end
+    end
+
+    it "has no duplicate id attribute values" do
+      # cause that is illegal in HTML among other reasons
+      id_values = css_select("*[id]").collect { |n| n["id"] }
+      expect(id_values.count).to eq(id_values.uniq.count)
+    end
+
+    describe "with custom block" do
+      let(:block) do
+        proc do |input_name, value|
+          "<span input_name='#{input_name}' value='#{value}'>".html_safe
+        end
+      end
+
+      let(:generator) do
+        generator = nil
+        helper.simple_form_for(instance, url: "http://example/target") do |form|
+          generator = Kithe::RepeatableInputGenerator.new(form, :string_array, block)
+        end
+        generator
+      end
+
+      it "calls block properly" do
+        # block called once for each existing value
+        assert_select("span[input_name=?][value=?]", "test_work[string_array_attributes][]", "one")
+        assert_select("span[input_name=?][value=?]", "test_work[string_array_attributes][]", "two")
+
+        # and the 'add' button has good html
+        link = assert_select('a.add_fields', count: 1).first
+        template = link["data-association-insertion-template"]
+        expect(template).to include("<span input_name='test_work[string_array_attributes][]' value=''>")
       end
     end
   end
