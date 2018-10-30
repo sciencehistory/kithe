@@ -102,7 +102,10 @@ class Kithe::RepeatableInputGenerator
     # Counting on the _attributes= method added by AttrJson::NestedAttributes, with handling
     # for primitives that removes empty strings from value before writing.
     #
-    template.text_field_tag(primitive_input_name, value, class: "form-control mb-2")
+    # For now we disable rails automatic generation of `id` attribute, becuase it
+    # would not be unique. FUTURE: perhaps we'll generate unique IDs, need to deal
+    # with cocoon JS for added elements.
+    template.text_field_tag(primitive_input_name, value, id: nil, class: "form-control mb-2")
   end
 
   # We use _attributes setter, and make sure to set to array value.

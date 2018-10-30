@@ -166,6 +166,12 @@ describe Kithe::RepeatableInputGenerator, type: :helper do
       end
     end
 
+    it "has no duplicate id attribute values" do
+      # cause that is illegal in HTML among other reasons
+      id_values = css_select("*[id]").collect { |n| n["id"] }
+      expect(id_values.count).to eq(id_values.uniq.count)
+    end
+
     describe "with custom block" do
       let(:block) do
         proc do |input_name, value|
