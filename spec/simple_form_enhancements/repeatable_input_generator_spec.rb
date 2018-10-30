@@ -118,6 +118,36 @@ describe Kithe::RepeatableInputGenerator, type: :helper do
           end
         end
       end
+
+      describe "build: :at_least_one" do
+        let(:generator) do
+          generator = nil
+          helper.simple_form_for(instance, url: "http://example/target") do |form|
+            generator = Kithe::RepeatableInputGenerator.new(form, :multi_model, block, build: :at_least_one)
+          end
+          generator
+        end
+
+        describe "with empty array" do
+          let(:instance) { TestWork.new(title: "test", multi_model: []) }
+          it "includes an input" do
+            assert_select("input[type=text]", count: 1)
+          end
+        end
+        describe "with nil" do
+          let(:instance) { TestWork.new(title: "test", multi_model: nil) }
+          it "includes an input" do
+            assert_select("input[type=text]", count: 1)
+          end
+        end
+        describe "with an element" do
+          let(:instance) { TestWork.new(title: "test", multi_model: [{ value: "present" }]) }
+          it "includes onluy one input" do
+            input = assert_select("input[type=text]", count: 1).first
+            expect(input["value"]).to eq("present")
+          end
+        end
+      end
     end
   end
 
@@ -170,6 +200,36 @@ describe Kithe::RepeatableInputGenerator, type: :helper do
       # cause that is illegal in HTML among other reasons
       id_values = css_select("*[id]").collect { |n| n["id"] }
       expect(id_values.count).to eq(id_values.uniq.count)
+    end
+
+    describe "build: :at_least_one" do
+      let(:generator) do
+        generator = nil
+        helper.simple_form_for(instance, url: "http://example/target") do |form|
+          generator = Kithe::RepeatableInputGenerator.new(form, :string_array, nil, build: :at_least_one)
+        end
+        generator
+      end
+
+      describe "with empty array" do
+        let(:instance) { TestWork.new(title: "test", string_array: []) }
+        it "includes an input" do
+          assert_select("input[type=text]", count: 1)
+        end
+      end
+      describe "with nil" do
+        let(:instance) { TestWork.new(title: "test", string_array: nil) }
+        it "includes an input" do
+          assert_select("input[type=text]", count: 1)
+        end
+      end
+      describe "with an element" do
+        let(:instance) { TestWork.new(title: "test", string_array: ["present"]) }
+        it "includes onluy one input" do
+          input = assert_select("input[type=text]", count: 1).first
+          expect(input["value"]).to eq("present")
+        end
+      end
     end
 
     describe "with custom block" do

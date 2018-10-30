@@ -52,9 +52,11 @@ class Kithe::FormBuilder < SimpleForm::FormBuilder
   # This is a method rather than a simple form component mostly becuase simple form components
   # don't allow a block param like this, that works out so well here.
   #
+  # TO DOC: build: :at_least_one. (maybe :extra in the future)
+  #
   # FUTURE: Provide options to customize classes and labels on generated wrapping UI apparatus.
-  def repeatable_attr_input(attr_name, &block)
+  def repeatable_attr_input(attr_name, build: nil, &block)
     #repeatable_main_content(attr_name, &block)
-    Kithe::RepeatableInputGenerator.new(self, attr_name, block).render
+    Kithe::RepeatableInputGenerator.new(self, attr_name, block, build: build).render
   end
 end

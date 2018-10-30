@@ -9,7 +9,8 @@ class Kithe::RepeatableInputGenerator
   # the block that captures what the caller wants to be repeatable content.
   # It should take one block arg, a form_builder.
   attr_reader :caller_content_block
-  def initialize(form_builder, attribute_name, caller_content_block, primitive: nil)
+
+  def initialize(form_builder, attribute_name, caller_content_block, primitive: nil, build: nil)
     @form_builder = form_builder
     @attribute_name = attribute_name
     @caller_content_block = caller_content_block
@@ -21,6 +22,15 @@ class Kithe::RepeatableInputGenerator
 
     unless base_model.class.method_defined?("#{attribute_name}_attributes=".to_sym)
       raise ArgumentError, "Needs a '#{attribute_name}_attributes=' method, usually from attr_json_accepts_nested_attributes_for"
+    end
+
+    # kinda cheesy, but seems good enough?
+    if build == :at_least_one && base_model.send(attribute_name).blank?
+      if primitive?
+        base_model.send("#{attribute_name}=", [""])
+      else
+        base_model.send("#{attribute_name}=", [{}])
+      end
     end
   end
 
