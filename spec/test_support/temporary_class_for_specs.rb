@@ -14,6 +14,9 @@ module TemporaryClassForSpecs
   #          end
   #       end
   #     end
+  #
+  # Oops, this does not actually currently let you redefine classes with same name in
+  # a nested example group, so it goes.
   def temporary_class(class_name, &block)
     if Object.const_defined?(class_name)
       raise ArgumentError, "#{class_name} conflicts with an existing class/constant"
