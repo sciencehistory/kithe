@@ -9,12 +9,5 @@ module Kithe
 
     # should only affect kithe development
     config.active_record.schema_format = :sql
-
-    initializer "kithe.simple_form.register_multi_input", after: "finisher_hook" do
-      require 'simple_form'
-      SimpleForm.setup do |config|
-        Kithe::MultiInputWrapper.register(config)
-      end
-    end
   end
 end

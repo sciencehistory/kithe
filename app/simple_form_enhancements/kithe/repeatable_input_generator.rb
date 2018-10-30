@@ -31,7 +31,7 @@ class Kithe::RepeatableInputGenerator
     end
 
     # simple_form #input method, with a block for custom input content.
-    form_builder.input(attribute_name, wrapper: :kithe_multi_input) do
+    form_builder.input(attribute_name, wrapper: :vertical_collection) do
       template.safe_join([
         placeholder_hidden_input,
         existing_value_inputs,

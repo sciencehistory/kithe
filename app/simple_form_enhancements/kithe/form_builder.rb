@@ -8,7 +8,8 @@ class Kithe::FormBuilder < SimpleForm::FormBuilder
 
 
   # Produce a form input for a repeatable attr_json field. Takes care
-  # of the add/remove UI apparatus -- generated HTML assumes Bootstrap 4.
+  # of the add/remove UI apparatus -- generated HTML assumes Bootstrap 4,
+  # and simple_form Bootstrap config with a :vertical_collection wrapper.
   #
   # If you have a repeatable AttrJson::Model attribute, you might write
   # a form input for it like this:
@@ -48,7 +49,8 @@ class Kithe::FormBuilder < SimpleForm::FormBuilder
   #
   # Actual implementation code is over in Kithe::RepeatableInputGenerator
   #
-  # Note: Need attr_json_accepts_nested_attributes_for
+  # This is a method rather than a simple form component mostly becuase simple form components
+  # don't allow a block param like this, that works out so well here.
   #
   # FUTURE: Provide options to customize classes and labels on generated wrapping UI apparatus.
   def repeatable_attr_input(attr_name, &block)
