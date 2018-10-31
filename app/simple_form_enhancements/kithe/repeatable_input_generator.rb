@@ -214,9 +214,9 @@ class Kithe::RepeatableInputGenerator
   # our attr_json things have no separate existence beyond what will be
   # submitted with form.
   def remove_link
-    # cocoon JS needs class remove_fields.dynamic, just treat em all
+    # cocoon JS needs class specifically remove_fields.dynamic, just treat em all
     # like dynamic, it seems okay.
-    template.link_to(I18n.t("kithe.repeatable_input.remove"), '#', class: "remove_fields dynamic btn btn-warning")
+    template.link_to(I18n.t("kithe.repeatable_input.remove"), '#', class: "remove_fields dynamic btn btn-secondary")
   end
 
   def insertion_template
