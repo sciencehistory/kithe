@@ -8,25 +8,39 @@ describe ArrayInclusionValidator do
 
       attr_json :str_array, :string, array: true
       validates :str_array, array_inclusion: { in: ["one", "two", "three"]}
+
+      attr_json :str_array_proc, :string, array: true
+      validates :str_array, array_inclusion: { proc: ->(v) { v != "BAD" } }
     end
   end
 
-  it "validates inclusion" do
-    expect(MyWork.new(str_array: ["one", "two"])).to be_valid
-    expect(MyWork.new(str_array: ["one", "two", "one"])).to be_valid
+  describe "in:" do
+    it "validates inclusion" do
+      expect(MyWork.new(str_array: ["one", "two"])).to be_valid
+      expect(MyWork.new(str_array: ["one", "two", "one"])).to be_valid
+    end
+
+    it "allows empty array" do
+      expect(MyWork.new(str_array: [])).to be_valid
+    end
+
+    it "allows nil" do
+      expect(MyWork.new()).to be_valid
+    end
+
+    it "rejects invalid" do
+      expect(MyWork.new(str_array: ["one", "extra"])).not_to be_valid
+      expect(MyWork.new(str_array: ["extra"])).not_to be_valid
+    end
   end
 
-  it "allows empty array" do
-    expect(MyWork.new(str_array: [])).to be_valid
-  end
-
-  it "allows nil" do
-    expect(MyWork.new()).to be_valid
-  end
-
-  it "rejects invalid" do
-    expect(MyWork.new(str_array: ["one", "extra"])).not_to be_valid
-    expect(MyWork.new(str_array: ["extra"])).not_to be_valid
+  describe "proc:" do
+    it "in-validates" do
+      expect(MyWork.new(str_array: ["one", "BAD"])).not_to be_valid
+    end
+    it "validates" do
+      expect(MyWork.new(str_array: ["one", "two"])).to be_valid
+    end
   end
 
   it "has good error" do
