@@ -61,6 +61,8 @@ including module namespace. You can generally use rake tasks and other rails com
 
 We use rspec for testing, [bundle exec] `rake spec`, `rake`, or `rspec`.
 
+Release new gem versions with `bundle exec rake release` (after making sure ./lib/kithe/version.rb is appropriate)
+
 
 ## License
 The gem is available as open source under the terms of the [MIT License](https://opensource.org/licenses/MIT).
