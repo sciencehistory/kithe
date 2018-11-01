@@ -1,17 +1,49 @@
 # Kithe
-An in-progress experiment in shareable tools/components for building a digital collections app in Rails.  Being used for the Science History Institute's digital collections rewrite.
+An in-progress experiment in shareable tools/components for building a digital collections app in Rails.
 
 [![Build Status](https://travis-ci.org/sciencehistory/kithe.svg?branch=master)](https://travis-ci.org/sciencehistory/kithe)
 
-Kithe requires you use postgres as your db, 9.5+.
+## What is kithe?
 
-## App setup notes
+Kithe is a toolkit for building digital collections/repository applications in Rails. It comes out of experience in the [samvera](https://samvera.org/) community of open source library-archives-museums digital collections/preservation work (but is not a samvera project).
 
-* You need `config.active_record.schema_format = :sql`, for friendlier_id postgres stored procedure to be recorded in a structure.sql rather than a schema.rb.
+Kithe does not use fedora or valkyrie, but stores all metadata using ActiveRecord, and some extensions/choices with ActiveRecord that try to take a light touch and leave the persistence mostly just standard ActiveRecord.  Kithe requires you use postgres as your db, 9.5+. In general, kithe will try to provide additional architecture and support on top of "ordinary" approaches to Rails apps.
 
-* rake kithe_engine:install:migrations
+Kithe will not give you a working "turnkey" application. It is a collection of tools to help you write a Rails app. It intends to provide tools and standard architecture for things most common to our digital collections/repository domain. You'll still have to write an app. The intention is that you will be able to choose to use more or fewer of kithe's tools -- although using the kithe basic domain modelling is _probably usually_ necessary for the other mix-and-match tools to work.  The range of tools provided and areas of an app given some support for in kithe will probably grow over time, in hopefully a careful and cautious way.
 
-* Views assume bootstrap 4 is in your app, and simple form has been configured with bootstrap settings. https://github.com/plataformatec/simple_form#bootstrap
+You still need to make your own app, with kithe providing some support. In this way, develping an app based on kythe in some ways analagous to developing an app based on [valkyrie](https://github.com/samvera-labs/valkyrie). They both provide basic standard architecture for modelling/persistence, although in very different ways. Kithe will provide both more and less than valkyrie.  If you are comparing it to a "solution bundle" digital collections platform, kithe may seem like "more work". But experience has shown me that in our domain, historically "solution bundles" can be less of a "turnkey" approach than they seem, and can have greater development cost over total app lifecycle than anticipated. If you have similar experience that leads you to consider a more 'bespoke' app approach -- you may want to consider kithe as some (hopefully) architecturally simple support and standardization for your custom app that still leaves you with tons of flexibility.
+
+Kithe is at the beginning stages of development. It is pre-1.0 and can change in backwards incompat ways. It is probably not ready for using seriously unless you really know what you're getting into. But trying it out is very invited and encouraged!
+
+Kithe is being developed in tandem with the Science History Institute's in-development [replacement digital collections](https://github.com/sciencehistory/scihist_digicoll) app, and you can look there for a model/canonical/demo kithe use.
+
+# Kithe parts
+
+Some guide documentation is available to explain kithe's architectures and components. Definitely start with the modelling guide.
+
+* [Modelling](./guides/modelling.md)
+* Form support
+
+## Setting up your app to use kithe
+
+So you want to start an app that uses kithe. We should later provide better 'getting started' guide. For now some sketchy notes:
+
+* Again re-iterate that kithe requires your Rails app use postgres, 9.5+.
+
+* To get migrations from kithe to setup your database for it's models: `rake kithe_engine:install:migrations`
+
+* Kithe view support generally assumes your app uses bootstrap 4, and uses [simple form](https://github.com/plataformatec/simple_form) configured with bootstrap settings. See https://github.com/plataformatec/simple_form#bootstrap
+
+* Specific additional pre-requisites/requirements can sometimes be found in individual feature docs. And include the Javascript from [cocoon](https://github.com/nathanvda/cocoon), for form support for repeatable-field editing forms.
+
+## To be done
+
+File handling in general including derivatives is next on the plate.
+
+There is also definitely planned to be solr indexing and some blacklight integration support. (These currently considered requirements for getting the Science History Institute's app to production, depending on the kithe features).
+
+Other components/features may become more clear as we continue to develop. It's possible that kithe won't (at least for a long time) contain controllers themselves (it may contain some helper methods for controllers), or generalized permissions architecture. Both of these are some of the things most particular to specific apps, that are hard to generalize without creating monsters.
+
 
 ## Development
 
