@@ -11,50 +11,24 @@ class Kithe::FormBuilder < SimpleForm::FormBuilder
   # of the add/remove UI apparatus -- generated HTML assumes Bootstrap 4,
   # and simple_form Bootstrap config with a :vertical_collection wrapper.
   #
-  # If you have a repeatable AttrJson::Model attribute, you might write
-  # a form input for it like this:
-  #
-  #     <%= kithe_form_for(@work) do |f| %>
-  #       <%= f.repeatable_model_input(:author) do |sub_form| %>
-  #          <div class="form-row">
-  #            <div class="col-auto">
-  #              <%= sub_form.input :category, collection: SOME_CATEGORIES, label: false %>
-  #            </div>
-  #            <div class="col">
-  #              <%= sub_form.input :value, label: false %>
-  #            </div>
-  #          </div>
-  #       <% end %>
-  #     <% end %>
-  #
-  # Note that it _requires_ a block, consisting of the HTML for a single element of
-  # the repeatable entry -- using the yielded sub_form parameter as a form builder.
-  #
-  # repeatable_attr_input can also be used with repeatable _primitive_ values, like
-  # `attr_json :additional_titles, :string, array: true`. For these, do _not_ pass a block,
-  # and it'll do what is right for that case -- generating input names that will turn into
-  # an array of strings in the `additional_titles` param.
-  #
-  # Either way, repeatable_model_input generates HTML with data attributes that will be used by
-  # Javascript to make the field repeatable. Currently we are using the cocoon javascript
-  # (although not the cocoon generator methods), so you'll need to `//= require cocoon` in your
-  # app JS.
-  #
-  # Note we use simple_form `input` method in our block above -- this will allow any errors
-  # on nested objects to show up appropriately! simple_form errors on the main :author element
-  # will show up properly too, courtesy of the kithe multi_input_wrapper. Likewise,
-  # [simple_form i18n](https://github.com/plataformatec/simple_form#i18n) on top-level
-  # as well as nested elements should show up, for labels and hints. It may be tricky
-  # to figure out proper i18n key paths for nested elements.
+  # See the [Forms Guide](../../../guides/forms.md) for more usage information.
   #
   # Actual implementation code is over in Kithe::RepeatableInputGenerator
   #
   # This is a method rather than a simple form component mostly becuase simple form components
-  # don't allow a block param like this, that works out so well here.
-  #
-  # TO DOC: build: :at_least_one. (maybe :extra in the future)
+  # don't allow a block param like this, and that works out so well here.
   #
   # FUTURE: Provide options to customize classes and labels on generated wrapping UI apparatus.
+  #
+  # @param attr_name [Symbol] Model attribute to generate input for, same one
+  #   you'd pass to a form builder.
+  # @param build [Boolean] nil default, or set to :at_least_one to have an empty input
+  #   generated even if the model includes no elements.
+  # @yield [builder] For model-type attributes (not primitives), yields a sub-builder similar to `fields_for`.
+  # @yield [input_name, value] For primitive-type attributes, different yield.
+  # @yieldparam [String] that should be used as HTML "name" attribute on input
+  # @yieldparam value that should be used as existing value when generating input for
+  #   primitive, usually by passing to `value` attribute in some input builder.
   def repeatable_attr_input(attr_name, build: nil, &block)
     #repeatable_main_content(attr_name, &block)
     Kithe::RepeatableInputGenerator.new(self, attr_name, block, build: build).render
