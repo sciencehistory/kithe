@@ -1,9 +1,9 @@
 # Uses our multi_input simple_form wrapper.
 #
-# FUTURE: more args to customize classses and labels.
+# This is normally expected only to be called by Kithe::FormBuilder#repeatable_attr_input ,
+# see docs there, as well as guide docs at [Kithe Forms Guide](../../../guides/forms.md)
 #
-# TODO: generating objects not working when we start out with nil/empty array.
-# write some tests first please.
+# FUTURE: more args to customize classses and labels.
 class Kithe::RepeatableInputGenerator
   attr_reader :form_builder, :attribute_name
   # the block that captures what the caller wants to be repeatable content.
