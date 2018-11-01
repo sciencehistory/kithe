@@ -22,7 +22,7 @@ Kithe is being developed in tandem with the Science History Institute's in-devel
 Some guide documentation is available to explain kithe's architectures and components. Definitely start with the modelling guide.
 
 * [Modelling](./guides/modelling.md)
-* Form support
+* [Form support](./guides/forms.md): repeatable inputs, including for compound/nested models
 
 ## Setting up your app to use kithe
 
@@ -35,6 +35,8 @@ So you want to start an app that uses kithe. We should later provide better 'get
 * Kithe view support generally assumes your app uses bootstrap 4, and uses [simple form](https://github.com/plataformatec/simple_form) configured with bootstrap settings. See https://github.com/plataformatec/simple_form#bootstrap
 
 * Specific additional pre-requisites/requirements can sometimes be found in individual feature docs. And include the Javascript from [cocoon](https://github.com/nathanvda/cocoon), for form support for repeatable-field editing forms.
+
+Note that at present kithe will end up forcing your app to use `:sql` [style schema dumps](https://guides.rubyonrails.org/v3.2.8/migrations.html#types-of-schema-dumps). We may try to fix this.
 
 ## To be done
 
