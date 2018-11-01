@@ -2,6 +2,7 @@
 An in-progress experiment in shareable tools/components for building a digital collections app in Rails.
 
 [![Build Status](https://travis-ci.org/sciencehistory/kithe.svg?branch=master)](https://travis-ci.org/sciencehistory/kithe)
+[![Gem Version](https://badge.fury.io/rb/kithe.svg)](https://badge.fury.io/rb/kithe)
 
 ## What is kithe?
 
