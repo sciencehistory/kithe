@@ -8,3 +8,6 @@ spec/dummy/storage/
 spec/dummy/tmp/
 .byebug_history
 Gemfile.lock
+
+# MacOS file system bookkeeping file
+**/.DS_Store
