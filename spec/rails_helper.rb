@@ -54,6 +54,19 @@ RSpec.configure do |config|
   FactoryBot.definition_file_paths = ['spec/factories', 'lib/testing_support/factories']
   FactoryBot.find_definitions
 
+  # Let blocks or tests add (eg) `queue_adapter: :inline` to determine Rails
+  # ActiveJob queue adapter. :test, :inline:, or :async, presumably.
+  # eg `it "does something", queue_adapter: :inline`, or
+  # `describe "something", queue_adapter: :inline`
+  config.around(:example, :queue_adapter) do |example|
+    original = ActiveJob::Base.queue_adapter
+    ActiveJob::Base.queue_adapter = example.metadata[:queue_adapter]
+
+    example.run
+
+    ActiveJob::Base.queue_adapter = original
+  end
+
 
   # RSpec Rails can automatically mix in different behaviours to your tests
   # based on their file location, for example enabling you to call `get` and

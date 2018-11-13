@@ -20,6 +20,7 @@ RSpec.configure do |config|
   end
 
   config.extend TemporaryClassForSpecs
+  config.include ShrineSpecSupport
 
   # rspec-expectations config goes here. You can use an alternate
   # assertion/expectation library such as wrong or the stdlib/minitest
@@ -50,6 +51,21 @@ RSpec.configure do |config|
   # inherited by the metadata hash of host groups and examples, rather than
   # triggering implicit auto-inclusion in groups with matching metadata.
   config.shared_context_metadata_behavior = :apply_to_host_groups
+
+  # For now, we define shrine storages here so tests can work with some default storages.
+  # https://github.com/shrinerb/shrine/blob/master/doc/testing.md
+
+  # wanted to use kithe_asset_store and kithe_asset_cache as keys to stay out of way of any other use,
+  # but backgrounding is broken. https://github.com/shrinerb/shrine/issues/310
+  require 'shrine'
+  require "shrine/storage/memory"
+
+  Shrine.storages = {
+    cache: Shrine::Storage::Memory.new,
+    store: Shrine::Storage::Memory.new,
+  }
+  # and we delete em all after test is done
+
 
 # The settings below are suggested to provide a good initial experience
 # with RSpec, but feel free to customize to your heart's content.
@@ -101,5 +117,7 @@ RSpec.configure do |config|
   Kernel.srand config.seed
 =end
 end
+
+
 
 

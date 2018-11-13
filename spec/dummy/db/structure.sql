@@ -109,7 +109,8 @@ CREATE TABLE kithe_models (
     created_at timestamp without time zone NOT NULL,
     updated_at timestamp without time zone NOT NULL,
     parent_id uuid,
-    friendlier_id character varying DEFAULT kithe_models_friendlier_id_gen('2821109907456'::bigint, '101559956668415'::bigint) NOT NULL
+    friendlier_id character varying DEFAULT kithe_models_friendlier_id_gen('2821109907456'::bigint, '101559956668415'::bigint) NOT NULL,
+    file_data jsonb
 );
 
 
@@ -177,6 +178,7 @@ SET search_path TO "$user", public;
 INSERT INTO "schema_migrations" (version) VALUES
 ('20181015143259'),
 ('20181015143413'),
-('20181015143737');
+('20181015143737'),
+('20181031190647');
 
 
