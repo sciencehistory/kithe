@@ -38,13 +38,7 @@ module Kithe
     # So we can assign a hash representing cached file
     plugin :parsed_json
 
-    # Set file location to "asset/#{asset_uuid_id}/#{unique_file_id}" -- regardless of
-    # asset sub-class, since they all have unique ids, just all under asset/.
-    # Or should we use friendly_id? Or pull this out into a plugin? That can use either?
-    # Too simple for a plugin maybe.
-    def generate_location(io, context)
-      ["asset", context[:record].id, super].join("/")
-    end
-
+    # Makes files stored as /asset/#{asset_pk}/#{random_uuid}.#{original_suffix}
+    plugin :kithe_storage_location
   end
 end

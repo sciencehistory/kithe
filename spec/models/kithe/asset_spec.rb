@@ -27,7 +27,7 @@ RSpec.describe Kithe::Asset, type: :model do
 
   # should we be testing the uploader directly instead/in addition?
   # We're doing it "integration" style here, but fixing queue adapter to inline
-  # to make it straightforward. Maybe better way(s) to test.
+  # to make it straightforward. Maybe better way(s) to test, or not.
   # https://github.com/shrinerb/shrine/blob/master/doc/testing.md
   describe "file attachment", queue_adapter: :inline do
     let(:source) { File.open(Kithe::Engine.root.join("spec/test_support/images/1x1_pixel.jpg")) }
@@ -50,6 +50,8 @@ RSpec.describe Kithe::Asset, type: :model do
       # This is the file location/storage path, currently under UUID pk.
       expect(asset.file.id).to match %r{\Aasset/#{asset.id}/.*\.jpg}
     end
+
+
   end
 
 
