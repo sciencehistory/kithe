@@ -16,6 +16,9 @@ module Kithe
   #   * Way to supply your own completely custom Uploader class?
   #     * Could be a sub-class of this one?
   #     * Some kithe behavior implemented as shrine plugins so you can easily re-use?
+  #
+  # FUTURE: Look at using client-side-calculated checksums to verify end-to-end.
+  # https://github.com/shrinerb/shrine/wiki/Using-Checksums-in-Direct-Uploads
   class AssetUploader < Shrine
     plugin :activerecord
 
@@ -40,5 +43,11 @@ module Kithe
 
     # Makes files stored as /asset/#{asset_pk}/#{random_uuid}.#{original_suffix}
     plugin :kithe_storage_location
+
+    # Allows you to assign hashes like:
+    #    { "id" => "http://url", "storage" => "remote_url", headers: { "Authorization" => "Bearer whatever"}}
+    # (headers optional), for fetching remote urls on promotion. Useful with browse-everything.
+    # WARNING: There's no whitelist, will accept any url. Is this a problem?
+    plugin :kithe_accept_remote_url
   end
 end

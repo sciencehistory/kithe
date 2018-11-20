@@ -9,6 +9,14 @@ module ShrineSpecSupport
     uploader_class.new(storage_key)
   end
 
+  def test_attacher!(*args, attachment_options: {}, &block)
+    uploader = test_uploader(*args, &block)
+    Object.send(:remove_const, "TestUser") if defined?(TestUser) # for warnings
+    user_class = Object.const_set("TestUser", Struct.new(:avatar_data, :id))
+    user_class.include uploader.class::Attachment.new(:avatar, attachment_options)
+    user_class.new.avatar_attacher
+  end
+
   # https://github.com/shrinerb/shrine/blob/203c2c9a0c83815c9ded1b09d5d006b2a523579c/test/support/generic_helper.rb#L27
   def fakeio(content = "file", **options)
     FakeIO.new(content, **options)
