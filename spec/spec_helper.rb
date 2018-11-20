@@ -13,6 +13,10 @@
 # it.
 #
 # See http://rubydoc.info/gems/rspec-core/RSpec/Core/Configuration
+#
+require 'byebug'
+require 'webmock/rspec'
+
 RSpec.configure do |config|
 
   Dir["#{File.dirname(__FILE__)}/test_support/*.rb"].each do |file|

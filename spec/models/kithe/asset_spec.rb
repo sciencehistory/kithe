@@ -50,9 +50,37 @@ RSpec.describe Kithe::Asset, type: :model do
       # This is the file location/storage path, currently under UUID pk.
       expect(asset.file.id).to match %r{\Aasset/#{asset.id}/.*\.jpg}
     end
-
-
   end
 
+  describe "remote urls", queue_adapter: :inline do
+    it "can assign and promote" do
+      stub_request(:any, "www.example.com/bar.html?foo=bar").
+        to_return(body: "Example Response" )
 
+      asset.file = {"id" => "http://www.example.com/bar.html?foo=bar", "storage" => "remote_url"}
+      asset.save!
+      asset.reload
+
+      expect(asset.file.storage_key).to eq(asset.file_attacher.store.storage_key.to_s)
+      expect(asset.stored?).to be true
+      expect(asset.file.read).to include("Example Response")
+      expect(asset.file.id).to end_with(".html") # no query params
+    end
+
+    it "will fetch headers" do
+      stubbed = stub_request(:any, "www.example.com/bar.html?foo=bar").
+                  to_return(body: "Example Response" )
+
+      asset.file = {"id" => "http://www.example.com/bar.html?foo=bar",
+                    "storage" => "remote_url",
+                    "headers" => {"Authorization" => "Bearer TestToken"}}
+      asset.save!
+
+      expect(
+        a_request(:get, "www.example.com/bar.html?foo=bar").with(
+          headers: {'Authorization'=>'Bearer TestToken', 'User-Agent' => /.+/}
+        )
+      ).to have_been_made.times(1)
+    end
+  end
 end
