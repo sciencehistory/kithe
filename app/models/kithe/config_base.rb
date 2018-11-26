@@ -69,6 +69,15 @@ module Kithe
   #
   #     define_key :foo_bar, system_env_transform: Kithe::ConfigBase::BOOLEAN_TRANSFORM
   #
+  # ## Allowable values
+  #
+  # You can specify allowable values as an array, regex, or proc, to fail quickly if a provided
+  # value is not allowed.
+  #
+  #     define_key :foo_bar, default: "one", allows: ["one", "two", "three"]
+  #     define_key :key, allows: /one|two|three/
+  #     define_key :other, allows: ->(val) { !val.include?("foo") }
+  #
   # ## Default value as proc
   #
   # A default value can be provided as a proc. It is still only lazily executed once.
@@ -81,9 +90,10 @@ module Kithe
   #
   # ## Future possible enhancements
   #
-  # * Specify proc or regexp defining allowable values, raise early if no match.
-  # * This is not completely thread-safe on boot, if multiple threads somehow concurrently
-  #   trigger first load of conf files. But probably shouldn't happen, should be fine.
+  # * This is not written thread-safely, which could be a problem for a global object. In reality,
+  # especially in MRI, it should not be a problem.  It is one way we make our values "immutable",
+  # at worst you should have multiple threads duplicatedly calculating the same value to cache,
+  # and even that is unlikely.
   class ConfigBase
     include Singleton
 
@@ -114,12 +124,13 @@ module Kithe
       self.config_file_paths = (self.config_file_paths + Array(args)).freeze
     end
 
-    def define_key(name, env_key: nil, default: nil, system_env_transform: nil)
+    def define_key(name, env_key: nil, default: nil, system_env_transform: nil, allows: nil)
       @key_definitions[name.to_sym] = {
         name: name.to_s,
         env_key: env_key,
         default: default,
-        system_env_transform: system_env_transform
+        system_env_transform: system_env_transform,
+        allows: allows
       }
     end
 
@@ -132,6 +143,11 @@ module Kithe
         result = file_lookup(defn) if result == NoValueProvided
         result = default_lookup(defn) if result == NoValueProvided
         result = nil if result == NoValueProvided
+
+        if disallowed?(defn, result)
+          raise TypeError.new("config #{name.to_sym} is required to match #{defn[:allows].inspect}, but is #{result.inspect}")
+        end
+
         result
       end
     end
@@ -188,6 +204,17 @@ module Kithe
         defn[:default].call
       else
         defn[:default]
+      end
+    end
+
+    def disallowed?(defn, value)
+      spec = defn[:allows]
+      return false unless spec
+
+      if spec.kind_of?(Array)
+        !spec.include?(value)
+      else
+        !(spec === value)
       end
     end
   end
