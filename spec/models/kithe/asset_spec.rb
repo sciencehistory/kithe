@@ -1,4 +1,5 @@
 require 'rails_helper'
+require 'digest'
 
 
 RSpec.describe Kithe::Asset, type: :model do
@@ -30,7 +31,8 @@ RSpec.describe Kithe::Asset, type: :model do
   # to make it straightforward. Maybe better way(s) to test, or not.
   # https://github.com/shrinerb/shrine/blob/master/doc/testing.md
   describe "file attachment", queue_adapter: :inline do
-    let(:source) { File.open(Kithe::Engine.root.join("spec/test_support/images/1x1_pixel.jpg")) }
+    let(:source_path) { Kithe::Engine.root.join("spec/test_support/images/1x1_pixel.jpg") }
+    let(:source) { File.open(source_path) }
     let(:asset) { Kithe::Asset.new(title: "foo") }
 
     it "can attach file correctly" do
@@ -43,12 +45,56 @@ RSpec.describe Kithe::Asset, type: :model do
       expect(asset.file).to be_present
       expect(asset.stored?).to be true
       expect(asset.content_type).to eq("image/jpeg")
-      expect(asset.size).to eq(File.open(Kithe::Engine.root.join("spec/test_support/images/1x1_pixel.jpg")).size)
+      expect(asset.size).to eq(File.open(source_path).size)
       expect(asset.height).to eq(1)
       expect(asset.width).to eq(1)
 
       # This is the file location/storage path, currently under UUID pk.
       expect(asset.file.id).to match %r{\Aasset/#{asset.id}/.*\.jpg}
+
+      # checksums
+      expect(asset.sha1).to eq(Digest::SHA1.hexdigest(File.open(source_path).read))
+      expect(asset.md5).to eq(Digest::MD5.hexdigest(File.open(source_path).read))
+      expect(asset.sha512).to eq(Digest::SHA512.hexdigest(File.open(source_path).read))
+    end
+
+    describe "pdf file" do
+
+      it "extracts page count" do
+
+      end
+    end
+  end
+
+  describe "direct uploads", queue_adapter: :inline do
+    let(:sample_file_path) { Kithe::Engine.root.join("spec/test_support/images/1x1_pixel.jpg") }
+    let(:cached_file) { asset.file_attacher.cache.upload(File.open(sample_file_path)) }
+    it "can attach json hash" do
+      asset.file = {
+        id: cached_file.id,
+        storage: cached_file.storage_key,
+        metadata: {
+          filename: "echidna.jpg"
+        }
+      }.to_json
+
+      asset.save!
+      asset.reload
+
+      expect(asset.file).to be_present
+      expect(asset.stored?).to be true
+      expect(asset.content_type).to eq("image/jpeg")
+      expect(asset.size).to eq(File.open(sample_file_path).size)
+      expect(asset.height).to eq(1)
+      expect(asset.width).to eq(1)
+
+      # This is the file location/storage path, currently under UUID pk.
+      expect(asset.file.id).to match %r{\Aasset/#{asset.id}/.*\.jpg}
+
+      # checksums
+      expect(asset.sha1).to eq(Digest::SHA1.hexdigest(File.open(sample_file_path).read))
+      expect(asset.md5).to eq(Digest::MD5.hexdigest(File.open(sample_file_path).read))
+      expect(asset.sha512).to eq(Digest::SHA512.hexdigest(File.open(sample_file_path).read))
     end
   end
 

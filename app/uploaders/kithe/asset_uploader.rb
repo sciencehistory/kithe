@@ -49,5 +49,35 @@ module Kithe
     # (headers optional), for fetching remote urls on promotion. Useful with browse-everything.
     # WARNING: There's no whitelist, will accept any url. Is this a problem?
     plugin :kithe_accept_remote_url
+
+    # We want to store md5 and sha1 checksums (legacy compat), as well as
+    # sha512 (more recent digital preservation recommendation: https://ocfl.io/draft/spec/#digests)
+    #
+    # We only calculate them on `store` action to avoid double-computation, and because for
+    # direct uploads/backgrounding, we haven't actually gotten the file in our hands to compute
+    # checksums until then anyway.
+    plugin :signature
+    add_metadata do |io, context|
+      if context[:action] == :store
+        {
+          md5: calculate_signature(io, :md5),
+          sha1: calculate_signature(io, :sha1),
+          sha512: calculate_signature(io, :sha512)
+        }
+      end
+    end
+    metadata_method :md5, :sha1, :sha512
+
+    # Make sure metadata is extracted on storage, since we are designing for direct
+    # uploads and backgrounding, where actual file isn't examined until bg job.
+    # This is the technique recommended at:
+    # although it's a bit squirrely.
+    plugin :refresh_metadata
+    plugin :processing
+    process(:store) do |io, context|
+      io.refresh_metadata!(context) # extracts metadata and updates `io.metadata`
+      io
+    end
+
   end
 end
