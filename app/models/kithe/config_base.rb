@@ -17,6 +17,8 @@ module Kithe
   # * Flat list of keys, you can 'namespace' in your key names if you want, nested hashes in my
   #   experience add too much complexity and bug potential. Kithe::ConfigBase does _not_ use
   #   the problematic [hashie](https://github.com/intridea/hashie) gem.
+  # * Loads all values the first time any of them is asked for -- should fail quickly for any
+  #   bad values -- on boot as long as you reference a value on boot.
   #
   # # Usage
   #
@@ -88,12 +90,6 @@ module Kithe
   #
   #     define_key :foo_bar, default: => { "#{Config.lookup!('baz')} plus more" }
   #
-  # ## Future possible enhancements
-  #
-  # * This is not written thread-safely, which could be a problem for a global object. In reality,
-  # especially in MRI, it should not be a problem.  It is one way we make our values "immutable",
-  # at worst you should have multiple threads duplicatedly calculating the same value to cache,
-  # and even that is unlikely.
   class ConfigBase
     include Singleton
 
@@ -106,6 +102,8 @@ module Kithe
 
     def initialize
       @key_definitions = {}
+      @loaded_values = nil
+      @load_mutex = Mutex.new
     end
 
     def self.define_key(*args)
@@ -135,21 +133,15 @@ module Kithe
     end
 
     def lookup(name)
-      defn = @key_definitions[name.to_sym]
-      raise ArgumentError.new("No env key defined for: #{name}") unless defn
+      lazy_load
 
-      defn[:cached_result] ||= begin
-        result = system_env_lookup(defn)
-        result = file_lookup(defn) if result == NoValueProvided
-        result = default_lookup(defn) if result == NoValueProvided
-        result = nil if result == NoValueProvided
+      name = name.to_sym
 
-        if disallowed?(defn, result)
-          raise TypeError.new("config #{name.to_sym} is required to match #{defn[:allows].inspect}, but is #{result.inspect}")
-        end
-
-        result
+      unless @key_definitions.has_key?(name)
+        raise ArgumentError.new("No env key defined for: #{name}")
       end
+
+      return @loaded_values[name]
     end
 
     # like lookup, but raises on no or blank value.
@@ -160,6 +152,34 @@ module Kithe
     end
 
     private
+
+    def lazy_load
+      unless @loaded_values
+        @load_mutex.synchronize do
+          return if @loaded_values # inside mutex
+          @loaded_values = @key_definitions.collect do |name, defn|
+                            [name, compute_lookup(name)]
+                          end.to_h
+        end
+      end
+    end
+
+    def compute_lookup(name)
+      defn = @key_definitions[name.to_sym]
+      raise ArgumentError.new("No env key defined for: #{name}") unless defn
+
+      result = system_env_lookup(defn)
+      result = file_lookup(defn) if result == NoValueProvided
+      result = default_lookup(defn) if result == NoValueProvided
+      result = nil if result == NoValueProvided
+
+      if disallowed?(defn, result)
+        raise TypeError.new("config #{name.to_sym} is required to match #{defn[:allows].inspect}, but is #{result.inspect}")
+      end
+
+      result
+    end
+
 
     def system_env_lookup(defn)
       return NoValueProvided if defn[:env_key] == false

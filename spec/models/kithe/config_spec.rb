@@ -13,6 +13,10 @@ describe "Kithe::ConfigBase" do
     end
   end
 
+  it "raises on unrecognized key" do
+    expect { config_class.lookup("no_such_key") }.to raise_error(ArgumentError)
+  end
+
   describe "from ENV" do
     before do
       stub_const('ENV', ENV.to_hash.merge(test_key.to_s.upcase => env_value))
@@ -152,41 +156,41 @@ describe "Kithe::ConfigBase" do
   describe "allowable" do
     describe "regexp" do
       before do
-        stub_const('ENV', ENV.to_hash.merge("ALLOWED" => "this has a", "NOT_ALLOWED" => "does not"))
-        config_class.define_key "allowed", allows: /a/
-        config_class.define_key "not_allowed", allows: /a/
+        config_class.define_key "with_allowance", allows: /a/
       end
       it "allows" do
-        expect(config_class.lookup("allowed")).to eq("this has a")
+        stub_const('ENV', ENV.to_hash.merge("WITH_ALLOWANCE" => "this has a"))
+        expect(config_class.lookup("with_allowance")).to eq("this has a")
       end
       it "disallows" do
-        expect { config_class.lookup("not_allowed") }.to raise_error(TypeError)
+        stub_const('ENV', ENV.to_hash.merge("WITH_ALLOWANCE" => "does not"))
+        expect { config_class.lookup("with_allowance") }.to raise_error(TypeError)
       end
     end
     describe "proc" do
       before do
-        stub_const('ENV', ENV.to_hash.merge("ALLOWED" => "this has a", "NOT_ALLOWED" => "does not"))
-        config_class.define_key "allowed", allows: ->(val) { true }
-        config_class.define_key "not_allowed", allows: ->(val) { val != "does not" }
+        config_class.define_key "with_allowance", allows: ->(val) { val != "bad" }
       end
       it "allows" do
-        expect(config_class.lookup("allowed")).to eq("this has a")
+        stub_const('ENV', ENV.to_hash.merge("WITH_ALLOWANCE" => "okay"))
+        expect(config_class.lookup("with_allowance")).to eq("okay")
       end
       it "disallows" do
-        expect { config_class.lookup("not_allowed") }.to raise_error(TypeError)
+        stub_const('ENV', ENV.to_hash.merge("WITH_ALLOWANCE" => "bad"))
+        expect { config_class.lookup("with_allowance") }.to raise_error(TypeError)
       end
     end
     describe "array" do
       before do
-        stub_const('ENV', ENV.to_hash.merge("ALLOWED" => "this has a", "NOT_ALLOWED" => "does not"))
-        config_class.define_key "allowed", allows: ["this has a", "other thing"]
-        config_class.define_key "not_allowed", allows: ["this has a", "other thing"]
+        config_class.define_key "with_allowance", allows: ["this has a", "other thing"]
       end
       it "allows" do
-        expect(config_class.lookup("allowed")).to eq("this has a")
+        stub_const('ENV', ENV.to_hash.merge("WITH_ALLOWANCE" => "this has a"))
+        expect(config_class.lookup("with_allowance")).to eq("this has a")
       end
       it "disallows" do
-        expect { config_class.lookup("not_allowed") }.to raise_error(TypeError)
+        stub_const('ENV', ENV.to_hash.merge("WITH_ALLOWANCE" => "not allowed thing"))
+        expect { config_class.lookup("with_allowance") }.to raise_error(TypeError)
       end
     end
   end
