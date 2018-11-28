@@ -97,6 +97,39 @@ CREATE TABLE ar_internal_metadata (
 
 
 --
+-- Name: kithe_derivatives; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE kithe_derivatives (
+    id bigint NOT NULL,
+    key character varying NOT NULL,
+    file_data jsonb,
+    asset_id uuid NOT NULL,
+    created_at timestamp without time zone NOT NULL,
+    updated_at timestamp without time zone NOT NULL
+);
+
+
+--
+-- Name: kithe_derivatives_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE kithe_derivatives_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: kithe_derivatives_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE kithe_derivatives_id_seq OWNED BY kithe_derivatives.id;
+
+
+--
 -- Name: kithe_models; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -124,11 +157,26 @@ CREATE TABLE schema_migrations (
 
 
 --
+-- Name: kithe_derivatives id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY kithe_derivatives ALTER COLUMN id SET DEFAULT nextval('kithe_derivatives_id_seq'::regclass);
+
+
+--
 -- Name: ar_internal_metadata ar_internal_metadata_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY ar_internal_metadata
     ADD CONSTRAINT ar_internal_metadata_pkey PRIMARY KEY (key);
+
+
+--
+-- Name: kithe_derivatives kithe_derivatives_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY kithe_derivatives
+    ADD CONSTRAINT kithe_derivatives_pkey PRIMARY KEY (id);
 
 
 --
@@ -148,6 +196,20 @@ ALTER TABLE ONLY schema_migrations
 
 
 --
+-- Name: index_kithe_derivatives_on_asset_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_kithe_derivatives_on_asset_id ON kithe_derivatives USING btree (asset_id);
+
+
+--
+-- Name: index_kithe_derivatives_on_asset_id_and_key; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_kithe_derivatives_on_asset_id_and_key ON kithe_derivatives USING btree (asset_id, key);
+
+
+--
 -- Name: index_kithe_models_on_friendlier_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -159,6 +221,14 @@ CREATE UNIQUE INDEX index_kithe_models_on_friendlier_id ON kithe_models USING bt
 --
 
 CREATE INDEX index_kithe_models_on_parent_id ON kithe_models USING btree (parent_id);
+
+
+--
+-- Name: kithe_derivatives fk_rails_3dac8b4201; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY kithe_derivatives
+    ADD CONSTRAINT fk_rails_3dac8b4201 FOREIGN KEY (asset_id) REFERENCES kithe_models(id);
 
 
 --
@@ -179,6 +249,7 @@ INSERT INTO "schema_migrations" (version) VALUES
 ('20181015143259'),
 ('20181015143413'),
 ('20181015143737'),
-('20181031190647');
+('20181031190647'),
+('20181128185658');
 
 

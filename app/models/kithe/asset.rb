@@ -1,4 +1,6 @@
 class Kithe::Asset < Kithe::Model
+  has_many :derivatives, dependent: :destroy # dependent destroy to get shrine destroy logic for assets
+
   # TODO we may need a way for local app to provide custom uploader class.
   # or just override at ./kithe/asset_uploader.rb locally?
   include Kithe::AssetUploader::Attachment.new(:file)
