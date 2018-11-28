@@ -24,16 +24,34 @@ class Kithe::Asset < Kithe::Model
   #
   # Will overrwrite any existing derivative with that key.
   def add_derivative(key, io, storage_key: :kithe_derivatives, metadata: {})
-    deriv = Kithe::Derivative.new(key: key.to_s, asset: self)
+    retries ||= 0
+    deriv ||= Kithe::Derivative.new(key: key.to_s, asset: self)
 
     # skip cache phase, right to specified storage, but with metadata extraction.
-    uploader = deriv.file_attacher.shrine_class.new(storage_key)
-    uploaded_file = uploader.upload(io, record: deriv, metadata: metadata)
+    uploader ||= deriv.file_attacher.shrine_class.new(storage_key)
+    uploaded_file ||= uploader.upload(io, record: deriv, metadata: metadata)
 
     deriv.file_attacher.set(uploaded_file)
     deriv.save!
 
     deriv
+  rescue ActiveRecord::RecordNotUnique => e
+    # A derivative with this key and asset id already existed, fetch it, and
+    # retry to set the specified UploadedFile on THAT one.
+    retries += 1
+    if retries < 3
+      deriv = Kithe::Derivative.where(key: key.to_s, asset: self).first
+      retry
+    else
+      # we're giving up, delete the file we uploaded to storage, and
+      # raise, instead of silently failing.
+      uploaded_file.delete if uploaded_file
+      raise e
+    end
   end
 
+  def remove_derivative(key)
+    deriv = Kithe::Derivative.where(key: key.to_s, asset: self).first
+    deriv.destroy! if deriv
+  end
 end

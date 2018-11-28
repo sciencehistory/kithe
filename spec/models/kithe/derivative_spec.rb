@@ -81,16 +81,27 @@ RSpec.describe Kithe::Derivative, type: :model do
       expect(stored_file.exists?).to be(false)
     end
 
-    pending "with an existing conflicting derivative" do
+    describe "with an existing derivative" do
       let!(:existing) { asset.add_derivative(key, StringIO.new("something else")) }
 
-      it "can replace an existing derivative" do
+      it "will replace an existing derivative" do
         expect(existing).to be_persisted
         original_shrine_file = existing.file
 
         replacement = asset.add_derivative(key, dummy_io)
 
         expect(original_shrine_file.exists?).to be(false)
+      end
+
+      it "can remove with #remove_derivative" do
+        expect(Kithe::Derivative.where(id: existing.id).count).to be(1)
+        stored_file = existing.file
+        expect(stored_file.exists?).to be(true)
+
+        asset.remove_derivative(key)
+
+        expect(stored_file.exists?).to be(false)
+        expect(Kithe::Derivative.where(id: existing.id).count).to be(0)
       end
     end
   end
