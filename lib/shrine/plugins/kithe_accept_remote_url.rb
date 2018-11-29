@@ -37,7 +37,7 @@ class Shrine
       module AttacherMethods
         # Override to use 'headers' key in UploadedFile data for making remote request,
         # when remote_url is being supplied.
-        def promote(cached_file, **options)
+        def promote(cached_file = get, **options)
           if cached_file.storage_key.to_s == "remote_url" && cached_file.data["headers"]
             # instead of having Shrine "open" the file itself, we'll "open" it ourselves, so
             # we can add supplied headers. Due to the beauty of design of `down` and `shrine-url`,
