@@ -125,9 +125,29 @@ RSpec.describe Kithe::Derivative, type: :model do
         expect {
           result = asset.add_derivative(key, StringIO.new("something else"))
           expect(result).to be_nil
-        }.to_not change{Kithe::Derivative.count}
+        }.to_not change{ [Kithe::Derivative.count, Kithe::DerivativeUploader.storages[:kithe_derivatives].store.count]}
 
         expect(asset.derivatives.reload.count).to be(0)
+      end
+    end
+
+    describe "existing asset" do
+      let!(:existing_asset) do
+        FactoryBot.create(:kithe_asset, :with_file).tap do |asset|
+          asset.file_attacher.promote(action: :store)
+          asset.save!
+        end
+      end
+      it "deletes existing derivatives on new file assignment" do
+        deriv = existing_asset.add_derivative(key, StringIO.new("something"))
+        deriv_uploaded_file = deriv.file
+
+        existing_asset.file = File.open(Kithe::Engine.root.join("spec/test_support/images/2x2_pixel.jpg"))
+        existing_asset.save!
+
+        expect(Kithe::Derivative.where(id: deriv.id).exists?).to be(false)
+        expect(deriv_uploaded_file.exists?).to be(false)
+        expect(existing_asset.derivatives.reload.count).to be(0)
       end
     end
   end
