@@ -2,7 +2,7 @@ require 'rails_helper'
 
 RSpec.describe Kithe::Derivative, type: :model do
   let(:key) { "some_thumb" }
-  let(:asset) { FactoryBot.create(:kithe_asset) }
+  let(:asset) { FactoryBot.create(:kithe_asset, :with_faked_metadata, faked_metadata: { sha512: "fakesha512" }) }
   let(:derivative) { Kithe::Derivative.new }
 
   describe "for referential integrity" do
@@ -28,11 +28,20 @@ RSpec.describe Kithe::Derivative, type: :model do
     end
   end
 
+  describe "asset without a sha256" do
+    let(:asset) { FactoryBot.create(:kithe_asset) }
+    it "won't create derivative" do
+      expect {
+        asset.add_derivative(key, StringIO.new("something"))
+      }.to raise_error(ArgumentError)
+    end
+  end
+
   describe "Asset#add_derivative", queue_adapter: :test do
     let(:key) { "some_derivative" }
     let(:dummy_content) { File.read(Kithe::Engine.root.join("spec/test_support/images/1x1_pixel.jpg"), encoding: "BINARY") }
     let(:dummy_io) { File.open(Kithe::Engine.root.join("spec/test_support/images/1x1_pixel.jpg"), encoding: "BINARY") }
-    let(:asset) { FactoryBot.create(:kithe_asset, :with_file)}
+    let(:asset) { FactoryBot.create(:kithe_asset, :with_faked_metadata, faked_metadata: { sha512: "fakesha512" })}
 
     it "can add a derivative" do
       derivative = asset.add_derivative(key, dummy_io)
@@ -102,6 +111,23 @@ RSpec.describe Kithe::Derivative, type: :model do
 
         expect(stored_file.exists?).to be(false)
         expect(Kithe::Derivative.where(id: existing.id).count).to be(0)
+      end
+    end
+
+    describe "with asset changed concurrently" do
+      before do
+        data_with_new_sha = asset.file.data.deep_dup.tap do |d|
+          d["metadata"]["sha512"] = "new_fake_sha512"
+        end
+        Kithe::Asset.where(id: asset.id).update_all(file_data: data_with_new_sha)
+      end
+      it "does not add derivative" do
+        expect {
+          result = asset.add_derivative(key, StringIO.new("something else"))
+          expect(result).to be_nil
+        }.to_not change{Kithe::Derivative.count}
+
+        expect(asset.derivatives.reload.count).to be(0)
       end
     end
   end

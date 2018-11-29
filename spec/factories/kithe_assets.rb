@@ -8,5 +8,19 @@ FactoryBot.define do
       end
       file { file_object }
     end
+
+    trait :with_faked_metadata do
+      with_file
+
+      transient do
+        faked_metadata { {} }
+      end
+
+      after(:build) do |model, evaluator|
+        if evaluator.faked_metadata
+          model.file.metadata.merge!(evaluator.faked_metadata.stringify_keys)
+        end
+      end
+    end
   end
 end

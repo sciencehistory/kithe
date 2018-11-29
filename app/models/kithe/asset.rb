@@ -17,13 +17,19 @@ class Kithe::Asset < Kithe::Model
   # higher-level API to manage them, but this one is used by higher level API.
   #
   # Makes sure referential integrity isn't violated despite possible concurrency:
-  # * Only one derivative with a certain key per asset can exist
+  # * Only one derivative with a certain key per asset can exist (uses an optimistic create
+  #   rescuing db constraint violations and recovering)
   # * If the asset file has changed in the db since we loaded this in memory,
   #   we simply don't update anything -- the asset we wanted to create a derivative
-  #   for isn't there anymore, it's been deleted, no problem.
+  #   for isn't there anymore, it's been deleted, no problem. (Uses db pessimistic locking
+  #   to make sure in-db asset sha512 is what we expect and remains so until after we save.)
   #
   # Will overrwrite any existing derivative with that key.
   def add_derivative(key, io, storage_key: :kithe_derivatives, metadata: {})
+    unless self.persisted? && self.sha512.present?
+      raise ArgumentError.new("Can not safely add derivative to an asset without a persisted sha512 value")
+    end
+
     retries ||= 0
     deriv ||= Kithe::Derivative.new(key: key.to_s, asset: self)
 
@@ -32,7 +38,20 @@ class Kithe::Asset < Kithe::Model
     uploaded_file ||= uploader.upload(io, record: deriv, metadata: metadata)
 
     deriv.file_attacher.set(uploaded_file)
-    deriv.save!
+
+    Kithe::Asset.transaction do
+      # pessimistic lock on the asset still existing with the same sha. We can
+      # count on sha512 existing, cause kithe says so.
+
+      existing = Kithe::Asset.where(id: self.id).where("file_data -> 'metadata' ->> 'sha512' = ?", self.sha512).lock.first
+      unless existing
+        # the file we're trying to add a derivative to doesn't exist anymore, forget it
+        uploaded_file.delete
+        return nil
+      end
+      # wait gotta delete the thing too.
+      deriv.save!
+    end
 
     deriv
   rescue ActiveRecord::RecordNotUnique => e
