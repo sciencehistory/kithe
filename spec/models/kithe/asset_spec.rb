@@ -129,4 +129,33 @@ RSpec.describe Kithe::Asset, type: :model do
       ).to have_been_made.times(1)
     end
   end
+
+  describe "#promote", queue_adapter: :test do
+    let(:asset) { FactoryBot.create(:kithe_asset, :with_file) }
+    before do
+      # pre-condition
+      expect(asset.file_attacher.cached?).to be(true)
+    end
+
+    it "can promote" do
+      asset.promote
+
+      expect(asset.stored?).to be(true)
+      expect(asset.file_attacher.stored?).to be(true)
+      expect(asset.file.exists?).to be(true)
+      expect(asset.file.metadata.keys).to include("filename", "size", "mime_type", "width", "height", "md5", "sha1", "sha512")
+    end
+
+    it "does not do anything for already promoted file", queue_adapter: :inline do
+      promoted_asset = FactoryBot.create(:kithe_asset, :with_file).reload
+
+      original_id = promoted_asset.file.id
+
+      expect(promoted_asset.file_attacher).not_to receive(:promote)
+      promoted_asset.promote
+      expect(promoted_asset.file.id).to eq(original_id)
+    end
+  end
+
+
 end

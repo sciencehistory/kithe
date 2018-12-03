@@ -134,8 +134,7 @@ RSpec.describe Kithe::Derivative, type: :model do
     describe "existing asset" do
       let!(:existing_asset) do
         FactoryBot.create(:kithe_asset, :with_file).tap do |asset|
-          asset.file_attacher.promote(action: :store)
-          asset.save!
+          asset.promote
         end
       end
       it "deletes existing derivatives on new file assignment" do

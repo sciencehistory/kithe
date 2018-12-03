@@ -47,6 +47,27 @@ class Kithe::Asset < Kithe::Model
     end
   end
 
+  # Runs the shrine promotion step, that we normally have in backgrounding, manually
+  # and in foreground. You might use this if a promotion failed and you need to re-run it,
+  # perhaps in bulk. It's also useful in tests.
+  #
+  # This will no-op unless the attached file is stored in cache -- that is, it
+  # will no-op if the file has already been promoted. In this way it matches ordinary
+  # shrine promotion. (Do we need an option to force promotion anyway?)
+  def promote(action: :store, context: {})
+    return unless file_attacher.cached?
+
+    context = {
+      action: action,
+      record: self
+    }.merge(context)
+
+    # A bit trickier than expected: https://github.com/shrinerb/shrine/issues/333
+    copy_of_data = file_attacher.uploaded_file(self.file.to_json)
+
+    file_attacher.promote(copy_of_data, context)
+  end
+
   private
 
   # Meant to be called in after_save hook, looks at activerecord dirty tracking in order
