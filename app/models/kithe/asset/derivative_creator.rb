@@ -2,6 +2,9 @@
 class Kithe::Asset::DerivativeCreator
   attr_reader :definitions, :asset, :only, :except, :lazy
 
+  # A helper class that provides the implementation for Kithe::Asset#create_derivatives,
+  # normally only expected to be called from there.
+  #
   # Creates derivatives according to derivative definitions.
   # Normally any definition with `default_create` true, but that can be
   # changed with `only:` and `except:` params, which take arrays of definition keys.

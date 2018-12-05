@@ -1,3 +1,5 @@
+# A definition of a derivative creation routine, this is intended to be an internal
+# class, it's what's created when you call Kithe::Asset#define_derivative
 class Kithe::Asset::DerivativeDefinition
   attr_reader :key, :content_type, :default_create, :proc, :storage_key
   def initialize(key:, storage_key:, proc:, content_type: nil, default_create: true)
