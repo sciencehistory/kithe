@@ -38,12 +38,46 @@ class Kithe::Asset::DerivativeCreator
 
   private
 
+  # Filters definitions to applicable ones. Based on:
+  # * default_create attribute, and only/except arguments
+  # * content_type filters
+  #
+  # The content_type filters are tricky because if more than one definition
+  # matches for the same key, we want to use the most specific content_type match.
+  #
+  # Otherwise, with or without content_type, if more than one definition matches we
+  # execute only the last.
   def applicable_definitions
-    definitions.find_all do |d|
+    # Find all matching definitions, and put them in the candidates hash,
+    # so we can choose the best one for each
+    candidates = definitions.find_all do |d|
       (only.nil? ? d.default_create : only.include?(d.key)) &&
       (except.nil? || ! except.include?(d.key)) &&
       (d.content_type.nil? || d.content_type == asset.content_type || d.content_type == asset.content_type.sub(%r{/.+\Z}, ''))
     end
+
+    # Now we gotta filter out any duplicate keys based on our priority rules, but keep
+    # the ordering. First we sort such that in case of duplicated key,
+    # our preferred most-specific-content-type match is LAST, cause in general
+    # we want last defn to win.
+    candidates.sort! do |a, b|
+      byebug if a.nil? || b.nil?
+
+      if a.key != b.key
+        0
+      else
+        most_specific = [b,a].find { |d| d.content_type.present? && d.content_type.include?('/') } ||
+          [b,a].find { |d| d.content_type.present? } || b
+        if most_specific == a
+          1
+        else
+          -1
+        end
+      end
+    end
+
+    # Now we uniq keeping last defn
+    candidates.reverse.uniq {|d| d.key }.reverse
   end
 
   def cleanup_returned_io(io)
