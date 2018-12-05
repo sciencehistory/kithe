@@ -1,6 +1,6 @@
 # Creates derivatives from definitions stored on an Asset class
 class Kithe::Asset::DerivativeCreator
-  attr_reader :definitions, :asset, :only, :except
+  attr_reader :definitions, :asset, :only, :except, :lazy
 
   # Creates derivatives according to derivative definitions.
   # Normally any definition with `default_create` true, but that can be
@@ -13,11 +13,19 @@ class Kithe::Asset::DerivativeCreator
   # @param asset an Asset instance
   # @param only array of definition keys, only execute these (doesn't matter if they are `default_create` or not)
   # @param except array of definition keys, exclude these from definitions of derivs to be created
-  def initialize(definitions, asset, only:nil, except:nil)
+  # @param lazy (default false), Normally we will create derivatives for all applicable definitions,
+  #   overwriting any that already exist for a given key. If the definition has changed, a new
+  #   derivative created with new definition will overwrite existing. However, if you pass lazy false,
+  #   it'll skip derivative creation if the derivative already exists, which can save time
+  #   if you are only intending to create missing derivatives.  With lazy:false, the asset
+  #   derivatives association will be consulted, so should be eager-loaded if you are going
+  #   to be calling on multiple assets.
+  def initialize(definitions, asset, only:nil, except:nil, lazy: false)
     @definitions = definitions
     @asset = asset
     @only = only && Array(only)
     @except = except && Array(except)
+    @lazy = !!lazy
   end
 
   def call
@@ -26,11 +34,17 @@ class Kithe::Asset::DerivativeCreator
     # https://github.com/shrinerb/shrine/pull/332
     Shrine.with_file(asset.file) do |original_file|
       applicable_definitions.each do |defn|
+        if lazy && asset.derivatives.collect(&:key).include?(defn.key.to_s)
+          next
+        end
+
         deriv_bytestream = defn.call(original_file: original_file, record: asset)
+
         if deriv_bytestream
           asset.add_derivative(defn.key, deriv_bytestream, storage_key: defn.storage_key)
           cleanup_returned_io(deriv_bytestream)
         end
+
         original_file.rewind
       end
     end

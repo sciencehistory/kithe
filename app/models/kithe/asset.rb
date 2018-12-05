@@ -28,8 +28,21 @@ class Kithe::Asset < Kithe::Model
     )
   end
 
-  def create_derivatives(only: nil, except: nil)
-    DerivativeCreator.new(derivative_definitions, self, only: only, except: except).call
+  # Create derivatives for every definition added with `define_derivative. Ordinarily
+  # will create a definition for every definition that has not been marked `default_create: false`.
+  #
+  # But you can also pass `only` and/or `except` to customize the list of definitions to be created,
+  # possibly including some that are `default_create: false`.
+  #
+  # create_derivatives should be idempotent. If it has failed having only created some derivatives,
+  # you can always just run it again.
+  #
+  # Will normally re-create derivatives (per existing definitions) even if they already exist,
+  # but pass `lazy: false` to skip creating if a derivative with a given key already exists.
+  # This will use the asset `derivatives` association, so if you are doing this in bulk for several
+  # assets, you should eager-load the derivatives association for efficiency.
+  def create_derivatives(only: nil, except: nil, lazy: false)
+    DerivativeCreator.new(derivative_definitions, self, only: only, except: except, lazy: lazy).call
   end
 
   # Adds an associated derivative with key and io bytestream specified.
