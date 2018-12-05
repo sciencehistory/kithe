@@ -108,7 +108,7 @@ class Kithe::Asset < Kithe::Model
   #
   # @return [Derivative] the Derivative created, or nil if it was not created because no longer
   #   applicable (underlying Asset#file has changed in db)
-  def add_derivative(key, io, storage_key: :kithe_derivatives, metadata: {})
+  def update_derivative(key, io, storage_key: :kithe_derivatives, metadata: {})
     DerivativeUpdater.new(self, key, io, storage_key: storage_key, metadata: metadata).update.tap do |result|
       self.derivatives.reset if result
     end

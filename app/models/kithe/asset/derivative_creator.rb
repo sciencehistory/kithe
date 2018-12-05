@@ -44,7 +44,7 @@ class Kithe::Asset::DerivativeCreator
         deriv_bytestream = defn.call(original_file: original_file, record: asset)
 
         if deriv_bytestream
-          asset.add_derivative(defn.key, deriv_bytestream, storage_key: defn.storage_key)
+          asset.update_derivative(defn.key, deriv_bytestream, storage_key: defn.storage_key)
           cleanup_returned_io(deriv_bytestream)
         end
 

@@ -239,7 +239,7 @@ describe "Kithe::Asset derivative definitions", queue_adapter: :test do
   describe "lazy creation" do
     before do
       asset.class.derivative_definitions.collect(&:key).each do |key|
-        asset.add_derivative(key, StringIO.new("#{key} original"))
+        asset.update_derivative(key, StringIO.new("#{key} original"))
       end
     end
 

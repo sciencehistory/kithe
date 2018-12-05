@@ -1,6 +1,6 @@
 # A service object to add an IO stream as a derivative with a certain key, to a asset.
 # Adds a Derivative database object for such. This class is normally only used from
-# Asset#add_derivative, it's a helper object, you aren't expected to use it independently.
+# Asset#update_derivative, it's a helper object, you aren't expected to use it independently.
 #
 # This would be very straightforward if it weren't for taking account of a couple concurrency race
 # conditions involving data integrity:

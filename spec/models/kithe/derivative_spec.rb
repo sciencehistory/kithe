@@ -32,19 +32,19 @@ RSpec.describe Kithe::Derivative, type: :model do
     let(:asset) { FactoryBot.create(:kithe_asset) }
     it "won't create derivative" do
       expect {
-        asset.add_derivative(key, StringIO.new("something"))
+        asset.update_derivative(key, StringIO.new("something"))
       }.to raise_error(ArgumentError)
     end
   end
 
-  describe "Asset#add_derivative", queue_adapter: :test do
+  describe "Asset#update_derivative", queue_adapter: :test do
     let(:key) { "some_derivative" }
     let(:dummy_content) { File.read(Kithe::Engine.root.join("spec/test_support/images/1x1_pixel.jpg"), encoding: "BINARY") }
     let(:dummy_io) { File.open(Kithe::Engine.root.join("spec/test_support/images/1x1_pixel.jpg"), encoding: "BINARY") }
     let(:asset) { FactoryBot.create(:kithe_asset, :with_faked_metadata, faked_metadata: { sha512: "fakesha512" })}
 
     it "can add a derivative" do
-      derivative = asset.add_derivative(key, dummy_io)
+      derivative = asset.update_derivative(key, dummy_io)
 
       expect(derivative).to be_present
       derivative.reload
@@ -66,7 +66,7 @@ RSpec.describe Kithe::Derivative, type: :model do
     end
 
     it "can add a derivative with custom storage location" do
-      derivative = asset.add_derivative(key, dummy_io, storage_key: :store)
+      derivative = asset.update_derivative(key, dummy_io, storage_key: :store)
 
       expect(derivative).to be_present
       derivative.reload
@@ -75,14 +75,14 @@ RSpec.describe Kithe::Derivative, type: :model do
     end
 
     it "can add a derivative with custom metadata" do
-      derivative = asset.add_derivative(key, dummy_io, metadata: { foo: "bar" })
+      derivative = asset.update_derivative(key, dummy_io, metadata: { foo: "bar" })
       expect(derivative).to be_present
       expect(derivative.file.metadata["size"]).to eq(dummy_content.length)
       expect(derivative.file.metadata["foo"]).to eq("bar")
     end
 
     it "deletes stored file when model is deleted" do
-      derivative = asset.add_derivative(key, dummy_io, metadata: { foo: "bar" })
+      derivative = asset.update_derivative(key, dummy_io, metadata: { foo: "bar" })
       stored_file = derivative.file
       expect(stored_file.exists?).to be(true)
 
@@ -91,13 +91,13 @@ RSpec.describe Kithe::Derivative, type: :model do
     end
 
     describe "with an existing derivative" do
-      let!(:existing) { asset.add_derivative(key, StringIO.new("something else")) }
+      let!(:existing) { asset.update_derivative(key, StringIO.new("something else")) }
 
       it "will replace an existing derivative" do
         expect(existing).to be_persisted
         original_shrine_file = existing.file
 
-        replacement = asset.add_derivative(key, dummy_io)
+        replacement = asset.update_derivative(key, dummy_io)
 
         expect(original_shrine_file.exists?).to be(false)
       end
@@ -123,7 +123,7 @@ RSpec.describe Kithe::Derivative, type: :model do
       end
       it "does not add derivative" do
         expect {
-          result = asset.add_derivative(key, StringIO.new("something else"))
+          result = asset.update_derivative(key, StringIO.new("something else"))
           expect(result).to be_nil
         }.to_not change{ [Kithe::Derivative.count, Kithe::DerivativeUploader.storages[:kithe_derivatives].store.count]}
 
@@ -138,7 +138,7 @@ RSpec.describe Kithe::Derivative, type: :model do
         end
       end
       it "deletes existing derivatives on new file assignment" do
-        deriv = existing_asset.add_derivative(key, StringIO.new("something"))
+        deriv = existing_asset.update_derivative(key, StringIO.new("something"))
         deriv_uploaded_file = deriv.file
 
         existing_asset.file = File.open(Kithe::Engine.root.join("spec/test_support/images/2x2_pixel.jpg"))
