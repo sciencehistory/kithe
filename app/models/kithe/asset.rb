@@ -54,7 +54,7 @@ class Kithe::Asset < Kithe::Model
   # You can also set `default_create: false` if you want a particular definition not to be
   # included in a no-arg `asset.create_derivatives` that is normally triggered on asset creation.
   #
-  # And you can set content_type to either a specific type like `image/jpeg` or a general type
+  # And you can set content_type to either a specific type like `image/jpeg` (or array of such) or a general type
   # like `image`, if you want to define a derivative generation routine for only certain types.
   # If multiple blocks for the same key are defined, with different content_type restrictions,
   # the most specific one will be used.  That is, for a JPG, `image/jpeg` beats `image` beats no restriction.
