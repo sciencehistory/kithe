@@ -28,8 +28,8 @@ class Kithe::Asset < Kithe::Model
     )
   end
 
-  def create_derivatives
-    DerivativeCreator.new(derivative_definitions, self).call
+  def create_derivatives(only: nil, except: nil)
+    DerivativeCreator.new(derivative_definitions, self, only: only, except: except).call
   end
 
   # Adds an associated derivative with key and io bytestream specified.

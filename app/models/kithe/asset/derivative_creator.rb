@@ -1,6 +1,6 @@
 # Creates derivatives from definitions stored on an Asset class
 class Kithe::Asset::DerivativeCreator
-  attr_reader :definitions, :asset
+  attr_reader :definitions, :asset, :only, :except
 
   # Creates derivatives according to derivative definitions.
   # Normally any definition with `default_create` true, but that can be
@@ -16,8 +16,8 @@ class Kithe::Asset::DerivativeCreator
   def initialize(definitions, asset, only:nil, except:nil)
     @definitions = definitions
     @asset = asset
-    @only = only
-    @except = except
+    @only = only && Array(only)
+    @except = except && Array(except)
   end
 
   def call
@@ -39,7 +39,10 @@ class Kithe::Asset::DerivativeCreator
   private
 
   def applicable_definitions
-    definitions.find_all { |d| d.default_create }
+    definitions.find_all do |d|
+      (only.nil? ? d.default_create : only.include?(d.key)) &&
+      (except.nil? || ! except.include?(d.key))
+    end
   end
 
   def cleanup_returned_io(io)

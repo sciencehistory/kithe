@@ -124,4 +124,48 @@ describe "Kithe::Asset derivative definitions", queue_adapter: :test do
     end
   end
 
+  describe "only/except" do
+    let(:monitoring_proc1) { proc { |asset| StringIO.new("one") } }
+    let(:monitoring_proc2) { proc { |asset| StringIO.new("two") } }
+    let(:monitoring_proc3) { proc { |asset| StringIO.new("three") } }
+
+    temporary_class("TestAssetSubclass") do
+      p1, p2, p3 = monitoring_proc1, monitoring_proc2, monitoring_proc3
+      Class.new(Kithe::Asset) do
+        define_derivative(:one, default_create: false, &p1)
+        define_derivative(:two, &p2)
+        define_derivative(:three, &p3)
+      end
+    end
+
+    it "can call with only" do
+      expect(monitoring_proc1).to receive(:call).and_call_original
+      expect(monitoring_proc2).to receive(:call).and_call_original
+      expect(monitoring_proc3).not_to receive(:call)
+
+      asset.create_derivatives(only: [:one, :two])
+
+      expect(asset.derivatives.collect(&:key)).to eq(["one", "two"])
+    end
+
+    it "can call with except" do
+      expect(monitoring_proc1).not_to receive(:call)
+      expect(monitoring_proc2).to receive(:call).and_call_original
+      expect(monitoring_proc3).not_to receive(:call)
+
+      asset.create_derivatives(except: [:three])
+
+      expect(asset.derivatives.collect(&:key)).to eq(["two"])
+    end
+
+    it "can call with only and except" do
+      expect(monitoring_proc1).to receive(:call).and_call_original
+      expect(monitoring_proc2).not_to receive(:call)
+      expect(monitoring_proc3).not_to receive(:call)
+
+      asset.create_derivatives(only: [:one, :two], except: :two)
+
+      expect(asset.derivatives.collect(&:key)).to eq(["one"])
+    end
+  end
 end
