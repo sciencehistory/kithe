@@ -168,4 +168,29 @@ describe "Kithe::Asset derivative definitions", queue_adapter: :test do
       expect(asset.derivatives.collect(&:key)).to eq(["one"])
     end
   end
+
+  describe "content_type filters" do
+    temporary_class("TestAssetSubclass") do
+      Class.new(Kithe::Asset) do
+        define_derivative(:never_called, content_type: "nothing/nothing") { |o| StringIO.new("never") }
+        define_derivative(:gated_positive, content_type: "image/jpeg") { |o| StringIO.new("gated positive") }
+        define_derivative(:gated_positive_main_type, content_type: "image") { |o| StringIO.new("gated positive") }
+      end
+    end
+
+    it "does not call if content type does not match" do
+      asset.create_derivatives
+      expect(asset.derivatives.collect(&:key)).not_to include("never_called")
+    end
+
+    it "calls for exact content type match" do
+      asset.create_derivatives
+      expect(asset.derivatives.collect(&:key)).to include("gated_positive")
+    end
+
+    it "calls for main content type match" do
+      asset.create_derivatives
+      expect(asset.derivatives.collect(&:key)).to include("gated_positive_main_type")
+    end
+  end
 end

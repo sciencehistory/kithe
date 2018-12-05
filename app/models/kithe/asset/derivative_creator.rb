@@ -41,7 +41,8 @@ class Kithe::Asset::DerivativeCreator
   def applicable_definitions
     definitions.find_all do |d|
       (only.nil? ? d.default_create : only.include?(d.key)) &&
-      (except.nil? || ! except.include?(d.key))
+      (except.nil? || ! except.include?(d.key)) &&
+      (d.content_type.nil? || d.content_type == asset.content_type || d.content_type == asset.content_type.sub(%r{/.+\Z}, ''))
     end
   end
 
