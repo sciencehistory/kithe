@@ -108,4 +108,20 @@ describe "Kithe::Asset derivative definitions", queue_adapter: :test do
     end
   end
 
+  describe "default_create false" do
+    let(:monitoring_proc) { proc { |asset| } }
+
+    temporary_class("TestAssetSubclass") do
+      p = monitoring_proc
+      Class.new(Kithe::Asset) do
+        define_derivative(:some_data, default_create: false, &p)
+      end
+    end
+
+    it "is not run automatically" do
+      expect(monitoring_proc).not_to receive(:call)
+      asset.create_derivatives
+    end
+  end
+
 end

@@ -39,7 +39,7 @@ class Kithe::Asset::DerivativeCreator
   private
 
   def applicable_definitions
-    definitions
+    definitions.find_all { |d| d.default_create }
   end
 
   def cleanup_returned_io(io)
