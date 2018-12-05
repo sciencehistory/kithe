@@ -13,6 +13,25 @@ class Kithe::Asset < Kithe::Model
 
   after_save :remove_invalid_derivatives
 
+  class_attribute :derivative_definitions, instance_writer: false, default: []
+
+  def self.define_derivative(key, storage_key: :kithe_derivatives, content_type: nil, default_create: true, &block)
+    # Make sure we dup the array to handle sub-classes on class_attribute
+    self.derivative_definitions = self.derivative_definitions.dup.push(
+      DerivativeDefinition.new(
+        key: key,
+        storage_key: storage_key,
+        content_type: content_type,
+        default_create: default_create,
+        proc: block
+      )
+    )
+  end
+
+  def create_derivatives
+    DerivativeCreator.new(derivative_definitions, self).call
+  end
+
   # Adds an associated derivative with key and io bytestream specified.
   # Normally you don't use this, you would define derivatives and use
   # higher-level API to manage them, but this one is used by higher level API.
