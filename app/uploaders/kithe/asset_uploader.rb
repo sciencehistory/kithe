@@ -68,16 +68,8 @@ module Kithe
     end
     metadata_method :md5, :sha1, :sha512
 
-    # Make sure metadata is extracted on storage, since we are designing for direct
-    # uploads and backgrounding, where actual file isn't examined until bg job.
-    # This is the technique recommended at:
-    # although it's a bit squirrely.
-    plugin :refresh_metadata
-    plugin :processing
-    process(:store) do |io, context|
-      io.refresh_metadata!(context) # extracts metadata and updates `io.metadata`
-      io
-    end
-
+    # This makes sure metadata is extracted on promotion, and also supports promotion
+    # callbacks (before/after/around) on the Kithe::Asset classes.
+    plugin :kithe_promotion_hooks
   end
 end

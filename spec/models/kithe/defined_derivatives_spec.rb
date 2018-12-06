@@ -24,7 +24,12 @@ describe "Kithe::Asset derivative definitions", queue_adapter: :test do
   let(:asset) do
     TestAssetSubclass.create(title: "test",
       file: File.open(Kithe::Engine.root.join("spec/test_support/images/1x1_pixel.jpg"))
-    ).tap { |a| a.promote }
+    ).tap do |a|
+      # We want to promote without create_derivatives being automatically called
+      # as usual, so we can test create_derivatives manually.
+      a.file_attacher.set_promotion_directives(skip_callbacks: true)
+      a.promote
+    end
   end
 
   it "builds derivatives" do
@@ -36,6 +41,16 @@ describe "Kithe::Asset derivative definitions", queue_adapter: :test do
 
     jpg_deriv = asset.derivatives.find {|d| d.key == "a_jpg"}
     expect(jpg_deriv.file.read).to eq(File.read(a_jpg_deriv_file, encoding: "BINARY"))
+  end
+
+  describe "under normal operation", queue_adapter: :inline do
+    let(:asset) do
+      TestAssetSubclass.create!(title: "test",
+        file: File.open(Kithe::Engine.root.join("spec/test_support/images/1x1_pixel.jpg")))
+    end
+    it "automatically creates derivatives" do
+      expect(asset.derivatives.count).to eq(2)
+    end
   end
 
   it "extracts limited metadata from derivative" do

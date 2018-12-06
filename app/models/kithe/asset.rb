@@ -15,6 +15,16 @@ class Kithe::Asset < Kithe::Model
 
   class_attribute :derivative_definitions, instance_writer: false, default: []
 
+  # Callbacks are called by our kiteh_promotion_callbacks shrine plugin, around
+  # shrine promotion. A before callback can cancel promotion with the usual
+  # `throw :abort`. An after callback may want to trigger things you want
+  # to happen only after asset is promoted, like derivatives.
+  define_model_callbacks :promotion
+
+  after_promotion do
+    self.create_derivatives
+  end
+
   # Establish a derivative definition that will be used to create a derivative
   # when #create_derivatives is called, for instance automatically after promotion.
   #
