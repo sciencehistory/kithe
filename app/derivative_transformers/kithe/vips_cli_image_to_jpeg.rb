@@ -84,7 +84,7 @@ module Kithe
     def maybe_profile_normalization_args
       return [] unless thumbnail_mode?
 
-      ["--rotate", "--eprofile", srgb_profile_path, "--delete"]
+      ["--eprofile", srgb_profile_path, "--delete"]
     end
 
     # Params to add on to end of JPG output path, as in:
