@@ -1,6 +1,10 @@
 require 'rails_helper'
 
 describe "Kithe::Asset promotion hooks", queue_adapter: :inline do
+  temporary_class("TestAsset") do
+    Class.new(Kithe::Asset)
+  end
+
   let(:unsaved_asset) {
     TestAsset.new(title: "test",
       file: File.open(Kithe::Engine.root.join("spec/test_support/images/1x1_pixel.jpg"))
@@ -89,4 +93,29 @@ describe "Kithe::Asset promotion hooks", queue_adapter: :inline do
       expect(unsaved_asset.stored?).to be(true)
     end
   end
+
+  describe "promotion_directive :promote", queue_adapter: :test do
+    it "can cancel promotion" do
+      expect_any_instance_of(Kithe::AssetUploader::Attacher).not_to receive(:promote)
+
+      unsaved_asset.file_attacher.set_promotion_directives(promote: :none)
+
+      unsaved_asset.save!
+      unsaved_asset.reload
+
+      expect(unsaved_asset.stored?).to be(false)
+    end
+
+    it "can force promotion in foreground" do
+      unsaved_asset.file_attacher.set_promotion_directives(promote: :foreground)
+
+      unsaved_asset.save!
+      unsaved_asset.reload
+
+      expect(unsaved_asset.stored?).to be(true)
+      expect(ActiveJob::Base.queue_adapter.enqueued_jobs.size).to eq(0)
+      expect(ActiveJob::Base.queue_adapter.performed_jobs.size).to eq(0)
+    end
+  end
+
 end
