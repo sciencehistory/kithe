@@ -26,6 +26,7 @@ Gem::Specification.new do |s|
   s.add_dependency "fastimage", "~> 2.0.0" # use by default for image dimensions
   s.add_dependency "marcel" # use by default for content-type detection
   s.add_dependency "pdf-reader", "~> 2.0" # for pdf metadata extraction
+  s.add_dependency "tty-command", ">= 0.8.2", "< 2" # still at pre-1.0 when we write this. :(
 
   s.add_development_dependency "pg"
   s.add_development_dependency "yard-activesupport-concern"
