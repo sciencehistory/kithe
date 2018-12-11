@@ -159,6 +159,14 @@ class Kithe::Asset < Kithe::Model
     file_attacher.promote(copy_of_data, context)
   end
 
+  # The derivative creator sets metadata when it's created all derivatives
+  # defined as `default_create`. So we can tell you if it's done or not.
+  def derivatives_created?
+    if file
+      !!file.metadata["derivatives_created"]
+    end
+  end
+
   private
 
   # Meant to be called in after_save hook, looks at activerecord dirty tracking in order

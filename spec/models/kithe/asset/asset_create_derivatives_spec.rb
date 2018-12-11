@@ -43,6 +43,13 @@ describe "Kithe::Asset derivative definitions", queue_adapter: :test do
     expect(jpg_deriv.file.read).to eq(File.read(a_jpg_deriv_file, encoding: "BINARY"))
   end
 
+  it "sets #derivatives_created?" do
+    expect(asset.derivatives_created?).to be(false)
+    asset.create_derivatives
+    asset.reload
+    expect(asset.derivatives_created?).to be(true)
+  end
+
   describe "under normal operation", queue_adapter: :inline do
     let(:asset) do
       TestAssetSubclass.create!(title: "test",

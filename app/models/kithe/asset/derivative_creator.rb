@@ -50,6 +50,7 @@ class Kithe::Asset::DerivativeCreator
 
         original_file.rewind
       end
+      mark_derivatives_created!
     end
   end
 
@@ -109,6 +110,31 @@ class Kithe::Asset::DerivativeCreator
       # It's a File, close it and delete it.
       io.close
       File.unlink(io.path)
+    end
+  end
+
+  # Sets kithe asset metadata "derivatives_created" to `true`, so
+  # code can know that we're finished creating all `default_create`
+  # derivatives.
+  #
+  # Uses a db-level atomic jsonb update and db-locking to make sure it can do this
+  # without overwriting any other metadata changes, safely.
+  def mark_derivatives_created!
+    asset.transaction do
+      #TODO factor out an Asset#acquire_lock_on_sha
+      unless Kithe::Asset.where(id: asset.id).where("file_data -> 'metadata' ->> 'sha512' = ?", asset.sha512).lock.first
+        # asset bytestream has changed
+        return nil
+      end
+
+      sql = <<~SQL
+        UPDATE #{Kithe::Asset.table_name}
+        SET file_data = jsonb_set(file_data, '{metadata, derivatives_created}', 'true')
+        WHERE id = '#{asset.id}'
+      SQL
+
+      #ActiveRecord::Base.connection.exec_update("update table set f1=#{ActiveRecord::Base.sanitize(f1)}")
+      Kithe::Asset.connection.execute(sql)
     end
   end
 end
