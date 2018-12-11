@@ -167,6 +167,23 @@ class Kithe::Asset < Kithe::Model
     end
   end
 
+  # Take out a DB lock on the asset with unchanged sha512 saved in metadata. If a lock
+  # can't be acquired -- which would be expected to be because the asset has already changed
+  # and has a new sha for some reason -- returns nil.
+  #
+  # Useful for making a change to an asset making sure it applies to a certain original file.
+  #
+  # Needs to be done in a transaction, and you should keep the transaction SMALL AS POSSIBLE.
+  # We can't check to make sure you're in a transaction reliably because of Rails transactional
+  # tests, you gotta do it!
+  #
+  # This method is mostly intended for internal Kithe use, cause it's a bit tricky.
+  def acquire_lock_on_sha
+    raise ArgumentError.new("Can't acquire lock without sha512 in metadata") if self.sha512.blank?
+
+    Kithe::Asset.where(id: self.id).where("file_data -> 'metadata' ->> 'sha512' = ?", self.sha512).lock.first
+  end
+
   private
 
   # Meant to be called in after_save hook, looks at activerecord dirty tracking in order

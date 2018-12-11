@@ -88,7 +88,7 @@ class Kithe::Asset::DerivativeUpdater
   def save_deriv_ensuring_unchanged_asset(deriv)
     Kithe::Asset.transaction do
       # the file we're trying to add a derivative to doesn't exist anymore, forget it
-      unless Kithe::Asset.where(id: asset.id).where("file_data -> 'metadata' ->> 'sha512' = ?", asset.sha512).lock.first
+      unless asset.acquire_lock_on_sha
         deriv.file.delete
         return nil
       end

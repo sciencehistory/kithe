@@ -121,14 +121,13 @@ class Kithe::Asset::DerivativeCreator
   # without overwriting any other metadata changes, safely.
   def mark_derivatives_created!
     asset.transaction do
-      #TODO factor out an Asset#acquire_lock_on_sha
-      unless Kithe::Asset.where(id: asset.id).where("file_data -> 'metadata' ->> 'sha512' = ?", asset.sha512).lock.first
+      unless asset.acquire_lock_on_sha
         # asset bytestream has changed
         return nil
       end
 
       sql = <<~SQL
-        UPDATE #{Kithe::Asset.table_name}
+        UPDATE "#{Kithe::Asset.table_name}"
         SET file_data = jsonb_set(file_data, '{metadata, derivatives_created}', 'true')
         WHERE id = '#{asset.id}'
       SQL
