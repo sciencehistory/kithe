@@ -72,6 +72,10 @@ class Kithe::Asset::DerivativeUpdater
       uploaded_file.delete if uploaded_file
       raise e
     end
+  rescue StandardError
+    # aggressively clean up our file on errors!
+    uploaded_file.delete if uploaded_file
+    raise e
   end
 
   # Save a Derivative model with some fancy DB footwork to ensure at the time
@@ -86,16 +90,22 @@ class Kithe::Asset::DerivativeUpdater
   # Can raise a ActiveRecord::RecordNotUnique, if derivative unique constraint is violated,
   # that is handled above here.
   def save_deriv_ensuring_unchanged_asset(deriv)
-    Kithe::Asset.transaction do
-      # the file we're trying to add a derivative to doesn't exist anymore, forget it
-      unless asset.acquire_lock_on_sha
-        deriv.file.delete
-        return nil
-      end
+    # fancy throw/catch keep our abort rescue from being in the transaction
+    catch(:kithe_unchanged_abort) do
+      Kithe::Asset.transaction do
+        # the file we're trying to add a derivative to doesn't exist anymore, forget it
+        unless asset.acquire_lock_on_sha
+          throw :kithe_unchanged_abort
+        end
 
-      deriv.save!
-      return deriv
+        deriv.save!
+        return deriv
+      end
     end
+
+    # If we made it here, we've aborted
+    deriv.file.delete
+    return nil
   end
 
   def asset_has_persisted_sha512?
