@@ -157,5 +157,30 @@ RSpec.describe Kithe::Asset, type: :model do
     end
   end
 
+  describe "removes derivatives" do
+    let(:asset_with_derivatives) do
+      Kithe::Asset.create(title: "test",
+        file: File.open(Kithe::Engine.root.join("spec/test_support/images/1x1_pixel.jpg"))
+      ).tap do |a|
+        a.file_attacher.set_promotion_directives(skip_callbacks: true)
+        a.promote
+        a.update_derivative(:existing, StringIO.new("content"))
+      end
+    end
+    let!(:existing_derivative) { asset_with_derivatives.derivatives.first }
+    let!(:existing_stored_file) { existing_derivative.file }
 
+    it "deletes derivatives on delete" do
+      asset_with_derivatives.destroy
+      expect{ existing_derivative.reload }.to raise_error(ActiveRecord::RecordNotFound)
+      expect(existing_stored_file.exists?).to be(false)
+    end
+
+    it "deletes derivatives on new asset assigned" do
+      asset_with_derivatives.file = StringIO.new("some new thing")
+      asset_with_derivatives.save!
+      expect{ existing_derivative.reload }.to raise_error(ActiveRecord::RecordNotFound)
+      expect(existing_stored_file.exists?).to be(false)
+    end
+  end
 end

@@ -158,9 +158,9 @@ class Kithe::Asset < Kithe::Model
   # Meant to be called in after_save hook, looks at activerecord dirty tracking in order
   # to removes all derivatives if the asset sha512 has changed
   def remove_invalid_derivatives
-    if file_data_previously_changed? &&
-      file_data_previous_change.first.try(:dig, "metadata", "sha512") !=
-        file_data_previous_change.second.try(:dig, "metadata", "sha512")
+    if saved_change_to_file_data? &&
+      saved_change_to_file_data.first.try(:dig, "metadata", "sha512") !=
+        saved_change_to_file_data.second.try(:dig, "metadata", "sha512")
       derivatives.destroy_all
     end
   end
