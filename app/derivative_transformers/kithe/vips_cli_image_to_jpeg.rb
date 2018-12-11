@@ -19,7 +19,7 @@ module Kithe
   #
   #     class Asset < KitheAsset
   #       define_derivative(thumb) do |original_file|
-  #         Kithe::VipsCliImageToJpeg.new(max_width: 100).call(original_file)
+  #         Kithe::VipsCliImageToJpeg.new(max_width: 100, thumbnail_mode: true).call(original_file)
   #       end
   #     end
   #
