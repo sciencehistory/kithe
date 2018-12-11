@@ -132,6 +132,12 @@ class Kithe::Asset < Kithe::Model
     end
   end
 
+  # Just finds the Derivative object matching supplied key. if you're going to be calling
+  # this on a list of Asset objects, make sure to preload :derivatives association.
+  def derivative_for(key)
+    derivatives.find {|d| d.key == key.to_s }
+  end
+
   # Runs the shrine promotion step, that we normally have in backgrounding, manually
   # and in foreground. You might use this if a promotion failed and you need to re-run it,
   # perhaps in bulk. It's also useful in tests.

@@ -157,6 +157,15 @@ RSpec.describe Kithe::Asset, type: :model do
     end
   end
 
+  describe "#derivative_for" do
+    let!(:derivative) do
+      asset.derivatives.create!(key: "foo", file: StringIO.new("whatever"))
+    end
+    it "returns thing" do
+      expect(asset.derivative_for(:foo)).to eq(derivative)
+    end
+  end
+
   describe "removes derivatives" do
     let(:asset_with_derivatives) do
       Kithe::Asset.create(title: "test",
