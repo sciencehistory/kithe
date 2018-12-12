@@ -22,7 +22,7 @@ class Kithe::Asset < Kithe::Model
   define_model_callbacks :promotion
 
   after_promotion do
-    self.create_derivatives
+    self.create_derivatives(mark_created: true)
   end
 
   # Establish a derivative definition that will be used to create a derivative
@@ -94,8 +94,8 @@ class Kithe::Asset < Kithe::Model
   # but pass `lazy: false` to skip creating if a derivative with a given key already exists.
   # This will use the asset `derivatives` association, so if you are doing this in bulk for several
   # assets, you should eager-load the derivatives association for efficiency.
-  def create_derivatives(only: nil, except: nil, lazy: false)
-    DerivativeCreator.new(derivative_definitions, self, only: only, except: except, lazy: lazy).call
+  def create_derivatives(only: nil, except: nil, lazy: false, mark_created: false)
+    DerivativeCreator.new(derivative_definitions, self, only: only, except: except, lazy: lazy, mark_created: mark_created).call
   end
 
   # Adds an associated derivative with key and io bytestream specified.

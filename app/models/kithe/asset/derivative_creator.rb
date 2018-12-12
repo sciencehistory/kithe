@@ -1,6 +1,6 @@
 # Creates derivatives from definitions stored on an Asset class
 class Kithe::Asset::DerivativeCreator
-  attr_reader :definitions, :asset, :only, :except, :lazy
+  attr_reader :definitions, :asset, :only, :except, :lazy, :mark_created
 
   # A helper class that provides the implementation for Kithe::Asset#create_derivatives,
   # normally only expected to be called from there.
@@ -23,12 +23,15 @@ class Kithe::Asset::DerivativeCreator
   #   if you are only intending to create missing derivatives.  With lazy:false, the asset
   #   derivatives association will be consulted, so should be eager-loaded if you are going
   #   to be calling on multiple assets.
-  def initialize(definitions, asset, only:nil, except:nil, lazy: false)
+  # @param mark_created [Boolean] default false, if true will set shrine metadata indicating we've done
+  #   derivative creation phase, so Asset#derivatives_created? will return true.
+  def initialize(definitions, asset, only:nil, except:nil, lazy: false, mark_created: false)
     @definitions = definitions
     @asset = asset
     @only = only && Array(only)
     @except = except && Array(except)
     @lazy = !!lazy
+    @mark_created = !!mark_created
   end
 
   def call
@@ -50,7 +53,7 @@ class Kithe::Asset::DerivativeCreator
 
         original_file.rewind
       end
-      mark_derivatives_created!
+      mark_derivatives_created! if mark_created
     end
   end
 
