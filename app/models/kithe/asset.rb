@@ -184,14 +184,18 @@ class Kithe::Asset < Kithe::Model
     Kithe::Asset.where(id: self.id).where("file_data -> 'metadata' ->> 'sha512' = ?", self.sha512).lock.first
   end
 
+  def saved_change_to_file_sha?
+    saved_change_to_file_data? &&
+      saved_change_to_file_data.first.try(:dig, "metadata", "sha512") !=
+        saved_change_to_file_data.second.try(:dig, "metadata", "sha512")
+  end
+
   private
 
   # Meant to be called in after_save hook, looks at activerecord dirty tracking in order
   # to removes all derivatives if the asset sha512 has changed
   def remove_invalid_derivatives
-    if saved_change_to_file_data? &&
-      saved_change_to_file_data.first.try(:dig, "metadata", "sha512") !=
-        saved_change_to_file_data.second.try(:dig, "metadata", "sha512")
+    if saved_change_to_file_sha?
       derivatives.destroy_all
     end
   end
