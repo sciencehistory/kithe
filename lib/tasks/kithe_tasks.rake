@@ -6,10 +6,11 @@ namespace :kithe do
     options = {}
     OptionParser.new do |opts|
       opts.banner = "Usage: ./bin/rake kithe:create_derivatives -- [options]"
-      opts.on("--derivatives TYPES", "Comma-seperated list of type keys") { |ids| options[:derivative_keys] = ids.split(",")}
+      opts.on("--derivatives TYPES", "comma-seperated list of type keys") { |ids| options[:derivative_keys] = ids.split(",")}
       opts.on("--lazy","Lazy create") { options[:lazy] = true }
-      opts.on("--asset-id FRIENDLIER_IDS", "Comma-seperated list of asset (friendlier) ids") { |ids| options[:asset_ids] = ids.split(",") }
-      opts.on("--work-id FRIENDLIER_IDS", "Comma-seperated list of work (friendlier) ids") { |ids| options[:work_ids] = ids.split(",") }
+      opts.on("--asset-id FRIENDLIER_IDS", "comma-seperated list of asset (friendlier) ids") { |ids| options[:asset_ids] = ids.split(",") }
+      opts.on("--work-id FRIENDLIER_IDS", "comma-seperated list of work (friendlier) ids") { |ids| options[:work_ids] = ids.split(",") }
+      opts.on("--mark-derivatives-created", "set derivatives_created? flag on assets") { |ids| options[:mark_derivatives_created] = true }
     end.tap do |parser|
       parser.parse!(parser.order(ARGV) {})
     end
@@ -24,7 +25,11 @@ namespace :kithe do
     progress_bar = ProgressBar.create(total: scope.count, format: "%a %t: |%B| %R/s %c/%u %p%% %e")
 
     scope.find_each do |asset|
-      asset.create_derivatives(only: options[:derivative_keys], lazy: !!options[:lazy])
+      asset.create_derivatives(
+        only: options[:derivative_keys],
+        lazy: !!options[:lazy],
+        mark_created: options[:mark_derivatives_created]
+      )
       progress_bar.increment
     end
   end
