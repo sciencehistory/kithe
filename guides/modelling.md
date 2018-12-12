@@ -11,7 +11,7 @@ They all live in the postgres database; using [ActiveRecord single-table inherit
 **Kithe::Asset** represents a single ingested file (digital object), and metadata (technical, descriptive, whatever) about it. Each Asset normally belongs to exactly one `parent` Work, which it is a member of. An Asset is allowed to have no parent, mainly intended for ingested Assets waiting for assignment.
   * (not yet complete) Assets additionally have "derivatives" (thumbnails, transformations), which are usually automatically generated.
   * Kithe::Asset roughly corresponds to a samvera "FileSet" plus it's "File" object. In PCDM terms, it's kind of an "Object" combined with a single "File". Unlike in samvera/PCDM, an Asset belongs to at most _one_ parent work. This makes the implementation a lot simpler, easier to make performant, and allows an Asset to more easily inherit certain things, like permissions, from it's parent. We believe this is sufficient for a large swath of apps; an app that needs a many-to-many children/membership relationship would have to add that modelling itself.
-  * You may have a custom subclass of Kithe::Asset in your app if you'd like to add additional metadata fields or behavior; it's unclear if this will be common/recommended.
+  * It is expected you will have at least one subclass of Kithe::Asset. This is where you define derivatives, you can also add custom metadata or other customizations here.
 
 **Kithe::Collection** is a group of Kithe::Works. The association between collection and work is many-to-many, a work can be in several collections. A work has an `in_collection` association; a collection has a (to be determined name, can't re-use `member` though) association to it's member works.
 
@@ -30,6 +30,13 @@ This is one way to make it easy to implement (in a simple and performant way) he
 The downside of single-table inheritance is that the base kithe_models table may include some columns only relevant to certain sub-classes. This includes association modelling -- while the `parent_id` column is intended for work/child relationships, there is no database constraint preventing making an Asset a parent (not intended to be allowed by kithe modelling). In some cases, we can work around this generalization with app-level Rails validations or other model code, or even using [ActiveRecord ignored_columns feature](https://blog.bigbinary.com/2016/05/24/rails-5-adds-active-record-ignored-columns.html) to hide some columns from some sub-classes.
 
 The generalization can possibly be useful in the future in some cases. We've basically defined a single one-to-many association from any Kithe::Model to any other (work members/parent), and a single many-to-many (collection association); perhaps in the future we can generalize this for more purposes, maybe even add a 'type' qualifier to each association.
+
+**Note Well** Because of [how Rails Single-Table Inheritance interacts with dev-mode auto-loading](https://guides.rubyonrails.org/autoloading_and_reloading_constants.html#autoloading-and-sti), for any custom subclasses you define, you should add a to_prepare block to load them, perhaps in your config/application.rb. If you have a local `Work` and `Asset` class:
+
+    config.to_prepare do
+      require_dependency "work"
+      require_dependency "asset"
+    end
 
 ## Primary keys:  friendlier_id
 
