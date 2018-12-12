@@ -1,3 +1,5 @@
+require 'shrine'
+
 module Kithe
   class Engine < ::Rails::Engine
     config.generators do |g|

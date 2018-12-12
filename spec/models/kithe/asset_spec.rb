@@ -129,4 +129,67 @@ RSpec.describe Kithe::Asset, type: :model do
       ).to have_been_made.times(1)
     end
   end
+
+  describe "#promote", queue_adapter: :test do
+    let(:asset) { FactoryBot.create(:kithe_asset, :with_file) }
+    before do
+      # pre-condition
+      expect(asset.file_attacher.cached?).to be(true)
+    end
+
+    it "can promote" do
+      asset.promote
+
+      expect(asset.stored?).to be(true)
+      expect(asset.file_attacher.stored?).to be(true)
+      expect(asset.file.exists?).to be(true)
+      expect(asset.file.metadata.keys).to include("filename", "size", "mime_type", "width", "height", "md5", "sha1", "sha512")
+    end
+
+    it "does not do anything for already promoted file", queue_adapter: :inline do
+      promoted_asset = FactoryBot.create(:kithe_asset, :with_file).reload
+
+      original_id = promoted_asset.file.id
+
+      expect(promoted_asset.file_attacher).not_to receive(:promote)
+      promoted_asset.promote
+      expect(promoted_asset.file.id).to eq(original_id)
+    end
+  end
+
+  describe "#derivative_for" do
+    let!(:derivative) do
+      asset.derivatives.create!(key: "foo", file: StringIO.new("whatever"))
+    end
+    it "returns thing" do
+      expect(asset.derivative_for(:foo)).to eq(derivative)
+    end
+  end
+
+  describe "removes derivatives" do
+    let(:asset_with_derivatives) do
+      Kithe::Asset.create(title: "test",
+        file: File.open(Kithe::Engine.root.join("spec/test_support/images/1x1_pixel.jpg"))
+      ).tap do |a|
+        a.file_attacher.set_promotion_directives(skip_callbacks: true)
+        a.promote
+        a.update_derivative(:existing, StringIO.new("content"))
+      end
+    end
+    let!(:existing_derivative) { asset_with_derivatives.derivatives.first }
+    let!(:existing_stored_file) { existing_derivative.file }
+
+    it "deletes derivatives on delete" do
+      asset_with_derivatives.destroy
+      expect{ existing_derivative.reload }.to raise_error(ActiveRecord::RecordNotFound)
+      expect(existing_stored_file.exists?).to be(false)
+    end
+
+    it "deletes derivatives on new asset assigned" do
+      asset_with_derivatives.file = StringIO.new("some new thing")
+      asset_with_derivatives.save!
+      expect{ existing_derivative.reload }.to raise_error(ActiveRecord::RecordNotFound)
+      expect(existing_stored_file.exists?).to be(false)
+    end
+  end
 end

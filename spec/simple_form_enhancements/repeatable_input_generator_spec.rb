@@ -1,5 +1,6 @@
 require 'rails_helper'
 require 'simple_form'
+require 'attr_json'
 
 # We want to spec our repeatable input generation. We want to test it in a de-coupled
 # fashion, try to 'unit' test it, not in integration with other things or assuming other things,
@@ -18,15 +19,26 @@ require 'simple_form'
 #
 # There might be better ways to test this func, not sure.
 describe Kithe::RepeatableInputGenerator, type: :helper do
-    let(:output) { generator.render }
-    before do
-      # total hack to let us use assert_select
-      # https://coderwall.com/p/fkh-fq/right-way-to-stub-views-in-helper-specs
-      #
-      # This is how I'm trying to keep HTML production tests reasonable, may be a better
-      # way?
-      concat output
+  let(:output) { generator.render }
+
+  before do
+    # total hack to let us use assert_select
+    # https://coderwall.com/p/fkh-fq/right-way-to-stub-views-in-helper-specs
+    #
+    # Then had to hack further to get it to happen lazily with our temporary class setup
+    # involved. :(
+    #
+    # This is how I'm trying to keep HTML production tests reasonable, may be a better
+    # way?
+    output_concatted = false
+    allow(self).to receive(:document_root_element).and_wrap_original do |m, *args|
+      unless output_concatted
+        concat output
+        output_concatted = true
+      end
+      m.call(*args)
     end
+  end
 
   describe "for a repeated model" do
     temporary_class "TestNestedModel" do
@@ -59,7 +71,9 @@ describe Kithe::RepeatableInputGenerator, type: :helper do
     end
 
     describe "existing record" do
-      let(:instance) { TestWork.create!(title: "test", multi_model: [{value: "one"}, {value: "two"}])}
+      let(:instance) {
+        TestWork.create!(title: "test", multi_model: [{value: "one"}, {value: "two"}])
+      }
 
       it "produces form with good HTML" do
         assert_select("fieldset.form-group") do

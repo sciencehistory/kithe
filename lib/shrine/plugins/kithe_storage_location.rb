@@ -1,3 +1,5 @@
+require 'shrine/storage/url'
+
 class Shrine
   module Plugins
     # Set file location to "asset/#{asset_uuid_id}/#{unique_file_id}" -- regardless of

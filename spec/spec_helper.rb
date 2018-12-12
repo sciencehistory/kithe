@@ -67,6 +67,7 @@ RSpec.configure do |config|
   Shrine.storages = {
     cache: Shrine::Storage::Memory.new,
     store: Shrine::Storage::Memory.new,
+    kithe_derivatives: Shrine::Storage::Memory.new
   }
   # and we delete em all after test is done
 
