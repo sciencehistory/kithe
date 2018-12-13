@@ -90,6 +90,11 @@ module Kithe
   #
   #     define_key :foo_bar, default: => { "#{Config.lookup!('baz')} plus more" }
   #
+  # ## Concurrency warning
+  #
+  # This doesn't use any locking for concurrent initial loads, which is technically not
+  # great, but probably shouldn't be a problem in practice, especially in MRI. Trying to
+  # do proper locking with lazy load was too hard for me right now.
   class ConfigBase
     include Singleton
 
@@ -102,8 +107,6 @@ module Kithe
 
     def initialize
       @key_definitions = {}
-      @loaded_values = nil
-      @load_mutex = Mutex.new
     end
 
     def self.define_key(*args)
@@ -133,15 +136,14 @@ module Kithe
     end
 
     def lookup(name)
-      lazy_load
-
       name = name.to_sym
+      defn = @key_definitions[name]
 
-      unless @key_definitions.has_key?(name)
+      unless defn
         raise ArgumentError.new("No env key defined for: #{name}")
       end
 
-      return @loaded_values[name]
+      defn[:cached_result] ||= compute_lookup(name)
     end
 
     # like lookup, but raises on no or blank value.
@@ -152,17 +154,6 @@ module Kithe
     end
 
     private
-
-    def lazy_load
-      unless @loaded_values
-        @load_mutex.synchronize do
-          return if @loaded_values # inside mutex
-          @loaded_values = @key_definitions.collect do |name, defn|
-                            [name, compute_lookup(name)]
-                          end.to_h
-        end
-      end
-    end
 
     def compute_lookup(name)
       defn = @key_definitions[name.to_sym]
@@ -219,9 +210,9 @@ module Kithe
     def default_lookup(defn)
       if !defn.has_key?(:default)
         NoValueProvided
-      elsif defn[:default].respond_to?(:call)
+      elsif defn[:default].respond_to?(:to_proc)
         # allow a proc that gets executed on demand
-        defn[:default].call
+        self.instance_exec(&defn[:default])
       else
         defn[:default]
       end

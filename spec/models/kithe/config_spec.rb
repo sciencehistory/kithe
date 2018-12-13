@@ -203,4 +203,21 @@ describe "Kithe::ConfigBase" do
       expect { config_class.lookup!("no_value_provided")}.to raise_error(TypeError)
     end
   end
+
+  describe "default in terms of another value" do
+    let(:config_class) do
+      Class.new(Kithe::ConfigBase).tap do |klass|
+        klass.define_key "base_key"
+        klass.define_key "derived_key", default: -> { "derived: #{lookup("base_key")}" }
+      end
+    end
+
+    before do
+      stub_const('ENV', ENV.to_hash.merge("BASE_KEY" => "value from env"))
+    end
+
+    it "works" do
+      expect(config_class.lookup("derived_key")).to eq("derived: value from env")
+    end
+  end
 end
