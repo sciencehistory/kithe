@@ -18,6 +18,9 @@ class Kithe::Model < ActiveRecord::Base
   has_many :members, class_name: "Kithe::Model", foreign_key: :parent_id, inverse_of: :parent, dependent: :destroy
   belongs_to :parent, class_name: "Kithe::Model", inverse_of: :members, optional: true
 
+  # This only applies to assets, but we put it here so we can pre-load it on members fetch. :(
+  has_many :derivatives, foreign_key: "asset_id", inverse_of: "asset", dependent: :destroy # dependent destroy to get shrine destroy logic for assets
+
   # recovering a bit from our generalized members/parent relationship with validations.
   # parent has to be a Work, and Collections don't have parents (for now?), etc.
   # Could make this an injectable dependency for other apps?
@@ -48,5 +51,16 @@ class Kithe::Model < ActiveRecord::Base
     end
 
     in_memory
+  end
+
+  # hacky :(
+  def derivatives(*args)
+    raise TypeError.new("Only valid on Kithe::Asset") unless self.kind_of?(Kithe::Asset)
+    super
+  end
+  # hacky :(
+  def derivatives=(*args)
+    raise TypeError.new("Only valid on Kithe::Asset") unless self.kind_of?(Kithe::Asset)
+    super
   end
 end
