@@ -1,5 +1,6 @@
 class Kithe::Asset < Kithe::Model
-
+  # This only applies to assets, but we put it here so we can pre-load it on members fetch. :(
+  has_many :derivatives, foreign_key: "asset_id", inverse_of: "asset", dependent: :destroy # dependent destroy to get shrine destroy logic for assets
 
   # TODO we may need a way for local app to provide custom uploader class.
   # or just override at ./kithe/asset_uploader.rb locally?

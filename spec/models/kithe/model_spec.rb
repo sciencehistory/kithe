@@ -31,5 +31,17 @@ module Kithe
         ).to be(true)
       end
     end
+
+    describe "eager-loading derivatives" do
+      let!(:work) { FactoryBot.create(:kithe_work) }
+      let!(:collection) { FactoryBot.create(:kithe_collection) }
+      let!(:asset) { FactoryBot.create(:kithe_asset) }
+
+      it "work from hetereogeous collections" do
+        results = Kithe::Model.all.includes(:derivatives)
+        asset = results.to_a.find { |a| a.kind_of? Kithe::Asset }
+        expect(asset.derivatives.loaded?).to be(true)
+      end
+    end
   end
 end
