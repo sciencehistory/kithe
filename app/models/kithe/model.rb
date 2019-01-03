@@ -13,10 +13,14 @@ class Kithe::Model < ActiveRecord::Base
   # when fetching all Kithe::Model. And it's to Kithe::Model so it can include
   # both Works and Assets. We do some app-level validation to try and make it used
   # as intended.
-  #
-  # TODO: what should 'dependent' be?
   has_many :members, class_name: "Kithe::Model", foreign_key: :parent_id, inverse_of: :parent, dependent: :destroy
   belongs_to :parent, class_name: "Kithe::Model", inverse_of: :members, optional: true
+
+
+  # Mainly meant for Works (maybe Collection too?), but on Kithe::Model to allow rails eager
+  # loading on hetereogenous fetches
+  belongs_to :representative, class_name: "Kithe::Model", foreign_key: :representative_id, optional: true
+
 
   # recovering a bit from our generalized members/parent relationship with validations.
   # parent has to be a Work, and Collections don't have parents (for now?), etc.

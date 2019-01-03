@@ -143,7 +143,8 @@ CREATE TABLE kithe_models (
     updated_at timestamp without time zone NOT NULL,
     parent_id uuid,
     friendlier_id character varying DEFAULT kithe_models_friendlier_id_gen('2821109907456'::bigint, '101559956668415'::bigint) NOT NULL,
-    file_data jsonb
+    file_data jsonb,
+    representative_id uuid
 );
 
 
@@ -224,6 +225,13 @@ CREATE INDEX index_kithe_models_on_parent_id ON kithe_models USING btree (parent
 
 
 --
+-- Name: index_kithe_models_on_representative_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_kithe_models_on_representative_id ON kithe_models USING btree (representative_id);
+
+
+--
 -- Name: kithe_derivatives fk_rails_3dac8b4201; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -240,6 +248,14 @@ ALTER TABLE ONLY kithe_models
 
 
 --
+-- Name: kithe_models fk_rails_afa93b7b5d; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY kithe_models
+    ADD CONSTRAINT fk_rails_afa93b7b5d FOREIGN KEY (representative_id) REFERENCES kithe_models(id);
+
+
+--
 -- PostgreSQL database dump complete
 --
 
@@ -250,6 +266,7 @@ INSERT INTO "schema_migrations" (version) VALUES
 ('20181015143413'),
 ('20181015143737'),
 ('20181031190647'),
-('20181128185658');
+('20181128185658'),
+('20190103144947');
 
 
