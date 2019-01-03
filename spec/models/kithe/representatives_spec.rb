@@ -20,4 +20,33 @@ RSpec.describe "Model representatives", type: :model do
       expect(asset.representative_id).to eq(asset.id)
     end
   end
+
+  describe "leaf_representative" do
+    let(:work) { FactoryBot.create(:kithe_work, title: "top", representative: intermediate_work)}
+    let(:intermediate_work) { FactoryBot.create(:kithe_work, title: "intermediate", representative: asset)}
+
+    it "is set" do
+      expect(intermediate_work.leaf_representative).to eq(asset)
+      expect(work.leaf_representative).to eq(asset)
+
+      work.representative = nil
+      work.save!
+      expect(work.leaf_representative).to be(nil)
+    end
+
+    describe "with accidental cycle" do
+      let(:work) { FactoryBot.create(:kithe_work) }
+      let(:work2) { FactoryBot.create(:kithe_work) }
+
+      it "handles sanely" do
+        work.update(representative_id: work2.id)
+        work2.update(representative_id: work.id)
+
+        # mainly we care that it didn't infinite loop or raise, don't care
+        # too much what it is, it's a mess.
+        expect(work.leaf_representative_id).to eq(work.representative_id)
+        expect(work2.leaf_representative_id).to eq(work2.id)
+      end
+    end
+  end
 end

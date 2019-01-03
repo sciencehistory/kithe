@@ -2,7 +2,7 @@ class Kithe::Asset < Kithe::Model
   has_many :derivatives, foreign_key: "asset_id", inverse_of: "asset", dependent: :destroy # dependent destroy to get shrine destroy logic for assets
 
   # representatives don't apply to assets, they are their own
-  self.ignored_columns = %w(representative_id)
+  self.ignored_columns = %w(representative_id leaf_representative_id)
 
   # TODO we may need a way for local app to provide custom uploader class.
   # or just override at ./kithe/asset_uploader.rb locally?
@@ -197,9 +197,11 @@ class Kithe::Asset < Kithe::Model
   def representative
     self
   end
+  alias_method :leaf_representative, :representative
   def representative_id
     id
   end
+  alias_method :leaf_representative_id, :representative_id
 
   private
 

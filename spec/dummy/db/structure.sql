@@ -144,7 +144,8 @@ CREATE TABLE kithe_models (
     parent_id uuid,
     friendlier_id character varying DEFAULT kithe_models_friendlier_id_gen('2821109907456'::bigint, '101559956668415'::bigint) NOT NULL,
     file_data jsonb,
-    representative_id uuid
+    representative_id uuid,
+    leaf_representative_id uuid
 );
 
 
@@ -218,6 +219,13 @@ CREATE UNIQUE INDEX index_kithe_models_on_friendlier_id ON kithe_models USING bt
 
 
 --
+-- Name: index_kithe_models_on_leaf_representative_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_kithe_models_on_leaf_representative_id ON kithe_models USING btree (leaf_representative_id);
+
+
+--
 -- Name: index_kithe_models_on_parent_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -237,6 +245,14 @@ CREATE INDEX index_kithe_models_on_representative_id ON kithe_models USING btree
 
 ALTER TABLE ONLY kithe_derivatives
     ADD CONSTRAINT fk_rails_3dac8b4201 FOREIGN KEY (asset_id) REFERENCES kithe_models(id);
+
+
+--
+-- Name: kithe_models fk_rails_403cce5c0d; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY kithe_models
+    ADD CONSTRAINT fk_rails_403cce5c0d FOREIGN KEY (leaf_representative_id) REFERENCES kithe_models(id);
 
 
 --

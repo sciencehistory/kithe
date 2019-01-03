@@ -19,7 +19,10 @@ class Kithe::Model < ActiveRecord::Base
 
   # Mainly meant for Works (maybe Collection too?), but on Kithe::Model to allow rails eager
   # loading on hetereogenous fetches
-  belongs_to :representative, class_name: "Kithe::Model", foreign_key: :representative_id, optional: true
+  belongs_to :representative, class_name: "Kithe::Model", optional: true
+  belongs_to :leaf_representative, class_name: "Kithe::Model", optional: true
+  before_save :set_leaf_representative
+  after_save :update_referencing_leaf_representatives
 
 
   # recovering a bit from our generalized members/parent relationship with validations.
@@ -63,5 +66,35 @@ class Kithe::Model < ActiveRecord::Base
   def derivatives=(*args)
     raise TypeError.new("Only valid on Kithe::Asset") unless self.kind_of?(Kithe::Asset)
     super
+  end
+
+  private
+
+  # if a representative is set, set leaf_representative by following
+  # the tree with an efficient recursive CTE
+  def set_leaf_representative
+    return if self.kind_of?(Kithe::Asset) # not applicable
+    return unless will_save_change_to_representative_id?
+
+    # a postgres recursive CTE to find the ultimate leaf through
+    # a possible chain of works, guarding against cycles.
+    # https://www.postgresql.org/docs/9.1/queries-with.html
+    recursive_cte = <<~EOS
+      WITH RECURSIVE find_terminal(id, link) AS (
+          SELECT m.id, m.representative_id
+          FROM kithe_models m
+          WHERE m.id = #{self.class.connection.quote self.representative_id}
+        UNION
+          SELECT m.id, m.representative_id
+          FROM kithe_models m, find_terminal ft
+          WHERE m.id = ft.link
+      ) SELECT id
+        FROM find_terminal
+        WHERE link IS NULL
+        LIMIT 1;
+    EOS
+
+    result = self.class.connection.select_value(recursive_cte)
+    self.leaf_representative_id = result
   end
 end
