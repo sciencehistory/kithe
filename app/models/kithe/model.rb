@@ -83,7 +83,7 @@ class Kithe::Model < ActiveRecord::Base
       WITH RECURSIVE find_terminal(id, link) AS (
           SELECT m.id, m.representative_id
           FROM kithe_models m
-          WHERE m.id = #{self.class.connection.quote self.representative_id}
+          WHERE m.id = $1
         UNION
           SELECT m.id, m.representative_id
           FROM kithe_models m, find_terminal ft
@@ -94,7 +94,50 @@ class Kithe::Model < ActiveRecord::Base
         LIMIT 1;
     EOS
 
-    result = self.class.connection.select_value(recursive_cte)
+    # trying to use a prepared statement, hoping it means performance advantage
+    result = self.class.connection.select_all(
+      recursive_cte,
+      "set_leaf_representative",
+      [[nil, self.representative_id]],
+      preparable: true
+    ).first.try(:dig, "id")
+
     self.leaf_representative_id = result
+  end
+
+
+  # if leaf_representative changed, set anything that might reference
+  # us to have a new leaf_representative, by fetching the tree with
+  # an efficient recursive CTE. https://www.postgresql.org/docs/9.1/queries-with.html
+  #
+  # Note, does the update directly to db for efficiency, no rails
+  # callbacks will be called for other nodes that were updated.
+  def update_referencing_leaf_representatives
+    return if self.kind_of?(Kithe::Asset) # not applicable
+    return unless saved_change_to_leaf_representative_id?
+
+    # update in one statement with a recursive CTE for maximal
+    # efficiency. Not using a prepared statement here, not
+    # sure if it actually matters?
+
+    recursive_cte_update = <<~EOS
+      UPDATE kithe_models
+      SET leaf_representative_id = #{self.class.connection.quote self.leaf_representative_id}
+      WHERE id IN (
+        WITH RECURSIVE search_graph(id, link) AS (
+                SELECT m.id, m.representative_id
+                FROM kithe_models m
+                WHERE m.id = #{self.class.connection.quote self.id}
+              UNION
+                SELECT m.id, m.representative_id
+                FROM kithe_models m, search_graph sg
+                WHERE m.representative_id = sg.id
+        )
+        SELECT id
+        FROM search_graph
+        WHERE id != #{self.class.connection.quote self.id}
+      );
+    EOS
+    self.class.connection.exec_update(recursive_cte_update)
   end
 end

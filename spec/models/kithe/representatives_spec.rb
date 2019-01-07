@@ -48,5 +48,41 @@ RSpec.describe "Model representatives", type: :model do
         expect(work2.leaf_representative_id).to eq(work2.id)
       end
     end
+
+    describe "changing intermediate representatives" do
+      let!(:asset2) { FactoryBot.create(:kithe_asset) }
+      let!(:child1) { FactoryBot.create(:kithe_work, title: "child1", representative: asset) }
+      let!(:child2) { FactoryBot.create(:kithe_work, title: "child1", representative: asset2) }
+      let!(:parent) { FactoryBot.create(:kithe_work, title: "parent", representative: child1) }
+      let!(:parent_alt) { FactoryBot.create(:kithe_work, title: "parent", representative: child1) }
+      let!(:parent2) { FactoryBot.create(:kithe_work, title: "parent", representative: child2) }
+      let!(:grandparent) { FactoryBot.create(:kithe_work, title: "grandparent", representative: parent) }
+      let!(:great_grandparent) { FactoryBot.create(:kithe_work, title: "great-grandparent", representative: grandparent) }
+      let!(:great_grandparent2) { FactoryBot.create(:kithe_work, title: "great-grandparent", representative: grandparent) }
+
+      it "changes references with intermediate change" do
+        parent.representative = child2
+        parent.save!
+
+        expect(parent.reload.leaf_representative_id).to eq(asset2.id)
+        expect(grandparent.reload.leaf_representative_id).to eq(asset2.id)
+        expect(great_grandparent.reload.leaf_representative_id).to eq(asset2.id)
+        expect(great_grandparent2.reload.leaf_representative_id).to eq(asset2.id)
+
+        # unchanged
+        expect(parent_alt.reload.leaf_representative_id).to eq(asset.id)
+        expect(child1.reload.leaf_representative_id).to eq(asset.id)
+      end
+
+      it "changes references with terminal change" do
+        child1.update(representative: asset2)
+
+        expect(parent.reload.leaf_representative_id).to eq(asset2.id)
+        expect(parent_alt.reload.leaf_representative_id).to eq(asset2.id)
+        expect(grandparent.reload.leaf_representative_id).to eq(asset2.id)
+        expect(great_grandparent.reload.leaf_representative_id).to eq(asset2.id)
+        expect(great_grandparent2.reload.leaf_representative_id).to eq(asset2.id)
+      end
+    end
   end
 end
