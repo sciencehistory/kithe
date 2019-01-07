@@ -84,5 +84,19 @@ RSpec.describe "Model representatives", type: :model do
         expect(great_grandparent2.reload.leaf_representative_id).to eq(asset2.id)
       end
     end
+
+    describe "hetereogenous fetch" do
+      let!(:asset) { FactoryBot.create(:kithe_asset) }
+      let!(:work) { FactoryBot.create(:kithe_work, representative: asset) }
+      let!(:collection) { FactoryBot.create(:kithe_collection, representative: work) }
+
+      it "can eager load" do
+        all = Kithe::Model.includes(:leaf_representative).all.to_a
+        all.each do |model|
+          expect(model.association(:leaf_representative).loaded?).to be(true)
+          expect(model.leaf_representative).to eq(asset)
+        end
+      end
+    end
   end
 end
