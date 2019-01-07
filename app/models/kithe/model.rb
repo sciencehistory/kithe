@@ -13,10 +13,17 @@ class Kithe::Model < ActiveRecord::Base
   # when fetching all Kithe::Model. And it's to Kithe::Model so it can include
   # both Works and Assets. We do some app-level validation to try and make it used
   # as intended.
-  #
-  # TODO: what should 'dependent' be?
   has_many :members, class_name: "Kithe::Model", foreign_key: :parent_id, inverse_of: :parent, dependent: :destroy
   belongs_to :parent, class_name: "Kithe::Model", inverse_of: :members, optional: true
+
+
+  # Mainly meant for Works (maybe Collection too?), but on Kithe::Model to allow rails eager
+  # loading on hetereogenous fetches
+  belongs_to :representative, class_name: "Kithe::Model", optional: true
+  belongs_to :leaf_representative, class_name: "Kithe::Model", optional: true
+  before_save :set_leaf_representative
+  after_save :update_referencing_leaf_representatives
+
 
   # recovering a bit from our generalized members/parent relationship with validations.
   # parent has to be a Work, and Collections don't have parents (for now?), etc.
@@ -59,5 +66,78 @@ class Kithe::Model < ActiveRecord::Base
   def derivatives=(*args)
     raise TypeError.new("Only valid on Kithe::Asset") unless self.kind_of?(Kithe::Asset)
     super
+  end
+
+  private
+
+  # if a representative is set, set leaf_representative by following
+  # the tree with an efficient recursive CTE
+  def set_leaf_representative
+    return if self.kind_of?(Kithe::Asset) # not applicable
+    return unless will_save_change_to_representative_id?
+
+    # a postgres recursive CTE to find the ultimate leaf through
+    # a possible chain of works, guarding against cycles.
+    # https://www.postgresql.org/docs/9.1/queries-with.html
+    recursive_cte = <<~EOS
+      WITH RECURSIVE find_terminal(id, link) AS (
+          SELECT m.id, m.representative_id
+          FROM kithe_models m
+          WHERE m.id = $1
+        UNION
+          SELECT m.id, m.representative_id
+          FROM kithe_models m, find_terminal ft
+          WHERE m.id = ft.link
+      ) SELECT id
+        FROM find_terminal
+        WHERE link IS NULL
+        LIMIT 1;
+    EOS
+
+    # trying to use a prepared statement, hoping it means performance advantage
+    result = self.class.connection.select_all(
+      recursive_cte,
+      "set_leaf_representative",
+      [[nil, self.representative_id]],
+      preparable: true
+    ).first.try(:dig, "id")
+
+    self.leaf_representative_id = result
+  end
+
+
+  # if leaf_representative changed, set anything that might reference
+  # us to have a new leaf_representative, by fetching the tree with
+  # an efficient recursive CTE. https://www.postgresql.org/docs/9.1/queries-with.html
+  #
+  # Note, does the update directly to db for efficiency, no rails
+  # callbacks will be called for other nodes that were updated.
+  def update_referencing_leaf_representatives
+    return if self.kind_of?(Kithe::Asset) # not applicable
+    return unless saved_change_to_leaf_representative_id?
+
+    # update in one statement with a recursive CTE for maximal
+    # efficiency. Not using a prepared statement here, not
+    # sure if it actually matters?
+
+    recursive_cte_update = <<~EOS
+      UPDATE kithe_models
+      SET leaf_representative_id = #{self.class.connection.quote self.leaf_representative_id}
+      WHERE id IN (
+        WITH RECURSIVE search_graph(id, link) AS (
+                SELECT m.id, m.representative_id
+                FROM kithe_models m
+                WHERE m.id = #{self.class.connection.quote self.id}
+              UNION
+                SELECT m.id, m.representative_id
+                FROM kithe_models m, search_graph sg
+                WHERE m.representative_id = sg.id
+        )
+        SELECT id
+        FROM search_graph
+        WHERE id != #{self.class.connection.quote self.id}
+      );
+    EOS
+    self.class.connection.exec_update(recursive_cte_update)
   end
 end
