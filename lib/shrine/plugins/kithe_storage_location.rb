@@ -20,14 +20,7 @@ class Shrine
           # of direct upload endpoint. A better path will be created on store.
           id = context[:record].id if context[:record].respond_to?(:id)
 
-          # remove query param from shrine-url ids that are urls, that is not actually part of
-          # filename and should not be part of location. workaround.
-          # https://github.com/shrinerb/shrine-url/issues/4
-          # Not needed when https://github.com/shrinerb/shrine/pull/326 is in a shrine release.
           basename = super
-          if io.respond_to?(:storage) && io.storage.is_a?(Shrine::Storage::Url)
-            basename = URI.parse(basename).path
-          end
 
           ["asset", id, basename].compact.join("/")
         end

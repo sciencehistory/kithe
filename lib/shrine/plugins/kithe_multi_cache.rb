@@ -36,23 +36,8 @@ class Shrine
       # but couldn't think of any other way to only extend the "cache" uploader,
       # and not the "store" uploader.
       module AttacherMethods
-        def cache(*args)
-          cache_uploader = super
-
-          unless @kithe_multi_cache_overridden
-            cache_uploader.extend(CacheInstanceMethods)
-            @kithe_multi_cache_overridden = true
-          end
-
-          cache_uploader
-        end
-      end
-
-      # Not a standard shrine plugin module, one we manually use to extend
-      # just the cache object.
-      module CacheInstanceMethods
-        def uploaded?(uploaded_file)
-          super || opts[:kithe_multi_cache_keys].include?(uploaded_file.storage_key)
+        def cached?(file = get)
+          super || (file && shrine_class.opts[:kithe_multi_cache_keys].include?(file.storage_key))
         end
       end
     end
