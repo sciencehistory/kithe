@@ -68,6 +68,15 @@ class Kithe::Model < ActiveRecord::Base
     super
   end
 
+
+  # insist that leaf_representative is an Asset, otherwise return nil.
+  # nil means there is no _asset_ leaf, and lets caller rely on leaf being
+  # an asset.
+  def leaf_representative
+    leaf = super
+    leaf.kind_of?(Kithe::Asset) ? leaf : nil
+  end
+
   private
 
   # if a representative is set, set leaf_representative by following
