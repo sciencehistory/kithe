@@ -23,10 +23,7 @@ class Kithe::Model < ActiveRecord::Base
   belongs_to :leaf_representative, class_name: "Kithe::Model", optional: true
   before_save :set_leaf_representative
   after_save :update_referencing_leaf_representatives
-  # solely for `dependent: nullify` controls:
-  has_many :references_as_representative, class_name: "Kithe::Model", foreign_key: :representative_id, dependent: :nullify
-  has_many :leaf_references_as_representative, class_name: "Kithe::Model", foreign_key: :leaf_representative_id, dependent: :nullify
-
+  before_destroy :nullify_representative_ids
 
   # recovering a bit from our generalized members/parent relationship with validations.
   # parent has to be a Work, and Collections don't have parents (for now?), etc.
@@ -142,5 +139,31 @@ class Kithe::Model < ActiveRecord::Base
       );
     EOS
     self.class.connection.exec_update(recursive_cte_update)
+  end
+
+  def nullify_representative_ids
+    leaf_sql = <<~EOS
+      UPDATE kithe_models
+      SET leaf_representative_id = NULL
+      WHERE leaf_representative_id = $1
+    EOS
+
+    self.class.connection.exec_update(
+      leaf_sql,
+      "update_leaf_representative_id_for_destroyed",
+      [[nil, self.id]]
+    )
+
+    rep_sql = <<~EOS
+      UPDATE kithe_models
+      SET representative_id = NULL
+      WHERE representative_id = $1
+    EOS
+
+    self.class.connection.exec_update(
+      rep_sql,
+      "update_representative_id_for_destroyed",
+      [[nil, self.id]]
+    )
   end
 end
