@@ -1,6 +1,6 @@
 require 'rails_helper'
 
-RSpec.describe Kithe::Derivative, type: :model do
+RSpec.describe Kithe::Derivative, type: :model, queue_adapter: :test do
   let(:key) { "some_thumb" }
   let(:asset) { FactoryBot.create(:kithe_asset, :with_faked_metadata, faked_metadata: { sha512: "fakesha512" }) }
   let(:derivative) { Kithe::Derivative.new }
