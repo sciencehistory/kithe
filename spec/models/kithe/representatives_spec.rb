@@ -99,4 +99,21 @@ RSpec.describe "Model representatives", type: :model do
       end
     end
   end
+
+  describe "on destroy" do
+    let(:work) { FactoryBot.create(:kithe_work, representative: asset) }
+    let(:asset) { FactoryBot.create(:kithe_asset) }
+
+    it "allows and nullifies references" do
+      expect(work.representative).to eq(asset)
+      expect(work.leaf_representative).to eq(asset)
+
+      asset.destroy
+      work.reload
+
+      expect(work.representative).to be(nil)
+      expect(work.leaf_representative).to be(nil)
+    end
+  end
+
 end

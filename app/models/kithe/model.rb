@@ -23,6 +23,9 @@ class Kithe::Model < ActiveRecord::Base
   belongs_to :leaf_representative, class_name: "Kithe::Model", optional: true
   before_save :set_leaf_representative
   after_save :update_referencing_leaf_representatives
+  # solely for `dependent: nullify` controls:
+  has_many :references_as_representative, class_name: "Kithe::Model", foreign_key: :representative_id, dependent: :nullify
+  has_many :leaf_references_as_representative, class_name: "Kithe::Model", foreign_key: :leaf_representative_id, dependent: :nullify
 
 
   # recovering a bit from our generalized members/parent relationship with validations.
