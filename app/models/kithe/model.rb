@@ -16,6 +16,18 @@ class Kithe::Model < ActiveRecord::Base
   has_many :members, class_name: "Kithe::Model", foreign_key: :parent_id, inverse_of: :parent, dependent: :destroy
   belongs_to :parent, class_name: "Kithe::Model", inverse_of: :members, optional: true
 
+  # a self-referential many-to-many is a bit confusing, but our "contains" relation
+  # is such! We define it on Model for all model types, although it's mostly motivated
+  # by (collection <-> work).
+  # https://medium.com/@jbmilgrom/active-record-many-to-many-self-join-table-e0992c27c1e
+  has_many :contains_contained_by, foreign_key: :containee_id, class_name: "Kithe::ModelContains"
+  has_many :contained_by, through: :contains_contained_by, source: :container
+
+
+  has_many :contains_contains, foreign_key: :container_id, class_name: "Kithe::ModelContains"
+  has_many :contains, through: :contains_contains, source: :containee
+
+
 
   # Mainly meant for Works (maybe Collection too?), but on Kithe::Model to allow rails eager
   # loading on hetereogenous fetches
