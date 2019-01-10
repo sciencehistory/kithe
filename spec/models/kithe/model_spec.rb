@@ -43,5 +43,35 @@ module Kithe
         expect(asset.derivatives.loaded?).to be(true)
       end
     end
+
+    describe "contains association" do
+      let(:collection1) { FactoryBot.create(:kithe_collection)}
+      let(:collection2) { FactoryBot.create(:kithe_collection)}
+      let(:work) { FactoryBot.create(:kithe_work)}
+      let(:work2) { FactoryBot.create(:kithe_work)}
+
+      it "associates" do
+        collection1.contains << work
+
+        expect(collection1.contains).to include(work)
+        expect(work.contained_by).to include(collection1)
+
+        work.contained_by << collection2
+        expect(collection2.contains.to_a).to eq([work])
+        expect(work.contained_by.to_a).to match([collection1, collection2])
+
+        work.destroy!
+        collection1.reload
+        collection2.reload
+        expect(collection1.contains.count).to eq(0)
+        expect(collection2.contains.count).to eq(0)
+
+        collection1.contains << work2
+        collection1.destroy!
+        work2.reload
+        expect(work2.contained_by.count).to eq(0)
+      end
+    end
+
   end
 end
