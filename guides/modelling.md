@@ -13,9 +13,11 @@ They all live in the postgres database; using [ActiveRecord single-table inherit
   * Kithe::Asset roughly corresponds to a samvera "FileSet" plus it's "File" object. In PCDM terms, it's kind of an "Object" combined with a single "File". Unlike in samvera/PCDM, an Asset belongs to at most _one_ parent work. This makes the implementation a lot simpler, easier to make performant, and allows an Asset to more easily inherit certain things, like permissions, from it's parent. We believe this is sufficient for a large swath of apps; an app that needs a many-to-many children/membership relationship would have to add that modelling itself.
   * It is expected you will have at least one subclass of Kithe::Asset. This is where you define derivatives, you can also add custom metadata or other customizations here.
 
-**Kithe::Collection** is a group of Kithe::Works. The association between collection and work is many-to-many, a work can be in several collections. A work has an `in_collection` association; a collection has a (to be determined name, can't re-use `member` though) association to it's member works.
+**Kithe::Collection** is a group of Kithe::Works. The association between collection and work is many-to-many, a work can be in several collections. This can use an n-to-m join-table "contains" association. A work has `contained_by` association; a collection has a `contains` association to it's member works.
 
 * You may have one or more custom sub-classes of Kithe::Collection in your app if you'd like to add additional metadata fields or behavior or different collection types.
+
+* The "contains" association is actually generically defined on all Kithe::Models, an instance of kind of model can contain/be contained by any other. We haven't tried to put limitations on this in case it seems useful for other purposes to have a generic many-to-many-with-join table association. But it's motivating use-case is collection-work association. You may want to establish additional validation limits in your app if necessary.
 
 * Hypothetically, the `parent_id` column normally used for Work members/parents could be used for nested/child Collections, we haven't carried this through yet.
 
