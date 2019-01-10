@@ -130,6 +130,16 @@ ALTER SEQUENCE kithe_derivatives_id_seq OWNED BY kithe_derivatives.id;
 
 
 --
+-- Name: kithe_model_contains; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE kithe_model_contains (
+    containee_id uuid,
+    container_id uuid
+);
+
+
+--
 -- Name: kithe_models; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -212,17 +222,24 @@ CREATE UNIQUE INDEX index_kithe_derivatives_on_asset_id_and_key ON kithe_derivat
 
 
 --
+-- Name: index_kithe_model_contains_on_containee_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_kithe_model_contains_on_containee_id ON kithe_model_contains USING btree (containee_id);
+
+
+--
+-- Name: index_kithe_model_contains_on_container_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_kithe_model_contains_on_container_id ON kithe_model_contains USING btree (container_id);
+
+
+--
 -- Name: index_kithe_models_on_friendlier_id; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE UNIQUE INDEX index_kithe_models_on_friendlier_id ON kithe_models USING btree (friendlier_id);
-
-
---
--- Name: index_kithe_models_on_leaf_representative_id; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX index_kithe_models_on_leaf_representative_id ON kithe_models USING btree (leaf_representative_id);
 
 
 --
@@ -240,6 +257,14 @@ CREATE INDEX index_kithe_models_on_representative_id ON kithe_models USING btree
 
 
 --
+-- Name: kithe_model_contains fk_rails_091010187b; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY kithe_model_contains
+    ADD CONSTRAINT fk_rails_091010187b FOREIGN KEY (container_id) REFERENCES kithe_models(id);
+
+
+--
 -- Name: kithe_derivatives fk_rails_3dac8b4201; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -253,6 +278,14 @@ ALTER TABLE ONLY kithe_derivatives
 
 ALTER TABLE ONLY kithe_models
     ADD CONSTRAINT fk_rails_403cce5c0d FOREIGN KEY (leaf_representative_id) REFERENCES kithe_models(id);
+
+
+--
+-- Name: kithe_model_contains fk_rails_490c1158f7; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY kithe_model_contains
+    ADD CONSTRAINT fk_rails_490c1158f7 FOREIGN KEY (containee_id) REFERENCES kithe_models(id);
 
 
 --
@@ -283,6 +316,7 @@ INSERT INTO "schema_migrations" (version) VALUES
 ('20181015143737'),
 ('20181031190647'),
 ('20181128185658'),
-('20190103144947');
+('20190103144947'),
+('20190109192252');
 
 
