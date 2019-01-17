@@ -31,7 +31,7 @@ class Kithe::Asset < Kithe::Model
   after_promotion do
     if file_attacher.promotion_directives[:create_derivatives] == false
       # no-op
-    elsif file_attacher.promotion_directives[:create_derivatives].to_s == "foreground"
+    elsif file_attacher.promotion_directives[:create_derivatives].to_s == "inline"
       Kithe::CreateDerivativesJob.perform_now(self, mark_created: true)
     else
       Kithe::CreateDerivativesJob.perform_later(self, mark_created: true)

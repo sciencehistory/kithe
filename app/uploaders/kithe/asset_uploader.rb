@@ -37,11 +37,11 @@ module Kithe
     # Normally we promote in background with backgrounding, but the set_promotion_directives
     # feature can be used to make promotion not happen at all, or happen in foreground.
     #     asset.file_attacher.set_promotion_directives(promote: "none")
-    #     asset.file_attacher.set_promotion_directives(promote: "foreground")
+    #     asset.file_attacher.set_promotion_directives(promote: "inline")
     Attacher.promote do |data|
       if data && data.dig("promotion_directives", :promote).to_s == "none"
         # no op
-      elsif data && data.dig("promotion_directives", :promote).to_s == "foreground"
+      elsif data && data.dig("promotion_directives", :promote).to_s == "inline"
         # Foreground, but you'll still need to #reload your asset to see changes,
         # since backgrounding mechanism still reloads a new instance, sorry.
         #Kithe::AssetPromoteJob.perform_now(data)
