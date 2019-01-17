@@ -29,7 +29,7 @@ class Kithe::Asset < Kithe::Model
   define_model_callbacks :promotion
 
   after_promotion do
-    self.create_derivatives(mark_created: true)
+    Kithe::CreateDerivativesJob.perform_later(self, mark_created: true)
   end
 
   # Establish a derivative definition that will be used to create a derivative

@@ -113,7 +113,7 @@ describe "Kithe::Asset promotion hooks", queue_adapter: :inline do
       unsaved_asset.reload
 
       expect(unsaved_asset.stored?).to be(true)
-      expect(ActiveJob::Base.queue_adapter.enqueued_jobs.size).to eq(0)
+      expect(Kithe::AssetPromoteJob).not_to have_been_enqueued
       expect(ActiveJob::Base.queue_adapter.performed_jobs.size).to eq(0)
     end
   end
