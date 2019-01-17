@@ -29,8 +29,11 @@ class Kithe::Asset < Kithe::Model
   define_model_callbacks :promotion
 
   after_promotion do
-    byebug
-    unless file_attacher.promotion_directives[:create_derivatives] == false
+    if file_attacher.promotion_directives[:create_derivatives] == false
+      # no-op
+    elsif file_attacher.promotion_directives[:create_derivatives].to_s == "foreground"
+      Kithe::CreateDerivativesJob.perform_now(self, mark_created: true)
+    else
       Kithe::CreateDerivativesJob.perform_later(self, mark_created: true)
     end
   end
