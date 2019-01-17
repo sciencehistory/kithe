@@ -114,8 +114,23 @@ describe "Kithe::Asset promotion hooks", queue_adapter: :inline do
 
       expect(unsaved_asset.stored?).to be(true)
       expect(Kithe::AssetPromoteJob).not_to have_been_enqueued
+      expect(Kithe::CreateDerivativesJob).to have_been_enqueued
       expect(ActiveJob::Base.queue_adapter.performed_jobs.size).to eq(0)
     end
+
+    describe ", create_derivatives: false" do
+      it "does not create derivatives" do
+        unsaved_asset.file_attacher.set_promotion_directives(promote: :foreground, create_derivatives: false)
+
+        unsaved_asset.save!
+        unsaved_asset.reload
+
+        expect(Kithe::AssetPromoteJob).not_to have_been_enqueued
+        expect(Kithe::CreateDerivativesJob).not_to have_been_enqueued
+        expect(ActiveJob::Base.queue_adapter.performed_jobs.size).to eq(0)
+      end
+    end
   end
+
 
 end
