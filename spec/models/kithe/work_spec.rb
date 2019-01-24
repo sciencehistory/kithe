@@ -37,6 +37,12 @@ RSpec.describe Kithe::Work, type: :model do
     }.to raise_error(ActiveRecord::RecordInvalid)
   end
 
+  it "can create new with collection id" do
+    work = FactoryBot.build(:kithe_work, contained_by_ids: [collection.id])
+    work.save!
+    expect(work.contained_by).to include(collection)
+  end
+
   describe "sub-class with attr_json" do
     let(:subclass_name) { "TestWorkSubclass" }
     let(:subclass) do

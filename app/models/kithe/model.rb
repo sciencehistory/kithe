@@ -20,11 +20,11 @@ class Kithe::Model < ActiveRecord::Base
   # is such! We define it on Model for all model types, although it's mostly motivated
   # by (collection <-> work).
   # https://medium.com/@jbmilgrom/active-record-many-to-many-self-join-table-e0992c27c1e
-  has_many :contains_contained_by, foreign_key: :containee_id, class_name: "Kithe::ModelContains"
-  has_many :contained_by, through: :contains_contained_by, source: :container, dependent: :destroy
+  has_many :contains_contained_by, foreign_key: :containee_id, class_name: "Kithe::ModelContains", inverse_of: :containee
+  has_many :contained_by, through: :contains_contained_by, source: :container, dependent: :destroy, inverse_of: :contains
 
-  has_many :contains_contains, foreign_key: :container_id, class_name: "Kithe::ModelContains"
-  has_many :contains, through: :contains_contains, source: :containee, dependent: :destroy
+  has_many :contains_contains, foreign_key: :container_id, class_name: "Kithe::ModelContains", inverse_of: :container
+  has_many :contains, through: :contains_contains, source: :containee, dependent: :destroy, inverse_of: :contained_by
 
 
 
