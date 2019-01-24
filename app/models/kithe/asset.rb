@@ -29,7 +29,13 @@ class Kithe::Asset < Kithe::Model
   define_model_callbacks :promotion
 
   after_promotion do
-    self.create_derivatives(mark_created: true)
+    if file_attacher.promotion_directives[:create_derivatives] == false
+      # no-op
+    elsif file_attacher.promotion_directives[:create_derivatives].to_s == "inline"
+      Kithe::CreateDerivativesJob.perform_now(self, mark_created: true)
+    else
+      Kithe::CreateDerivativesJob.perform_later(self, mark_created: true)
+    end
   end
 
   # Establish a derivative definition that will be used to create a derivative

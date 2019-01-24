@@ -107,15 +107,47 @@ describe "Kithe::Asset promotion hooks", queue_adapter: :inline do
     end
 
     it "can force promotion in foreground" do
-      unsaved_asset.file_attacher.set_promotion_directives(promote: :foreground)
+      unsaved_asset.file_attacher.set_promotion_directives(promote: :inline)
 
       unsaved_asset.save!
       unsaved_asset.reload
 
       expect(unsaved_asset.stored?).to be(true)
-      expect(ActiveJob::Base.queue_adapter.enqueued_jobs.size).to eq(0)
+      expect(Kithe::AssetPromoteJob).not_to have_been_enqueued
+      expect(Kithe::CreateDerivativesJob).to have_been_enqueued
       expect(ActiveJob::Base.queue_adapter.performed_jobs.size).to eq(0)
     end
+
+    describe ", create_derivatives: false" do
+      it "does not create derivatives" do
+        expect_any_instance_of(Kithe::Asset).not_to receive(:create_derivatives)
+
+        unsaved_asset.file_attacher.set_promotion_directives(promote: :inline, create_derivatives: false)
+
+        unsaved_asset.save!
+        unsaved_asset.reload
+
+        expect(Kithe::AssetPromoteJob).not_to have_been_enqueued
+        expect(Kithe::CreateDerivativesJob).not_to have_been_enqueued
+        expect(ActiveJob::Base.queue_adapter.performed_jobs.size).to eq(0)
+      end
+    end
+
+    describe ", create_derivatives: :inline" do
+      it "creates derivatives inline" do
+        expect_any_instance_of(Kithe::Asset).to receive(:create_derivatives)
+
+        unsaved_asset.file_attacher.set_promotion_directives(promote: :inline, create_derivatives: :inline)
+
+        unsaved_asset.save!
+        unsaved_asset.reload
+
+        expect(Kithe::AssetPromoteJob).not_to have_been_enqueued
+        expect(Kithe::CreateDerivativesJob).not_to have_been_enqueued
+        expect(ActiveJob::Base.queue_adapter.performed_jobs.size).to eq(0)
+      end
+    end
   end
+
 
 end
