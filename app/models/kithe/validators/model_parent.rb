@@ -1,7 +1,7 @@
 class Kithe::Validators::ModelParent < ActiveModel::Validator
   def validate(record)
-    if record.parent.present? && !(record.parent.class <= Kithe::Work)
-      record.errors[:parent] << 'must be a Work instance'
+    if record.parent.present? && (record.parent.class <= Kithe::Asset)
+      record.errors[:parent] << 'can not be an Asset instance'
     end
 
     if record.parent.present? && record.class <= Kithe::Collection
