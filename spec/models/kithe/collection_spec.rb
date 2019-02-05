@@ -17,11 +17,4 @@ RSpec.describe Kithe::Collection, type: :model do
       work = Kithe::Collection.create!
     }.to raise_error(ActiveRecord::RecordInvalid)
   end
-
-  it "can not have any members" do
-    collection.members << asset
-    expect {
-      asset.save!
-    }.to raise_error(ActiveRecord::RecordInvalid)
-  end
 end

@@ -12,6 +12,7 @@ They all live in the postgres database; using [ActiveRecord single-table inherit
   * (not yet complete) Assets additionally have "derivatives" (thumbnails, transformations), which are usually automatically generated.
   * Kithe::Asset roughly corresponds to a samvera "FileSet" plus it's "File" object. In PCDM terms, it's kind of an "Object" combined with a single "File". Unlike in samvera/PCDM, an Asset belongs to at most _one_ parent work. This makes the implementation a lot simpler, easier to make performant, and allows an Asset to more easily inherit certain things, like permissions, from it's parent. We believe this is sufficient for a large swath of apps; an app that needs a many-to-many children/membership relationship would have to add that modelling itself.
   * It is expected you will have at least one subclass of Kithe::Asset. This is where you define derivatives, you can also add custom metadata or other customizations here.
+  * An Asset _can_ belong to a Collection with member/parent, possibly for custom use for collection thumbs or other metadata. This is not intended for ordinary collection "membership" though.
 
 **Kithe::Collection** is a group of Kithe::Works. The association between collection and work is many-to-many, a work can be in several collections. This can use an n-to-m join-table "contains" association. A work has `contained_by` association; a collection has a `contains` association to it's member works.
 
