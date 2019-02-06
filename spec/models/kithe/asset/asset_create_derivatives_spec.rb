@@ -275,4 +275,21 @@ describe "Kithe::Asset derivative definitions", queue_adapter: :test do
     end
   end
 
+  describe "#remove_derivative_definition!" do
+    it "can remove by string" do
+      original_keys = TestAssetSubclass.defined_derivative_keys
+      TestAssetSubclass.remove_derivative_definition!(original_keys.first.to_s)
+      expect(TestAssetSubclass.defined_derivative_keys).to eq(original_keys.slice(1..original_keys.length))
+    end
+    it "can remove by symbol" do
+      original_keys = TestAssetSubclass.defined_derivative_keys
+      TestAssetSubclass.remove_derivative_definition!(original_keys.first.to_sym)
+      expect(TestAssetSubclass.defined_derivative_keys).to eq(original_keys.slice(1..original_keys.length))
+    end
+    it "can remove multiple args" do
+      original_keys = TestAssetSubclass.defined_derivative_keys
+      TestAssetSubclass.remove_derivative_definition!(*original_keys)
+      expect(TestAssetSubclass.defined_derivative_keys).to eq([])
+    end
+  end
 end

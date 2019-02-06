@@ -18,6 +18,7 @@ class Kithe::Asset < Kithe::Model
     to: :file, allow_nil: true
   delegate :stored?, to: :file_attacher
 
+
   after_save :remove_invalid_derivatives
 
   class_attribute :derivative_definitions, instance_writer: false, default: []
@@ -92,6 +93,24 @@ class Kithe::Asset < Kithe::Model
         proc: block
       )
     )
+  end
+
+  # Returns all derivative keys with a definition, as array of strings
+  def self.defined_derivative_keys
+    self.derivative_definitions.collect(&:key).uniq.collect(&:to_s)
+  end
+
+  # If you have a subclass that has inherited derivative definitions, you can
+  # remove them -- only by key, will remove any definitions with that key regardless
+  # of content_type restrictions.
+  #
+  # This could be considered rather bad OO design, you might want to consider
+  # a different class hieararchy where you don't have to do this. But it's here.
+  def self.remove_derivative_definition!(*keys)
+    keys = keys.collect(&:to_sym)
+    self.derivative_definitions = self.derivative_definitions.reject do |defn|
+      keys.include?(defn.key.to_sym)
+    end
   end
 
   # Create derivatives for every definition added with `define_derivative. Ordinarily
