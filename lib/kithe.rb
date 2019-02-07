@@ -1,6 +1,9 @@
 require "kithe/engine"
 
 module Kithe
+  # for ruby-progressbar
+  STANDARD_PROGRESS_BAR_FORMAT = "%a %t: |%B| %R/s %c/%u %p%% %e"
+
   # ActiveRecord will automatically pick this up for all our models.
   # We don't want an isolated engine, but we do want this, part of what isolated engines do.
   def self.table_name_prefix

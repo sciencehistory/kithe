@@ -1,6 +1,8 @@
 require 'ruby-progressbar'
 
 namespace :kithe do
+  # This one gives you lots of options, but is kinda confusing.
+  # What you probably want to do most of all is kithe:create_derivatives:all_default_lazy
   desc "bulk create derivatives. Uses command line options run `rake kithe:create_derivatives -- -h` for options"
   task :create_derivatives => :environment do
     options = {}
@@ -22,15 +24,30 @@ namespace :kithe do
     scope = scope.where(friendlier_id: options[:asset_ids]) if options[:asset_ids]
     scope = scope.includes(:derivatives) if options[:lazy]
 
-    progress_bar = ProgressBar.create(total: scope.count, format: "%a %t: |%B| %R/s %c/%u %p%% %e")
+    progress_bar = ProgressBar.create(total: scope.count, format: Kithe::STANDARD_PROGRESS_BAR_FORMAT)
 
     scope.find_each do |asset|
+      progress_bar.title = asset.friendlier_id
       asset.create_derivatives(
         only: options[:derivative_keys],
         lazy: !!options[:lazy],
         mark_created: options[:mark_derivatives_created]
       )
       progress_bar.increment
+    end
+  end
+
+  namespace :create_derivatives do
+    # See also kithe:create_derivatives task for being able to specify lots of params
+    desc "Create all default definitions lazily. Most common task."
+    task :lazy_defaults => :environment do
+      progress_bar = ProgressBar.create(total: Kithe::Asset.count, format: Kithe::STANDARD_PROGRESS_BAR_FORMAT)
+
+      Kithe::Asset.includes(:derivatives).find_each do |asset|
+        progress_bar.title = asset.friendlier_id
+        asset.create_derivatives(lazy: true, mark_created: true)
+        progress_bar.increment
+      end
     end
   end
 end
