@@ -22,6 +22,10 @@ module Kithe
   class AssetUploader < Shrine
     plugin :activerecord
 
+    # useful in forms to preserve entry on re-showing a form on validation error,
+    # so it can be submitted again.
+    plugin :cached_attachment_data
+
     # Marcel analyzer is pure-ruby and fast. It's from Basecamp and is what
     # ActiveStorage uses. It is very similar to :mimemagic (and uses mimemagic
     # under the hood), but mimemagic seems not to be maintained with up to date
