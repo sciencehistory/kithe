@@ -35,6 +35,8 @@ class Kithe::Asset::DerivativeCreator
   end
 
   def call
+    return unless asset.file.present? # if no file, can't create derivatives
+
     # Note, MAY make a superfluous copy and/or download of original file, ongoing
     # discussion https://github.com/shrinerb/shrine/pull/329#issuecomment-443615868
     # https://github.com/shrinerb/shrine/pull/332
