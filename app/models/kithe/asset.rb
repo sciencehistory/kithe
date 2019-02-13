@@ -17,9 +17,13 @@ class Kithe::Asset < Kithe::Model
     :md5, :sha1, :sha512,
     to: :file, allow_nil: true
   delegate :stored?, to: :file_attacher
-
+  delegate :set_promotion_directives, to: :file_attacher
 
   after_save :remove_invalid_derivatives
+
+  # will be sent to file_attacher.promotion_directives=, provided by our
+  # kithe_promotion_hooks shrine plugin.
+  class_attribute :promotion_directives, instance_writer: false, default: {}
 
   class_attribute :derivative_definitions, instance_writer: false, default: []
 
@@ -30,12 +34,17 @@ class Kithe::Asset < Kithe::Model
   define_model_callbacks :promotion
 
   after_promotion do
-    if file_attacher.promotion_directives[:create_derivatives] == false
+    directive = file_attacher.promotion_directives[:create_derivatives]
+    directive = (directive.nil? ? "background" : directive).to_s
+
+    if directive == "false"
       # no-op
-    elsif file_attacher.promotion_directives[:create_derivatives].to_s == "inline"
-      Kithe::CreateDerivativesJob.perform_now(self, mark_created: true)
+    elsif directive == "inline"
+      Kithe::CreateDerivativesJob.perform_now(self)
+    elsif directive == "background"
+      Kithe::CreateDerivativesJob.perform_later(self)
     else
-      Kithe::CreateDerivativesJob.perform_later(self, mark_created: true)
+      raise ArgumentError.new("unrecognized :create_derivatives directive value: #{directive}")
     end
   end
 
@@ -126,7 +135,7 @@ class Kithe::Asset < Kithe::Model
   # but pass `lazy: false` to skip creating if a derivative with a given key already exists.
   # This will use the asset `derivatives` association, so if you are doing this in bulk for several
   # assets, you should eager-load the derivatives association for efficiency.
-  def create_derivatives(only: nil, except: nil, lazy: false, mark_created: false)
+  def create_derivatives(only: nil, except: nil, lazy: false, mark_created: nil)
     DerivativeCreator.new(derivative_definitions, self, only: only, except: except, lazy: lazy, mark_created: mark_created).call
   end
 
@@ -231,6 +240,13 @@ class Kithe::Asset < Kithe::Model
     id
   end
   alias_method :leaf_representative_id, :representative_id
+
+  def initialize(*args)
+    super
+    if promotion_directives.present?
+      file_attacher.set_promotion_directives(promotion_directives)
+    end
+  end
 
   private
 

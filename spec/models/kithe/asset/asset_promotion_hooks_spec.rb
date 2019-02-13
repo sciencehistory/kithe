@@ -98,12 +98,15 @@ describe "Kithe::Asset promotion hooks", queue_adapter: :inline do
     it "can cancel promotion" do
       expect_any_instance_of(Kithe::AssetUploader::Attacher).not_to receive(:promote)
 
-      unsaved_asset.file_attacher.set_promotion_directives(promote: :none)
+      unsaved_asset.file_attacher.set_promotion_directives(promote: false)
 
       unsaved_asset.save!
       unsaved_asset.reload
 
       expect(unsaved_asset.stored?).to be(false)
+
+      expect(Kithe::AssetPromoteJob).not_to have_been_enqueued
+      expect(Kithe::CreateDerivativesJob).not_to have_been_enqueued
     end
 
     it "can force promotion in foreground" do
@@ -116,6 +119,13 @@ describe "Kithe::Asset promotion hooks", queue_adapter: :inline do
       expect(Kithe::AssetPromoteJob).not_to have_been_enqueued
       expect(Kithe::CreateDerivativesJob).to have_been_enqueued
       expect(ActiveJob::Base.queue_adapter.performed_jobs.size).to eq(0)
+    end
+
+    it "raises on unrecgonized value" do
+      unsaved_asset.file_attacher.set_promotion_directives(promote: :something)
+      expect {
+        unsaved_asset.save!
+      }.to raise_error(ArgumentError)
     end
 
     describe ", create_derivatives: false" do
@@ -149,5 +159,31 @@ describe "Kithe::Asset promotion hooks", queue_adapter: :inline do
     end
   end
 
+  describe "unrecognized promotion directive" do
+    it "raises" do
+      expect {
+        unsaved_asset.file_attacher.set_promotion_directives(:bad_made_up => true)
+      }.to raise_error(ArgumentError)
+    end
+  end
 
+  describe "delegated from asset" do
+    around do |example|
+      original_class_settings = Kithe::Asset.promotion_directives
+      example.run
+      Kithe::Asset.promotion_directives = original_class_settings
+    end
+
+    it "can set from class attribute" do
+      Kithe::Asset.promotion_directives = { promote: :inline }
+      asset = Kithe::Asset.new
+      expect(asset.file_attacher.promotion_directives).to eq(promote: :inline)
+    end
+
+    it "can set from instance writer" do
+      asset = Kithe::Asset.new
+      asset.set_promotion_directives(promote: :inline)
+      expect(asset.file_attacher.promotion_directives).to eq(promote: :inline)
+    end
+  end
 end

@@ -23,15 +23,16 @@ class Kithe::Asset::DerivativeCreator
   #   if you are only intending to create missing derivatives.  With lazy:false, the asset
   #   derivatives association will be consulted, so should be eager-loaded if you are going
   #   to be calling on multiple assets.
-  # @param mark_created [Boolean] default false, if true will set shrine metadata indicating we've done
-  #   derivative creation phase, so Asset#derivatives_created? will return true.
-  def initialize(definitions, asset, only:nil, except:nil, lazy: false, mark_created: false)
+  # @param mark_created [Boolean] if true will set shrine metadata indicating we've done
+  #   derivative creation phase, so Asset#derivatives_created? will return true. Defaults to nil,
+  #   meaning true if and only if `only` is nil -- mark created if creating default derivatives.
+  def initialize(definitions, asset, only:nil, except:nil, lazy: false, mark_created: :not_set)
     @definitions = definitions
     @asset = asset
     @only = only && Array(only)
     @except = except && Array(except)
     @lazy = !!lazy
-    @mark_created = !!mark_created
+    @mark_created = mark_created.nil? ? only.nil? : !! mark_created
   end
 
   def call

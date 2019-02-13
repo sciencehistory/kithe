@@ -45,7 +45,7 @@ describe "Kithe::Asset derivative definitions", queue_adapter: :test do
 
   it "sets #derivatives_created?" do
     expect(asset.derivatives_created?).to be(false)
-    asset.create_derivatives(mark_created: true)
+    asset.create_derivatives
     asset.reload
     expect(asset.derivatives_created?).to be(true)
   end
