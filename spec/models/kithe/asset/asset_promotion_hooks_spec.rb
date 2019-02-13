@@ -149,6 +149,14 @@ describe "Kithe::Asset promotion hooks", queue_adapter: :inline do
     end
   end
 
+  describe "unrecognized promotion directive" do
+    it "raises" do
+      expect {
+        unsaved_asset.file_attacher.set_promotion_directives(:bad_made_up => true)
+      }.to raise_error(ArgumentError)
+    end
+  end
+
   describe "delegated from asset" do
     around do |example|
       original_class_settings = Kithe::Asset.promotion_directives

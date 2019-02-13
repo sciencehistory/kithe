@@ -39,6 +39,12 @@ class Shrine
     #   attacher.promotion_directives[:some_key]
     #
     class KithePromotionHooks
+      # whitelist of allowed promotion_directive keys, so we can raise on typos but still
+      # be extensible. Also serves as some documentation of what directives available.
+      class_attribute :allowed_promotion_directives,
+        instance_writer: false,
+        default: [:promote, :skip_callbacks, :create_derivatives]
+
       def self.load_dependencies(uploader, *)
         uploader.plugin :refresh_metadata
         uploader.plugin :backgrounding
@@ -66,6 +72,11 @@ class Shrine
         #     some_model.file_attacher.set_promotion_directives(skip_callbacks: true)
         #     some_model.save!
         def set_promotion_directives(hash)
+          unrecognized = hash.keys.collect(&:to_sym) - KithePromotionHooks.allowed_promotion_directives
+          unless unrecognized.length == 0
+            raise ArgumentError.new("Unrecognized promotion directive key: #{unrecognized.join('')}")
+          end
+
           promotion_directives.merge!(hash)
         end
 
