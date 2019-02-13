@@ -34,13 +34,14 @@ class Kithe::Asset < Kithe::Model
   define_model_callbacks :promotion
 
   after_promotion do
-    directive = file_attacher.promotion_directives[:create_derivatives].to_s
+    directive = file_attacher.promotion_directives[:create_derivatives]
+    directive = (directive.nil? ? "background" : directive).to_s
 
     if directive == "false"
       # no-op
     elsif directive == "inline"
       Kithe::CreateDerivativesJob.perform_now(self, mark_created: true)
-    elsif directive.nil? || directive == "background"
+    elsif directive == "background"
       Kithe::CreateDerivativesJob.perform_later(self, mark_created: true)
     else
       raise ArgumentError.new("unrecognized :create_derivatives directive value: #{directive}")
