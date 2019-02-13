@@ -98,7 +98,7 @@ describe "Kithe::Asset promotion hooks", queue_adapter: :inline do
     it "can cancel promotion" do
       expect_any_instance_of(Kithe::AssetUploader::Attacher).not_to receive(:promote)
 
-      unsaved_asset.file_attacher.set_promotion_directives(promote: :none)
+      unsaved_asset.file_attacher.set_promotion_directives(promote: false)
 
       unsaved_asset.save!
       unsaved_asset.reload
