@@ -28,6 +28,7 @@ Gem::Specification.new do |s|
   s.add_dependency "pdf-reader", "~> 2.0" # for pdf metadata extraction
   s.add_dependency "tty-command", ">= 0.8.2", "< 2" # still at pre-1.0 when we write this. :(
   s.add_dependency "ruby-progressbar", "~> 1.0"
+  s.add_dependency "mini_mime" # already a rails dependency, but we use in derivative filename construction
 
   s.add_development_dependency "pg"
   s.add_development_dependency "yard-activesupport-concern"

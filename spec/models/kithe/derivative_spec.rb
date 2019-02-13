@@ -60,6 +60,7 @@ RSpec.describe Kithe::Derivative, type: :model, queue_adapter: :test do
       expect(derivative.content_type).to eq("image/jpeg")
       expect(derivative.height).to eq(1)
       expect(derivative.width).to eq(1)
+      expect(derivative.file.metadata["filename"]).to eq("#{asset.friendlier_id}_some_derivative.jpeg")
 
       # path on storage is nice and pretty
       expect(derivative.file.id).to match %r{\A#{asset.id}/#{key}/[a-f0-9]+\.jpg\Z}
