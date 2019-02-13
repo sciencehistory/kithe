@@ -11,6 +11,10 @@ module Kithe
     plugin :determine_mime_type, analyzer: :marcel
     plugin :store_dimensions
 
+    # Useful in case consumers want it, and doesn't harm anything to be available.
+    # https://github.com/shrinerb/shrine/blob/master/doc/plugins/rack_response.md
+    plugin :rack_response
+
     # should this be in a plugin? location in file system based on original asset
     # id and derivative key, as well as unique random file id from shrine.
     def generate_location(io, context)
