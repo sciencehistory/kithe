@@ -38,6 +38,10 @@ module Kithe
     # promotion and deletion will be in background.
     plugin :backgrounding
 
+    # Useful in case consumers want it, and doesn't harm anything to be available.
+    # https://github.com/shrinerb/shrine/blob/master/doc/plugins/rack_response.md
+    plugin :rack_response
+
     # Normally we promote in background with backgrounding, but the set_promotion_directives
     # feature can be used to make promotion not happen at all, or happen in foreground.
     #     asset.file_attacher.set_promotion_directives(promote: "none")
