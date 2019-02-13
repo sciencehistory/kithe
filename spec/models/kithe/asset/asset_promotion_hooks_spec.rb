@@ -104,6 +104,9 @@ describe "Kithe::Asset promotion hooks", queue_adapter: :inline do
       unsaved_asset.reload
 
       expect(unsaved_asset.stored?).to be(false)
+
+      expect(Kithe::AssetPromoteJob).not_to have_been_enqueued
+      expect(Kithe::CreateDerivativesJob).not_to have_been_enqueued
     end
 
     it "can force promotion in foreground" do
@@ -116,6 +119,13 @@ describe "Kithe::Asset promotion hooks", queue_adapter: :inline do
       expect(Kithe::AssetPromoteJob).not_to have_been_enqueued
       expect(Kithe::CreateDerivativesJob).to have_been_enqueued
       expect(ActiveJob::Base.queue_adapter.performed_jobs.size).to eq(0)
+    end
+
+    it "raises on unrecgonized value" do
+      unsaved_asset.file_attacher.set_promotion_directives(promote: :something)
+      expect {
+        unsaved_asset.save!
+      }.to raise_error(ArgumentError)
     end
 
     describe ", create_derivatives: false" do

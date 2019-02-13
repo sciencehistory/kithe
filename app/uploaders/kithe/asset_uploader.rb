@@ -47,16 +47,21 @@ module Kithe
     #     asset.file_attacher.set_promotion_directives(promote: false)
     #     asset.file_attacher.set_promotion_directives(promote: "inline")
     Attacher.promote do |data|
-      if data && data.dig("promotion_directives", :promote).to_s == "false"
+      directive = data.dig("promotion_directives", :promote)
+      directive = (directive.nil? ? "background" : directive).to_s
+
+      if directive == "false"
         # no op
-      elsif data && data.dig("promotion_directives", :promote).to_s == "inline"
+      elsif directive == "inline"
         # Foreground, but you'll still need to #reload your asset to see changes,
         # since backgrounding mechanism still reloads a new instance, sorry.
         #Kithe::AssetPromoteJob.perform_now(data)
         self.class.promote(data)
-      else
+      elsif directive == "background"
         # What shrine normally expects for backgrounding
         Kithe::AssetPromoteJob.perform_later(data)
+      else
+        raise ArgumentError.new("unrecognized :promote directive value: #{directive.inspect}")
       end
     end
     Attacher.delete { |data| Kithe::AssetDeleteJob.perform_later(data) }
