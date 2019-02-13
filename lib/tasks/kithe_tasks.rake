@@ -39,13 +39,13 @@ namespace :kithe do
 
   namespace :create_derivatives do
     # See also kithe:create_derivatives task for being able to specify lots of params
-    desc "Create all default definitions lazily. Most common task."
+    desc "Create all default definitions only if not already existing. Most common task."
     task :lazy_defaults => :environment do
       progress_bar = ProgressBar.create(total: Kithe::Asset.count, format: Kithe::STANDARD_PROGRESS_BAR_FORMAT)
 
       Kithe::Asset.includes(:derivatives).find_each do |asset|
         progress_bar.title = asset.friendlier_id
-        asset.create_derivatives(lazy: true, mark_created: true)
+        asset.create_derivatives(lazy: true)
         progress_bar.increment
       end
     end

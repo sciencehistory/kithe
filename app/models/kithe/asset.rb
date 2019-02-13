@@ -40,9 +40,9 @@ class Kithe::Asset < Kithe::Model
     if directive == "false"
       # no-op
     elsif directive == "inline"
-      Kithe::CreateDerivativesJob.perform_now(self, mark_created: true)
+      Kithe::CreateDerivativesJob.perform_now(self)
     elsif directive == "background"
-      Kithe::CreateDerivativesJob.perform_later(self, mark_created: true)
+      Kithe::CreateDerivativesJob.perform_later(self)
     else
       raise ArgumentError.new("unrecognized :create_derivatives directive value: #{directive}")
     end
@@ -135,7 +135,7 @@ class Kithe::Asset < Kithe::Model
   # but pass `lazy: false` to skip creating if a derivative with a given key already exists.
   # This will use the asset `derivatives` association, so if you are doing this in bulk for several
   # assets, you should eager-load the derivatives association for efficiency.
-  def create_derivatives(only: nil, except: nil, lazy: false, mark_created: false)
+  def create_derivatives(only: nil, except: nil, lazy: false, mark_created: nil)
     DerivativeCreator.new(derivative_definitions, self, only: only, except: except, lazy: lazy, mark_created: mark_created).call
   end
 
