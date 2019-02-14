@@ -38,6 +38,11 @@ class Shrine
     #   callback may consult, with `set_promotion_directives` as above. To consult, check
     #   attacher.promotion_directives[:some_key]
     #
+    #   You can also set promotion directives globally for Kithe::Asset or a sub-class, in
+    #   a class method. Especially useful for batch processing.
+    #
+    #       Kithe::Asset.promotion_directives = { promote: :inline, create_derivatives: :inline }
+    #
     class KithePromotionHooks
       # whitelist of allowed promotion_directive keys, so we can raise on typos but still
       # be extensible. Also serves as some documentation of what directives available.
@@ -67,6 +72,10 @@ class Shrine
         # Set one or more promotion directives, in context[:promotion_directives], that
         # will be serialized and restored to context for bg promotion. The values are intended
         # to be simple strings or other json-serializable primitives.
+        #
+        # set_promotion_directives will merge it's results into existing promotion directives,
+        # existing keys will remain. So you can set multiple directives with multiple
+        # calls to set_promotion_directives, or pass multiple keys to one calls.
         #
         # @example
         #     some_model.file_attacher.set_promotion_directives(skip_callbacks: true)

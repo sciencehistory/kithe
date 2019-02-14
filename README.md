@@ -8,22 +8,45 @@ An in-progress experiment in shareable tools/components for building a digital c
 
 Kithe is a toolkit for building digital collections/repository applications in Rails. It comes out of experience in the [samvera](https://samvera.org/) community of open source library-archives-museums digital collections/preservation work (but is not a samvera project).
 
-Kithe does not use fedora or valkyrie, but stores all metadata using ActiveRecord, and some extensions/choices with ActiveRecord that try to take a light touch and leave the persistence mostly just standard ActiveRecord.  Kithe requires you use postgres as your db, 9.5+. In general, kithe will try to provide additional architecture and support on top of "ordinary" approaches to Rails apps.
+Kithe does not use fedora or valkyrie, but stores all metadata using ActiveRecord.  Kithe requires you use postgres 9.5+ as your db. While kithe provides some additional architecture and support on top of "ordinary" ActiveRecord, it tries to mostly let you develop as you would any Rails app, inclduing all choices and you'd normally have, and taking advantage of standard ActiveRecord-based functionality.  Kithe bases it's file handling framework on [shrine](https://shrinerb.com), supporting cloud or local file storage.
 
-Kithe will not give you a working "turnkey" application. It is a collection of tools to help you write a Rails app. It intends to provide tools and standard architecture for things most common to our digital collections/repository domain. You'll still have to write an app. The intention is that you will be able to choose to use more or fewer of kithe's tools -- although using the kithe basic domain modelling is _probably usually_ necessary for the other mix-and-match tools to work.  The range of tools provided and areas of an app given some support for in kithe will probably grow over time, in hopefully a careful and cautious way.
+Kithe will not give you a working "turnkey" application. It is a collection of tools to help you write a Rails app. You may end up using some but not all of kithe's tools.  The range of tools provided and areas of an app given some support in kithe will probably grow over time, in hopefully a careful and cautious way.
 
-You still need to make your own app, with kithe providing some support. In this way, develping an app based on kythe in some ways analagous to developing an app based on [valkyrie](https://github.com/samvera-labs/valkyrie). They both provide basic standard architecture for modelling/persistence, although in very different ways. Kithe will provide both more and less than valkyrie.  If you are comparing it to a "solution bundle" digital collections platform, kithe may seem like "more work". But experience has shown me that in our domain, historically "solution bundles" can be less of a "turnkey" approach than they seem, and can have greater development cost over total app lifecycle than anticipated. If you have similar experience that leads you to consider a more 'bespoke' app approach -- you may want to consider kithe as some (hopefully) architecturally simple support and standardization for your custom app that still leaves you with tons of flexibility.
+In that it provides tools and not a turnkey app, develping an app based on kythe in some ways similar to developing an app based on [valkyrie](https://github.com/samvera-labs/valkyrie). They both provide basic architecture for modelling/persistence, although in quite different ways. Kithe also provides tools in addition to modelling/persistence, but does _not_ provide the data-mapper/repository pattern valkyrie does, or any built-in abstraction for persisting anywhere but a postgres DB.
 
-Kithe is at the beginning stages of development. It is pre-1.0 and can change in backwards incompat ways. It is probably not ready for using seriously unless you really know what you're getting into. But trying it out is very invited and encouraged!
+If you are comparing it to a "solution bundle" digital collections platform, kithe may seem like more work. But experience has shown me that in our domain, historically "solution bundles" can be less of a "turnkey" approach than they seem, and can have greater development cost over total app lifecycle than anticipated. If you have similar experience that leads you to consider a more 'bespoke' app approach -- you may want to consider kithe. We hope to provide architecturally simple support and standardization for your custom app, taking care of some of the common "hard parts" and leaving you with flexibility to build out the app that meets your needs.
+
+Kithe is at the beginning stages of development. It is pre-1.0 and can change in backwards incompat ways. It is probably not ready for using seriously unless you really know what you're getting into. But trying it out is very invited and encouraged.
+
+You are encouraged to try out kithe, but also welcome to copy any code or just ideas from kithe.
+
+Any questions or feedback of any kind are very welcome and encouraged, in the github project issues, samvera slack, or wherever is convenient.
 
 Kithe is being developed in tandem with the Science History Institute's in-development [replacement digital collections](https://github.com/sciencehistory/scihist_digicoll) app, and you can look there for a model/canonical/demo kithe use.
 
 # Kithe parts
 
-Some guide documentation is available to explain kithe's architectures and components. Definitely start with the modelling guide.
+Some guide documentation is available to explain each of kithe's major functionality areas. Definitely start with the modelling guide.
 
-* [Modelling](./guides/modelling.md)
-* [Form support](./guides/forms.md): repeatable inputs, including for compound/nested models
+* [Modelling and Persistence](./guides/modelling.md):  It can be somewhwat challenging to figure out a good way to model our data in an rdbms. We give you a hopefully flexible and understandable architecture that is designed to support efficient performance. It's influenced by PCDM and traditional samvera modelling. It's based on [attr_json](https://github.com/jrochkind/attr_json) to let you model arbitrary and complex object-oriented data that gets persisted as a serialized json hash. It uses rails Single Table Inheritance to support hetereogenous associations and collections. The modelling classes in some places use postgres-specific features for efficiency.
+
+  * [Work representatives](./guides/work_representative.md). Built in associations to support "representative", using postgres recursive CTE's to compute the "leaf" representative, designed to support efficient use of the DB including pre-loading leaf representatives.
+
+  * Kithe objects use UUIDv4's as internal primary keys, but also provide a "friendlier_id" with a shorter unique alphanumeric identifier for URLs and other UI. By default they are supplied by a postgres stored procedure, but your code can set them to whatever you like.
+
+* [Form support](./guides/forms.md): Dealing with complex and _repeatable_ data, as our modelling layer allows, can be tricky in an HTML form. We supply javascript-backed Rails form input help for repeatable and compound/nested data.
+
+* [File handling](./guides/file_handling.md): Handling files is at the core of digital repository use cases. We need a file handling framework that is flexible, predictable and reliable, and architected for performance. We try to give you one based on the [shrine](https://shrinerb.com) file attachment toolkit for ruby.
+
+  * [Derivatives](./guides/derivatives.md) A flexible and reliable derivatives architecture, designed to ensure data consistency without race conditions, and support efficient DB usage patterns.
+
+### Also
+
+* [Kithe::Parameters](./app/models/kithe/parameters.rb) provides some shortcuts around Rails "strong params" for attr_json serialized attributes.
+
+* [Kithe::ConfigBase](./app/models/kithe/config_base.rb) A totally optional solution for managing environmental config variables.
+
+* [ArrayInclusionValdaitor](./app/validators/array_inclusion_validator.rb) Useful for validating on attr_json arrays of primitives.
 
 ## Setting up your app to use kithe
 
@@ -31,17 +54,15 @@ So you want to start an app that uses kithe. We should later provide better 'get
 
 * Again re-iterate that kithe requires your Rails app use postgres, 9.5+.
 
-* To get migrations from kithe to setup your database for it's models: `rake kithe_engine:install:migrations`
+* To install migrations from kithe to setup your database for it's models: `rake kithe_engine:install:migrations`
 
-* Kithe view support generally assumes your app uses bootstrap 4, and uses [simple form](https://github.com/plataformatec/simple_form) configured with bootstrap settings. See https://github.com/plataformatec/simple_form#bootstrap
+* Kithe view support generally assumes your app uses bootstrap 4, and uses [simple form](https://github.com/plataformatec/simple_form) configured with bootstrap settings. See https://github.com/plataformatec/simple_form#bootstrap . So you should install simple_form and bootstrap 4.
 
-* Specific additional pre-requisites/requirements can sometimes be found in individual feature docs. And include the Javascript from [cocoon](https://github.com/nathanvda/cocoon), for form support for repeatable-field editing forms.
+* Specific additional pre-requisites/requirements can sometimes be found in individual feature docs. And include the Javascript from [cocoon](https://github.com/nathanvda/cocoon), for form support for repeatable-field editing forms. We haven't quite figured out our preferred sane approach for sharing Javascript via kithe.
 
 Note that at present kithe will end up forcing your app to use `:sql` [style schema dumps](https://guides.rubyonrails.org/v3.2.8/migrations.html#types-of-schema-dumps). We may try to fix this.
 
 ## To be done
-
-File handling in general including derivatives is next on the plate.
 
 There is also definitely planned to be solr indexing and some blacklight integration support. (These currently considered requirements for getting the Science History Institute's app to production, depending on the kithe features).
 
