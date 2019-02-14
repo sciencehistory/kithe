@@ -103,11 +103,24 @@ RSpec.describe Kithe::Derivative, type: :model, queue_adapter: :test do
         expect(original_shrine_file.exists?).to be(false)
       end
 
-      it "can remove with #remove_derivative" do
+      it "can remove with #remove_derivative with derivatives assoc loaded" do
         expect(Kithe::Derivative.where(id: existing.id).count).to be(1)
         stored_file = existing.file
         expect(stored_file.exists?).to be(true)
 
+        asset.derivatives.load
+        asset.remove_derivative(key)
+
+        expect(stored_file.exists?).to be(false)
+        expect(Kithe::Derivative.where(id: existing.id).count).to be(0)
+      end
+
+      it "can remove with #remove_derivative without derivatives assoc loaded" do
+        expect(Kithe::Derivative.where(id: existing.id).count).to be(1)
+        stored_file = existing.file
+        expect(stored_file.exists?).to be(true)
+
+        asset.association(:derivatives).reset
         asset.remove_derivative(key)
 
         expect(stored_file.exists?).to be(false)

@@ -140,8 +140,10 @@ class Kithe::Asset < Kithe::Model
   end
 
   # Adds an associated derivative with key and io bytestream specified.
-  # Normally you don't use this, you would define derivatives and use
-  # higher-level API to manage them, but this one is used by higher level API.
+  # Normally you don't use this with derivatives defined with `define_derivative`,
+  # this is used by higher-level API. But if you'd like to add a derivative not defined
+  # with `define_derivative`, or for any other reason would like to manually add
+  # a derivative, this is public API meant for that.
   #
   # Ensures safe from race conditions under multi-thread/process concurrency, to
   # make sure any existing derivative with same key is atomically replaced,
@@ -166,10 +168,14 @@ class Kithe::Asset < Kithe::Model
   end
 
   def remove_derivative(key)
-    deriv = Kithe::Derivative.where(key: key.to_s, asset: self).first
-    if deriv
-      deriv.destroy!
-      self.derivatives.reset
+    if association(:derivatives).loaded?
+      derivatives.find_all { |d| d.key == key.to_s }.each do |deriv|
+        derivatives.delete(deriv)
+      end
+    else
+      Kithe::Derivative.where(key: key.to_s, asset: self).each do |deriv|
+        deriv.destroy!
+      end
     end
   end
 
