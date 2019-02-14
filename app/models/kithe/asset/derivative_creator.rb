@@ -32,7 +32,7 @@ class Kithe::Asset::DerivativeCreator
     @only = only && Array(only)
     @except = except && Array(except)
     @lazy = !!lazy
-    @mark_created = mark_created.nil? ? only.nil? : !! mark_created
+    @mark_created = mark_created.nil? ? (only.nil? && except.nil?) : !! mark_created
   end
 
   def call
