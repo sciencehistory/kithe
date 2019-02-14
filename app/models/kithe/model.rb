@@ -32,7 +32,8 @@ class Kithe::Model < ActiveRecord::Base
   # loading on hetereogenous fetches
   belongs_to :representative, class_name: "Kithe::Model", optional: true
   belongs_to :leaf_representative, class_name: "Kithe::Model", optional: true
-  before_save :set_leaf_representative
+  before_save :set_leaf_representative, if: ->(model) { model.will_save_change_to_representative_id? }
+
   after_save :update_referencing_leaf_representatives
   before_destroy :nullify_representative_ids
 
@@ -88,13 +89,18 @@ class Kithe::Model < ActiveRecord::Base
     leaf.kind_of?(Kithe::Asset) ? leaf : nil
   end
 
-  private
-
   # if a representative is set, set leaf_representative by following
-  # the tree with an efficient recursive CTE
+  # the tree with an efficient recursive CTE to find proper value.
+  #
+  # Normally this is called for you in callbacks, and you don't need to
+  # call manually. But if things get out of sync, you can.
+  #
+  #    work.set_leaf_representative
+  #    work.save!
   def set_leaf_representative
-    return if self.kind_of?(Kithe::Asset) # not applicable
-    return unless will_save_change_to_representative_id?
+    if self.kind_of?(Kithe::Asset) # not applicable
+      self.leaf_representative_id = nil
+    end
 
     # a postgres recursive CTE to find the ultimate leaf through
     # a possible chain of works, guarding against cycles.
@@ -124,6 +130,10 @@ class Kithe::Model < ActiveRecord::Base
 
     self.leaf_representative_id = result
   end
+
+  private
+
+
 
 
   # if leaf_representative changed, set anything that might reference
