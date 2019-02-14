@@ -34,6 +34,17 @@ RSpec.describe "Model representatives", type: :model do
       expect(work.leaf_representative).to be(nil)
     end
 
+    it "can be set if wrong" do
+      wrong_asset = FactoryBot.create(:kithe_asset)
+      work.update(leaf_representative_id: wrong_asset.id)
+
+      expect(work.representative).to eq(intermediate_work)
+      expect(work.leaf_representative).to eq(wrong_asset)
+
+      work.set_leaf_representative
+      expect(work.leaf_representative).to eq(asset)
+    end
+
     describe "with accidental cycle" do
       let(:work) { FactoryBot.create(:kithe_work) }
       let(:work2) { FactoryBot.create(:kithe_work) }
