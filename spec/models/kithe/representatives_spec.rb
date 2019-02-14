@@ -114,6 +114,32 @@ RSpec.describe "Model representatives", type: :model do
       expect(work.representative).to be(nil)
       expect(work.leaf_representative).to be(nil)
     end
+
+    describe "intermediate chain" do
+      let!(:work) { FactoryBot.create(:kithe_work, representative: intermediate_work) }
+      let!(:intermediate_work) { FactoryBot.create(:kithe_work, representative: asset) }
+      let!(:asset) { FactoryBot.create(:kithe_asset) }
+
+      it "nullifies references on destroy intermediate" do
+        intermediate_work.destroy
+        work.reload
+
+        expect(work.representative).to be(nil)
+        expect(work.leaf_representative).to be(nil)
+      end
+
+      it "nullifies all references on destroy leaf" do
+        asset.destroy
+        work.reload
+        intermediate_work.reload
+
+        expect(intermediate_work.representative).to be(nil)
+        expect(intermediate_work.leaf_representative).to be(nil)
+
+        expect(work.representative).to be(nil)
+        expect(work.leaf_representative).to be(nil)
+      end
+    end
   end
 
 end

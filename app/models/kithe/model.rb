@@ -162,28 +162,25 @@ class Kithe::Model < ActiveRecord::Base
   end
 
   def nullify_representative_ids
-    leaf_sql = <<~EOS
+    recursive_cte_update = <<~EOS
       UPDATE kithe_models
-      SET leaf_representative_id = NULL
-      WHERE leaf_representative_id = $1
+      SET leaf_representative_id = NULL, representative_id = NULL
+      WHERE id IN (
+        WITH RECURSIVE search_graph(id, link) AS (
+                SELECT m.id, m.representative_id
+                FROM kithe_models m
+                WHERE m.id = #{self.class.connection.quote self.id}
+              UNION
+                SELECT m.id, m.representative_id
+                FROM kithe_models m, search_graph sg
+                WHERE m.representative_id = sg.id
+        )
+        SELECT id
+        FROM search_graph
+        WHERE id != #{self.class.connection.quote self.id}
+      );
     EOS
 
-    self.class.connection.exec_update(
-      leaf_sql,
-      "update_leaf_representative_id_for_destroyed",
-      [[nil, self.id]]
-    )
-
-    rep_sql = <<~EOS
-      UPDATE kithe_models
-      SET representative_id = NULL
-      WHERE representative_id = $1
-    EOS
-
-    self.class.connection.exec_update(
-      rep_sql,
-      "update_representative_id_for_destroyed",
-      [[nil, self.id]]
-    )
+    self.class.connection.exec_update(recursive_cte_update)
   end
 end
