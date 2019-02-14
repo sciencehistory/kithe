@@ -192,6 +192,9 @@ class Kithe::Asset < Kithe::Model
   # This will no-op unless the attached file is stored in cache -- that is, it
   # will no-op if the file has already been promoted. In this way it matches ordinary
   # shrine promotion. (Do we need an option to force promotion anyway?)
+  #
+  # Note that calling `file_attacher.promote` on it's own won't do quite the right thing,
+  # and won't respect that the file is already cached.
   def promote(action: :store, context: {})
     return unless file_attacher.cached?
 
@@ -200,10 +203,7 @@ class Kithe::Asset < Kithe::Model
       record: self
     }.merge(context)
 
-    # A bit trickier than expected: https://github.com/shrinerb/shrine/issues/333
-    copy_of_data = file_attacher.uploaded_file(self.file.to_json)
-
-    file_attacher.promote(copy_of_data, context)
+    file_attacher.promote(file_attacher.get, context)
   end
 
   # The derivative creator sets metadata when it's created all derivatives
