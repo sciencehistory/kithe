@@ -5,7 +5,8 @@ module Kithe
   # Use the [vips](https://jcupitt.github.io/libvips/) command-line utility (via shell-out)
   # to transform any image type to a JPG, with a specified maximum width (keeping aspect ratio).
   #
-  # Requires vips command line to be installed on your system, eg `brew install vips`
+  # Requires vips command line utilities `vips` and `vipsthumbnail` and to be installed on your system,
+  # eg `brew install vips`, or apt package `vips-tools`.
   #
   # If thumbnail_mode:true is given, we ALSO apply some additional best practices
   # for minimizing size when used as an image _in a browser_, such as removing

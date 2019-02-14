@@ -10,9 +10,6 @@ class Shrine
     #
     # We are choosing to store under Asset UUID PK instead of friendlier_id, friendlier_id
     # is good for public URLs and UI, but actual PK is more reliable/immutable.
-    #
-    # ALSO: this plugin takes care of bad names from use of shrine-url with query params,
-    # when storage "remote_url" is recognized.
     module KitheStorageLocation
       module InstanceMethods
         def generate_location(io, context)

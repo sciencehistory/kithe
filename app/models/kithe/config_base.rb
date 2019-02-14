@@ -4,8 +4,10 @@ require 'concurrent'
 module Kithe
   # A central place for environmental/infrastructure type configuration. There were
   # many existing ruby/rails 'config' solutions, but none did quite what I wanted without extra
-  # complexity. We will try to avoid kithe dependencies on this file, this is available solely
+  # complexity. There are now kithe dependencies on this file, this is available solely
   # as something for an individual app to use when it is convenient.
+  #
+  # You may also want to consider [railsconfig](https://github.com/railsconfig/config)
   #
   # Kithe::Config:
   #
