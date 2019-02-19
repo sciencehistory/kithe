@@ -214,6 +214,8 @@ If you want to consult any promotion_directives in a callback, you can look at `
 
 If you want to _suppress all promotion callbacks_, you can set a promotion directive: `asset.set_promotion_directives(skip_callbacks: true)`. This would mean default derivative generation wouldn't happen either.
 
+In the future we might want to explore a different architecture, perhaps based [around event-based/pub-sub](https://zorbash.com/post/the-10-minute-rails-pubsub/) for promotion and derivatives.
+
 ## Validation?
 
 The built-in [shrine validation architecture](https://github.com/shrinerb/shrine/blob/master/doc/validation.md#readme) is targetted at interactive forms, and doesn't make a lot of sense in our scenario where  where metadata extraction and promotion happen in the background.
