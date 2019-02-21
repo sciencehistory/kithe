@@ -54,6 +54,8 @@ So you want to start an app that uses kithe. We should later provide better 'get
 
 * Again re-iterate that kithe requires your Rails app use postgres, 9.5+.
 
+* kithe requires Rails 5.2 or 6.0.
+
 * To install migrations from kithe to setup your database for it's models: `rake kithe_engine:install:migrations`
 
 * Kithe view support generally assumes your app uses bootstrap 4, and uses [simple form](https://github.com/plataformatec/simple_form) configured with bootstrap settings. See https://github.com/plataformatec/simple_form#bootstrap . So you should install simple_form and bootstrap 4.
