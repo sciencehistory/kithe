@@ -33,20 +33,7 @@ class Kithe::Asset < Kithe::Model
   # to happen only after asset is promoted, like derivatives.
   define_model_callbacks :promotion
 
-  after_promotion do
-    directive = file_attacher.promotion_directives[:create_derivatives]
-    directive = (directive.nil? ? "background" : directive).to_s
-
-    if directive == "false"
-      # no-op
-    elsif directive == "inline"
-      Kithe::CreateDerivativesJob.perform_now(self)
-    elsif directive == "background"
-      Kithe::CreateDerivativesJob.perform_later(self)
-    else
-      raise ArgumentError.new("unrecognized :create_derivatives directive value: #{directive}")
-    end
-  end
+  after_promotion :schedule_derivatives
 
   # Establish a derivative definition that will be used to create a derivative
   # when #create_derivatives is called, for instance automatically after promotion.
@@ -255,6 +242,24 @@ class Kithe::Asset < Kithe::Model
   end
 
   private
+
+  # called by after_promotion hook
+  def schedule_derivatives
+    return unless self.derivative_definitions.present? # no need to schedule if we don't have any
+
+    directive = file_attacher.promotion_directives[:create_derivatives]
+    directive = (directive.nil? ? "background" : directive).to_s
+
+    if directive == "false"
+      # no-op
+    elsif directive == "inline"
+      Kithe::CreateDerivativesJob.perform_now(self)
+    elsif directive == "background"
+      Kithe::CreateDerivativesJob.perform_later(self)
+    else
+      raise ArgumentError.new("unrecognized :create_derivatives directive value: #{directive}")
+    end
+  end
 
   # Meant to be called in after_save hook, looks at activerecord dirty tracking in order
   # to removes all derivatives if the asset sha512 has changed

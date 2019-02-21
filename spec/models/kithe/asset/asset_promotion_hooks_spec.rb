@@ -2,7 +2,11 @@ require 'rails_helper'
 
 describe "Kithe::Asset promotion hooks", queue_adapter: :inline do
   temporary_class("TestAsset") do
-    Class.new(Kithe::Asset)
+    Class.new(Kithe::Asset) do
+      define_derivative :test do
+        # no-op, but we need a definition so will be scheduled
+      end
+    end
   end
 
   let(:unsaved_asset) {
