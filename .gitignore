@@ -9,5 +9,8 @@ spec/dummy/tmp/
 .byebug_history
 Gemfile.lock
 
+# "Appraisal" gemfiles. https://github.com/thoughtbot/appraisal#version-control
+/gemfiles/*.lock
+
 # MacOS file system bookkeeping file
 **/.DS_Store
