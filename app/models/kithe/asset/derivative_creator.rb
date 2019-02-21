@@ -38,7 +38,13 @@ class Kithe::Asset::DerivativeCreator
   def call
     return unless asset.file.present? # if no file, can't create derivatives
 
-    definitions_to_create = applicable_definitions(asset.derivatives.collect(&:key))
+    definitions_to_create = applicable_definitions
+    if lazy
+      existing_derivative_keys = asset.derivatives.collect(&:key).collect(&:to_s)
+      definitions_to_create.reject! do |defn|
+        existing_derivative_keys.include?(defn.key.to_s)
+      end
+    end
 
     return unless definitions_to_create.present?
 
@@ -71,7 +77,7 @@ class Kithe::Asset::DerivativeCreator
   #
   # Otherwise, with or without content_type, if more than one definition matches we
   # execute only the last.
-  def applicable_definitions(existing_derivative_keys)
+  def applicable_definitions
     # Find all matching definitions, and put them in the candidates hash,
     # so we can choose the best one for each
     candidates = definitions.find_all do |d|
@@ -103,16 +109,7 @@ class Kithe::Asset::DerivativeCreator
     end
 
     # Now we uniq keeping last defn
-    candidates = candidates.reverse.uniq {|d| d.key }.reverse
-
-    # Now if lazy, we eliminate any existing ones
-    if lazy
-      candidates.reject! do |defn|
-        existing_derivative_keys.include?(defn.key.to_s)
-      end
-    end
-
-    candidates
+    candidates.reverse.uniq {|d| d.key }.reverse
   end
 
   def cleanup_returned_io(io)
