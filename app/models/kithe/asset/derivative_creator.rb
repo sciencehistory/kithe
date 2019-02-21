@@ -38,15 +38,15 @@ class Kithe::Asset::DerivativeCreator
   def call
     return unless asset.file.present? # if no file, can't create derivatives
 
+    definitions_to_create = applicable_definitions(asset.derivatives.collect(&:key))
+
+    return unless definitions_to_create.present?
+
     # Note, MAY make a superfluous copy and/or download of original file, ongoing
     # discussion https://github.com/shrinerb/shrine/pull/329#issuecomment-443615868
     # https://github.com/shrinerb/shrine/pull/332
     Shrine.with_file(asset.file) do |original_file|
-      applicable_definitions.each do |defn|
-        if lazy && asset.derivatives.collect(&:key).include?(defn.key.to_s)
-          next
-        end
-
+      definitions_to_create.each do |defn|
         deriv_bytestream = defn.call(original_file: original_file, record: asset)
 
         if deriv_bytestream
@@ -71,7 +71,7 @@ class Kithe::Asset::DerivativeCreator
   #
   # Otherwise, with or without content_type, if more than one definition matches we
   # execute only the last.
-  def applicable_definitions
+  def applicable_definitions(existing_derivative_keys)
     # Find all matching definitions, and put them in the candidates hash,
     # so we can choose the best one for each
     candidates = definitions.find_all do |d|
@@ -89,8 +89,6 @@ class Kithe::Asset::DerivativeCreator
     # our preferred most-specific-content-type match is LAST, cause in general
     # we want last defn to win.
     candidates.sort! do |a, b|
-      byebug if a.nil? || b.nil?
-
       if a.key != b.key
         0
       else
@@ -105,7 +103,16 @@ class Kithe::Asset::DerivativeCreator
     end
 
     # Now we uniq keeping last defn
-    candidates.reverse.uniq {|d| d.key }.reverse
+    candidates = candidates.reverse.uniq {|d| d.key }.reverse
+
+    # Now if lazy, we eliminate any existing ones
+    if lazy
+      candidates.reject! do |defn|
+        existing_derivative_keys.include?(defn.key.to_s)
+      end
+    end
+
+    candidates
   end
 
   def cleanup_returned_io(io)
