@@ -236,6 +236,12 @@ It's not totally clear what pattern we want to establish for local metadata, it 
 
 Do we want to provide a way for you to specify a local custom uploader class to be used with `Kithe::Asset`? Maybe. Remains to be worked out. A custom local uploader might sub-class `Kithe::AssetUploader` and add functionality (shrine supports uploader sub-classes), or might re-use the kithe-provided shrine uploader plugins for kithe compatibility.
 
+## Note on deleting and callbacks
+
+If you delete an `Asset` using ActiveRecord `destroy`, shrine will take care of making sure the actual bytestream in storage is deleted too. If you use ActiveRecord `delete`, which doesn't call shrine callbacks, it won't be able to. So beware! This applies to deleting `Kithe::Derivatives` manually too.
+
+Likewise, if you are setting a new `file` on an `Asset`, make sure to do it in a way that does not disable ActiveRecord callbacks, to make sure kithe and shrine have the chance to remove originals and derivatives for the old replaced file that is no longer referenced after save.
+
 ## list of all custom kithe plugins
 
 * [kithe_accept_remote_url](../lib/shrine/plugins/kithe_accept_remote_url.rb) Allows a shrine storage that accepts remote urls as "cache" to be promoted, including supporting specifying custom headers (such as auth) to be sent to remote server. **Warning** will accept any remote_url, no whitelisting at present.
