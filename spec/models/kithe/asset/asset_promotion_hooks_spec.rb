@@ -163,6 +163,41 @@ describe "Kithe::Asset promotion hooks", queue_adapter: :inline do
     end
   end
 
+  describe "promotion_directive :delete", queue_adapter: :test do
+    let(:saved_asset) do
+      TestAsset.new(title: "test",
+        file: File.open(Kithe::Engine.root.join("spec/test_support/images/1x1_pixel.jpg"))
+      ).tap do |asset|
+        asset.set_promotion_directives(promote: "inline")
+        asset.save!
+        asset.reload
+        expect(asset.stored?).to be(true)
+      end
+    end
+
+    let!(:existing_file) {  saved_asset.file }
+
+    it "can cancel deletion" do
+      expect(Kithe::AssetUploader::Attacher).not_to receive(:delete)
+
+
+      saved_asset.set_promotion_directives(delete: false)
+      saved_asset.destroy!
+
+      expect(Kithe::AssetDeleteJob).not_to have_been_enqueued
+      expect(existing_file.exists?).to be(true)
+    end
+
+    it "can force deletion in foreground" do
+      saved_asset.set_promotion_directives(delete: :inline)
+      saved_asset.destroy!
+
+      expect(existing_file.exists?).to be(false)
+      expect(Kithe::AssetDeleteJob).not_to have_been_enqueued
+      expect(ActiveJob::Base.queue_adapter.performed_jobs.size).to eq(0)
+    end
+  end
+
   describe "unrecognized promotion directive" do
     it "raises" do
       expect {
