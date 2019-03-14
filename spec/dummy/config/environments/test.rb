@@ -41,6 +41,11 @@ Rails.application.configure do
   # Print deprecation notices to the stderr.
   config.active_support.deprecation = :stderr
 
+  # Rails 5.2.2.1 on travis fails without this defined, not sure what's up,
+  # but this should fix it.
+  # https://github.com/rails/rails/issues/35611
+  config.secret_key_base = SecureRandom.hex(64)
+
   # Raises error for missing translations
   # config.action_view.raise_on_missing_translations = true
 end
