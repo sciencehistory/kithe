@@ -19,3 +19,6 @@ group :development, :test do
   gem 'pry-byebug', '~> 3.6'
   gem 'factory_bot_rails', '~> 4.11'
 end
+
+# temporarily test against traject master
+gem "traject", github: "traject/traject"
