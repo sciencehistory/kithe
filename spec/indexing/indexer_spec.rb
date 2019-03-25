@@ -71,7 +71,8 @@ describe "Indexer end-to-end" do
   end
 
   let(:work) do
-    TestWork.new(
+    TestWork.create(
+      id: "my_pk",
       title: "a title",
       additional_title: ["additional title 1", "additional title 2"],
       external_id: [{category: "bib", value: "bib1"}, {category: "object", value: "object1"}],
@@ -130,8 +131,21 @@ describe "Indexer end-to-end" do
       "search2" => work.creator.collect(&:value),
       "search5" => work.external_id.collect(&:value),
       "rights_facet" => ["In Copyright"],
-      "max_year" => [1990]
+      "max_year" => [1990],
+      "model_name_ssi" => ["TestWork"],
+      "id" => [work.friendlier_id]
     )
   end
 
+  it "can process_with" do
+    writer = indexer.process_with([work], Traject::ArrayWriter.new)
+    expect(writer.contexts.length).to eq(1)
+    expect(indexer.settings["processing_thread_pool"]).to eq(0)
+  end
+
+  it "has no default writer so can't process_record" do
+    expect {
+      indexer.process_record(work)
+    }.to raise_error(NameError)
+  end
 end
