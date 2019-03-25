@@ -133,7 +133,7 @@ describe "Indexer end-to-end" do
       "rights_facet" => ["In Copyright"],
       "max_year" => [1990],
       "model_name_ssi" => ["TestWork"],
-      "id" => [work.friendlier_id]
+      "id" => [work.id]
     )
   end
 
