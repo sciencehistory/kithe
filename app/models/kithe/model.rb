@@ -4,6 +4,7 @@ class Kithe::Model < ActiveRecord::Base
   include AttrJson::Record
   include AttrJson::NestedAttributes
   include AttrJson::Record::Dirty
+  include Kithe::Indexable
 
   attr_json_config(default_accepts_nested_attributes: { reject_if: :all_blank })
 
