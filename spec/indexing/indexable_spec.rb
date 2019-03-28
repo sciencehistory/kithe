@@ -3,7 +3,7 @@ require 'rails_helper'
 describe Kithe::Indexable, type: :model do
   temporary_class("TestWork") do
     Class.new(Kithe::Work) do
-      self.kithe_indexable_index_class_name = "Kithe::Indexer"
+      self.kithe_indexable_mapper = Kithe::Indexer.new
     end
   end
 
@@ -42,7 +42,7 @@ describe Kithe::Indexable, type: :model do
   describe "auto-indexing" do
     temporary_class("TestWork") do
       Class.new(Kithe::Work) do
-        self.kithe_indexable_index_class_name = "Kithe::Indexer"
+        self.kithe_indexable_mapper = Kithe::Indexer.new
         self.kithe_indexable_auto_callbacks = true
       end
     end
