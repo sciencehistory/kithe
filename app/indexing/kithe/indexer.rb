@@ -11,13 +11,7 @@ module Kithe
       # We don't plan to use this for writing, no instance-level writer. 0 threads.
       @default_settings ||= super.merge(
         "processing_thread_pool" => 0,
-        "writer_class_name" => "NoWriterSet",
-
-        # for now we tell the solrjsonwriter to use no threads
-        # no batching.
-        "solr_writer.thread_pool" => 0,
-        "solr_writer.batch_size" => 1,
-
+        "writer_class_name" => "NoWriterSet"
       )
     end
 
