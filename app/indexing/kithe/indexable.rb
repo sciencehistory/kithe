@@ -32,9 +32,11 @@ module Kithe
         writer_class_name: "Traject::SolrJsonWriter",
         writer_settings: {
           # as default we tell the solrjsonwriter to use no threads,
-          # no batching. TODO softCommit on every update.
+          # no batching. softCommit on every update. Least surprising
+          # default configuration.
           "solr_writer.thread_pool" => 0,
           "solr_writer.batch_size" => 1,
+          "solr_writer.solr_update_args" => { softCommit: true }
         }
       )
     end

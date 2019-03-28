@@ -3,7 +3,7 @@ require 'rails_helper'
 describe Kithe::Indexable, type: :model do
   before do
     @solr_url = "http://localhost:8983/solr/collection1"
-    @solr_update_url = "#{@solr_url}/update/json"
+    @solr_update_url = "#{@solr_url}/update/json?softCommit=true"
 
     @original_solr_url = Kithe::Indexable.settings.solr_url
     Kithe::Indexable.settings.solr_url =@solr_url
