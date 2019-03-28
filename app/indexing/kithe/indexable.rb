@@ -20,6 +20,10 @@ module Kithe
       def writer_class
         writer_class_name.constantize
       end
+
+      def writer_instance!(additional_settings = {})
+        writer_class.new(writer_settings.merge(additional_settings))
+      end
     end
 
     mattr_accessor :settings do
@@ -60,12 +64,7 @@ module Kithe
 
       if batching
         local_writer = true
-        Thread.current[:kithe_indexable_writer] =
-          Kithe::Indexable.settings.writer_class.new(
-            Kithe::Indexable.settings.writer_settings.merge(
-              "solr_writer.batch_size" => 100
-            )
-          )
+        Thread.current[:kithe_indexable_writer] = Kithe::Indexable.settings.writer_instance!("solr_writer.batch_size" => 100)
       end
 
       if local_writer
@@ -127,7 +126,7 @@ module Kithe
       def writer
         # TODO solr_url should be from config. Actually move it to
         # defaults in Kithe::Indexer?
-        @writer ||= Thread.current[:kithe_indexable_writer] || Kithe::Indexable.settings.writer_class.new(Kithe::Indexable.settings.writer_settings)
+        @writer ||= Thread.current[:kithe_indexable_writer] || Kithe::Indexable.settings.writer_instance!
       end
 
       # A traject Indexer, probably a subclass of Kithe::Indexer, that we are going to
