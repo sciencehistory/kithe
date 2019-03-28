@@ -5,6 +5,14 @@ module Kithe
   module Indexable
     extend ActiveSupport::Concern
 
+    # These settings need to be _global_, not class-inheritable. We'll put them
+    # here for now, `Kithe::Indexable.solr_url = "https://whatever/solr/whatever"
+    # They might go elsewhere later.
+    mattr_accessor :solr_url do
+      "http://localhost:8983/"
+    end
+
+
     # in progress, really ugly implementation.
     #
     # Set some indexing parameters for the block yielded. For instance, to batch updates:
@@ -30,7 +38,7 @@ module Kithe
       if batching
         local_writer = true
         Thread.current[:kithe_indexable_writer] =
-          Traject::SolrJsonWriter.new("solr_writer.batch_size" => 100, "solr.url" => "http://localhost:8983/")
+          Traject::SolrJsonWriter.new("solr_writer.batch_size" => 100, "solr.url" => Kithe::Indexable.solr_url)
       end
 
       if local_writer
@@ -92,7 +100,7 @@ module Kithe
       def writer
         # TODO solr_url should be from config. Actually move it to
         # defaults in Kithe::Indexer?
-        @writer ||= Thread.current[:kithe_indexable_writer] || Traject::SolrJsonWriter.new(mapper.settings.merge("solr.url" => "http://localhost:8983/"))
+        @writer ||= Thread.current[:kithe_indexable_writer] || Traject::SolrJsonWriter.new(mapper.settings.merge("solr.url" => Kithe::Indexable.solr_url))
       end
 
       # A traject Indexer, probably a subclass of Kithe::Indexer, that we are going to

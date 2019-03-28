@@ -2,7 +2,15 @@ require 'rails_helper'
 
 describe Kithe::Indexable, type: :model do
   before do
-    @solr_update_url = "http://localhost:8983/update/json"
+    @solr_url = "http://localhost:8983/solr/collection1"
+    @solr_update_url = "#{@solr_url}/update/json"
+
+    @original_solr_url = Kithe::Indexable.solr_url
+    Kithe::Indexable.solr_url =@solr_url
+  end
+
+  after do
+    Kithe::Indexable.solr_url = @original_solr_url
   end
 
   temporary_class("TestWork") do
