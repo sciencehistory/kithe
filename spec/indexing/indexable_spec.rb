@@ -61,5 +61,26 @@ describe Kithe::Indexable, type: :model do
           JSON.parse(req.body) == { "delete" => work.id }
         }
     end
+
+    describe "index_with block" do
+      describe "with batching" do
+        it "batches solr updates" do
+          stub_request(:post, "http://localhost:8983/update/json")
+
+          Kithe::Indexable.index_with(batching: true) do
+            TestWork.create!(title: "test1")
+            TestWork.create!(title: "test2")
+          end
+
+          expect(WebMock).to have_requested(:post, "http://localhost:8983/update/json").once
+          expect(WebMock).to have_requested(:post, "http://localhost:8983/update/json").
+            with { |req| JSON.parse(req.body).count == 2}
+        end
+      end
+    end
+
   end
+
+
+
 end

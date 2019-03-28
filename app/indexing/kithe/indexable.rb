@@ -5,6 +5,46 @@ module Kithe
   module Indexable
     extend ActiveSupport::Concern
 
+    # in progress, really ugly implementation.
+    #
+    # Set some indexing parameters for the block yielded. For instance, to batch updates:
+    #
+    #     Kithe::Indexable.index_with(batching: true)
+    #        lots_of_records.each(&:update_index)
+    #     end
+    #
+    # And they will use a batching Traject writer for much more efficiency.
+    #
+    #
+    # What else do we want?
+    #  * Turn off callbacks.
+    #  * Supply custom local writer.
+    #  * supply custom writer options.
+    #  * flush custom local writer?
+    #  * optionally close custom local writer?
+    #
+    # Also pass in custom writer or mapper to #update_index
+    def self.index_with(batching: false)
+      local_writer = false
+
+      if batching
+        local_writer = true
+        Thread.current[:kithe_indexable_writer] =
+          Traject::SolrJsonWriter.new("solr_writer.batch_size" => 100, "solr.url" => "http://localhost:8983/")
+      end
+
+      if local_writer
+        original_writer = Thread.current[:kithe_indexable_writer]
+      end
+
+      yield
+    ensure
+      if local_writer
+        Thread.current[:kithe_indexable_writer].close
+        Thread.current[:kithe_indexable_writer] = original_writer
+      end
+    end
+
     included do
       # A whole bunch of class attributes is not great design, but it's so convenient
       # to have rails class_attribute semantics (can be set on class or instance, inherits well, so long
@@ -52,7 +92,7 @@ module Kithe
       def writer
         # TODO solr_url should be from config. Actually move it to
         # defaults in Kithe::Indexer?
-        @writer ||= Traject::SolrJsonWriter.new(mapper.settings.merge("solr.url" => "http://localhost:8983"))
+        @writer ||= Thread.current[:kithe_indexable_writer] || Traject::SolrJsonWriter.new(mapper.settings.merge("solr.url" => "http://localhost:8983/"))
       end
 
       # A traject Indexer, probably a subclass of Kithe::Indexer, that we are going to
