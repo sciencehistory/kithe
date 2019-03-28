@@ -5,28 +5,34 @@ module Kithe
   module Indexable
     extend ActiveSupport::Concern
 
-    # These settings need to be _global_, not class-inheritable. We'll put them
-    # here for now, `Kithe::Indexable.solr_url = "https://whatever/solr/whatever"
-    # They might go elsewhere later.
-    mattr_accessor :solr_url do
-      "http://localhost:8983/"
+    class IndexableSettings
+      attr_accessor :solr_url, :writer_class_name, :writer_settings
+      def initialize(solr_url:, writer_class_name:, writer_settings:)
+        @solr_url = solr_url
+        @writer_class_name = writer_class_name
+        @writer_settings = writer_settings
+      end
+
+      def writer_settings
+        { "solr.url" => solr_url }.merge(@writer_settings)
+      end
+
+      def writer_class
+        writer_class_name.constantize
+      end
     end
 
-    mattr_accessor :traject_writer_settings do
-      {
-        # for now we tell the solrjsonwriter to use no threads
-        # no batching.
-        "solr_writer.thread_pool" => 0,
-        "solr_writer.batch_size" => 1,
-      }
-    end
-    # add in the url setting on the fly, so changes change it appropriately.
-    def self.composed_traject_writer_settings
-      {"solr.url" => Kithe::Indexable.solr_url}.merge(self.traject_writer_settings)
-    end
-
-    mattr_accessor :traject_writer_class_name do
-      "Traject::SolrJsonWriter"
+    mattr_accessor :settings do
+      IndexableSettings.new(
+        solr_url: "http://localhost:8983/",
+        writer_class_name: "Traject::SolrJsonWriter",
+        writer_settings: {
+          # as default we tell the solrjsonwriter to use no threads,
+          # no batching. TODO softCommit on every update.
+          "solr_writer.thread_pool" => 0,
+          "solr_writer.batch_size" => 1,
+        }
+      )
     end
 
 
@@ -55,10 +61,9 @@ module Kithe
       if batching
         local_writer = true
         Thread.current[:kithe_indexable_writer] =
-          traject_writer_class_name.constantize.new(
-            composed_traject_writer_settings.merge(
-              "solr_writer.batch_size" => 100,
-              "solr.url" => Kithe::Indexable.solr_url
+          Kithe::Indexable.settings.writer_class.new(
+            Kithe::Indexable.settings.writer_settings.merge(
+              "solr_writer.batch_size" => 100
             )
           )
       end
@@ -122,7 +127,7 @@ module Kithe
       def writer
         # TODO solr_url should be from config. Actually move it to
         # defaults in Kithe::Indexer?
-        @writer ||= Thread.current[:kithe_indexable_writer] || Kithe::Indexable.traject_writer_class_name.constantize.new(Kithe::Indexable.composed_traject_writer_settings)
+        @writer ||= Thread.current[:kithe_indexable_writer] || Kithe::Indexable.settings.writer_class.new(Kithe::Indexable.settings.writer_settings)
       end
 
       # A traject Indexer, probably a subclass of Kithe::Indexer, that we are going to
