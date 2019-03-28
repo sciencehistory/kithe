@@ -1,6 +1,10 @@
 require 'rails_helper'
 
 describe Kithe::Indexable, type: :model do
+  before do
+    @solr_update_url = "http://localhost:8983/update/json"
+  end
+
   temporary_class("TestWork") do
     Class.new(Kithe::Work) do
       self.kithe_indexable_mapper = Kithe::Indexer.new
@@ -10,12 +14,12 @@ describe Kithe::Indexable, type: :model do
   describe "update_index" do
     describe "with something that should be in index" do
       it "sends solr update" do
-        stub_request(:post, "http://localhost:8983/update/json")
+        stub_request(:post, @solr_update_url)
 
         work = TestWork.create!(title: "test")
         work.update_index
 
-        expect(WebMock).to have_requested(:post, "http://localhost:8983/update/json").
+        expect(WebMock).to have_requested(:post, @solr_update_url).
           with { |req|
             JSON.parse(req.body) == [{"id" => [work.id],"model_name_ssi" => ["TestWork"]}]
           }
@@ -26,12 +30,12 @@ describe Kithe::Indexable, type: :model do
       it "sends delete to Solr" do
         work = TestWork.create!(title: "test")
 
-        stub_request(:post, "http://localhost:8983/update/json")
+        stub_request(:post, @solr_update_url)
 
         work.destroy!
         work.update_index
 
-        expect(WebMock).to have_requested(:post, "http://localhost:8983/update/json").
+        expect(WebMock).to have_requested(:post, @solr_update_url).
           with { |req|
             JSON.parse(req.body) == { "delete" => work.id }
           }
@@ -48,15 +52,15 @@ describe Kithe::Indexable, type: :model do
     end
 
     it "adds and deletes automatically" do
-      stub_request(:post, "http://localhost:8983/update/json")
+      stub_request(:post, @solr_update_url)
       work = TestWork.create!(title: "test")
-      expect(WebMock).to have_requested(:post, "http://localhost:8983/update/json").
+      expect(WebMock).to have_requested(:post, @solr_update_url).
         with { |req|
           JSON.parse(req.body) == [{"id" => [work.id],"model_name_ssi" => ["TestWork"]}]
         }
 
       work.destroy!
-      expect(WebMock).to have_requested(:post, "http://localhost:8983/update/json").
+      expect(WebMock).to have_requested(:post, @solr_update_url).
         with { |req|
           JSON.parse(req.body) == { "delete" => work.id }
         }
@@ -65,15 +69,15 @@ describe Kithe::Indexable, type: :model do
     describe "index_with block" do
       describe "with batching" do
         it "batches solr updates" do
-          stub_request(:post, "http://localhost:8983/update/json")
+          stub_request(:post, @solr_update_url)
 
           Kithe::Indexable.index_with(batching: true) do
             TestWork.create!(title: "test1")
             TestWork.create!(title: "test2")
           end
 
-          expect(WebMock).to have_requested(:post, "http://localhost:8983/update/json").once
-          expect(WebMock).to have_requested(:post, "http://localhost:8983/update/json").
+          expect(WebMock).to have_requested(:post, @solr_update_url).once
+          expect(WebMock).to have_requested(:post, @solr_update_url).
             with { |req| JSON.parse(req.body).count == 2}
         end
       end
