@@ -91,8 +91,35 @@ describe Kithe::Indexable, type: :model do
             with { |req| JSON.parse(req.body).count == 2}
         end
       end
-    end
 
+      describe "auto_callbacks" do
+        it "happen with no args" do
+          stub_request(:post, @solr_update_url)
+          Kithe::Indexable.index_with do
+            first = TestWork.new(title: "test1")
+            expect(first).to receive(:update_index).once.and_call_original
+            first.save!
+
+            TestWork.create!(title: "test2")
+          end
+
+          expect(WebMock).to have_requested(:post, @solr_update_url).twice
+        end
+
+        it "can be disabled" do
+          stub_request(:post, @solr_update_url)
+
+          Kithe::Indexable.index_with(auto_callbacks: false) do
+            first = TestWork.new(title: "test1")
+            expect(first).not_to receive(:update_index)
+
+            TestWork.create!(title: "test2")
+          end
+
+          expect(WebMock).not_to have_requested(:post, @solr_update_url)
+        end
+      end
+    end
   end
 
 

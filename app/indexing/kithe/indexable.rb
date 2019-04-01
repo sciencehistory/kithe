@@ -54,7 +54,6 @@ module Kithe
     #
     #
     # What else do we want?
-    #  * Turn off callbacks.
     #  * Supply custom local writer.
     #  * supply custom writer options.
     #  * flush custom local writer?
@@ -64,28 +63,34 @@ module Kithe
     #       by default other writes do soft commits.
     #
     # Also pass in custom writer or mapper to #update_index
-    def self.index_with(batching: false)
+    def self.index_with(batching: false, auto_callbacks: true)
       local_writer = false
+
+      if !auto_callbacks
+        original_auto_callbacks = Thread.current[:kithe_indexable_suppress_callbacks]
+        Thread.current[:kithe_indexable_suppress_callbacks] = true
+      end
 
       if batching
         local_writer = true
-        Thread.current[:kithe_indexable_writer] = Kithe::Indexable.settings.writer_instance!("solr_writer.batch_size" => 100)
-      end
-
-      if local_writer
         original_writer = Thread.current[:kithe_indexable_writer]
+        Thread.current[:kithe_indexable_writer] = Kithe::Indexable.settings.writer_instance!("solr_writer.batch_size" => 100)
       end
 
       yield
     ensure
+      if !auto_callbacks
+        Thread.current[:kithe_indexable_suppress_callbacks] = original_auto_callbacks
+      end
       if local_writer
         Thread.current[:kithe_indexable_writer].close
         Thread.current[:kithe_indexable_writer] = original_writer
       end
     end
 
+    # TODO clean up the Thread.current nonsense
     def self.auto_callbacks?(model)
-      model.kithe_indexable_auto_callbacks && model.kithe_indexable_mapper
+      model.kithe_indexable_auto_callbacks && model.kithe_indexable_mapper && !Thread.current[:kithe_indexable_suppress_callbacks]
     end
 
     included do
