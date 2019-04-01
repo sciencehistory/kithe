@@ -82,6 +82,7 @@ describe Kithe::Indexable, type: :model do
         thread_settings = nil
         it "batches solr updates" do
           stub_request(:post, @solr_update_url)
+          expect(Kithe::Indexable.settings.writer_class_name.constantize).to receive(:new).and_call_original
 
           Kithe::Indexable.index_with(batching: true) do
             TestWork.create!(title: "test1")
@@ -95,6 +96,12 @@ describe Kithe::Indexable, type: :model do
           expect(WebMock).to have_requested(:post, @solr_update_url).once
           expect(WebMock).to have_requested(:post, @solr_update_url).
             with { |req| JSON.parse(req.body).count == 2}
+        end
+
+        it "creates no writer if no updates happen" do
+          expect(Kithe::Indexable.settings.writer_class_name.constantize).not_to receive(:new)
+          Kithe::Indexable.index_with(batching: true) do
+          end
         end
       end
 
