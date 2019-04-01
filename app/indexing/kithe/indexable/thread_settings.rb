@@ -3,13 +3,9 @@ module Kithe
     class ThreadSettings
       THREAD_CURRENT_KEY = :kithe_indexable_current_writer_settings
 
-      def self.push(batching:, auto_callbacks:)
+      def self.push(**kwargs)
         original = Thread.current[THREAD_CURRENT_KEY]
-        instance = new(
-          batching: batching,
-          auto_callbacks: auto_callbacks,
-          original_settings: original
-        )
+        instance = new(kwargs.merge(original_settings: original))
         Thread.current[THREAD_CURRENT_KEY] = instance
 
         instance
@@ -23,10 +19,18 @@ module Kithe
 
       # Nobody uses this it's private, use Kithe::Indexable::ThreadSettings.push, and
       # some_thread_settings.pop or Kithe::Indexable::ThreadSettings.current.pop
-      def initialize(batching:, auto_callbacks:, original_settings:)
+      def initialize(batching:, auto_callbacks:, original_settings:,
+        writer:)
         @original_settings = original_settings
         @batching = !!batching
         @suppress_callbacks = !auto_callbacks
+
+        @writer = writer
+
+        if @batching && @writer
+          raise ArgumentError.new("either `batching:true` convenience, or `writer:` specified, you can't do both")
+        end
+
 
         @local_writer = false
       end
@@ -34,9 +38,11 @@ module Kithe
 
 
       def writer
-        if @batching
-          @local_writer = true
-          @writer ||= Kithe::Indexable.settings.writer_instance!("solr_writer.batch_size" => 100)
+        @writer ||= begin
+          if @batching
+            @local_writer = true
+            Kithe::Indexable.settings.writer_instance!("solr_writer.batch_size" => 100)
+          end
         end
       end
 

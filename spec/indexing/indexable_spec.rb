@@ -129,9 +129,25 @@ describe Kithe::Indexable, type: :model do
           expect(Thread.current[Kithe::Indexable::ThreadSettings::THREAD_CURRENT_KEY]).to be_nil
         end
       end
+
+      describe "specified writer" do
+        let(:array_writer) { writer = Traject::ArrayWriter.new }
+
+        it "raises ArgumentError if also batching" do
+          expect {
+            Kithe::Indexable.index_with(batching: true, writer: array_writer) do
+            end
+          }.to raise_error(ArgumentError)
+        end
+
+        it "uses custom writer, by default without close" do
+          expect(array_writer).to receive(:put).twice
+          Kithe::Indexable.index_with(writer: array_writer) do
+            TestWork.create!(title: "test1")
+            TestWork.create!(title: "test2")
+          end
+        end
+      end
     end
   end
-
-
-
 end

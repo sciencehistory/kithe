@@ -46,8 +46,6 @@ module Kithe
     end
 
 
-    # in progress, really ugly implementation.
-    #
     # Set some indexing parameters for the block yielded. For instance, to batch updates:
     #
     #     Kithe::Indexable.index_with(batching: true)
@@ -58,20 +56,23 @@ module Kithe
     #
     #
     # What else do we want?
-    #  * Supply custom local writer.
-    #  * supply custom writer options.
-    #  * flush custom local writer?
-    #  * optionally close custom local writer?
+    #  * supply custom writer options. (maybe not)
+    #  * flush custom local writer? (prob)
+    #  * optionally close custom local writer? (prob)
     #  * we need a way to specify in index_with whether to do commits on every update, commits at end, and soft/hard
     #     * batching by default should not do softCommits, but do a commit at the end instead. Even though
-    #       by default other writes do soft commits.
+    #       by default other writes do soft commits. (maybe not)
     #
     # Also pass in custom writer or mapper to #update_index
-    def self.index_with(batching: false, auto_callbacks: true)
-      settings = ThreadSettings.push(batching: batching, auto_callbacks: auto_callbacks)
+    def self.index_with(batching: false, auto_callbacks: true, writer: nil)
+      settings = ThreadSettings.push(
+        batching: batching,
+        auto_callbacks: auto_callbacks,
+        writer: writer)
+
       yield settings
     ensure
-      settings.pop
+      settings.pop if settings
     end
 
     def self.auto_callbacks?(model)
