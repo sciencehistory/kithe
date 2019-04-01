@@ -78,12 +78,18 @@ describe Kithe::Indexable, type: :model do
       describe "with batching" do
         # TODO should this turn off softCommits? do we need a way to specify in index_with
         # whether to do commits on every update, commits at end, and soft/hard? yes.
+        #
+        thread_settings = nil
         it "batches solr updates" do
           stub_request(:post, @solr_update_url)
 
           Kithe::Indexable.index_with(batching: true) do
             TestWork.create!(title: "test1")
             TestWork.create!(title: "test2")
+
+            thread_settings = Kithe::Indexable::ThreadSettings.current
+            expect(thread_settings.writer).to be_present
+            expect(thread_settings.writer).to receive(:close).and_call_original
           end
 
           expect(WebMock).to have_requested(:post, @solr_update_url).once
@@ -104,6 +110,8 @@ describe Kithe::Indexable, type: :model do
           end
 
           expect(WebMock).to have_requested(:post, @solr_update_url).twice
+
+          expect(Thread.current[Kithe::Indexable::ThreadSettings::THREAD_CURRENT_KEY]).to be_nil
         end
 
         it "can be disabled" do
@@ -117,6 +125,8 @@ describe Kithe::Indexable, type: :model do
           end
 
           expect(WebMock).not_to have_requested(:post, @solr_update_url)
+
+          expect(Thread.current[Kithe::Indexable::ThreadSettings::THREAD_CURRENT_KEY]).to be_nil
         end
       end
     end

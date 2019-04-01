@@ -14,7 +14,11 @@ module Kithe
       end
 
       def writer_settings
-        { "solr.url" => solr_url }.merge(@writer_settings)
+        if solr_url
+          { "solr.url" => solr_url }.merge(@writer_settings)
+        else
+          @writer_settings
+        end
       end
 
       def writer_class
@@ -28,7 +32,7 @@ module Kithe
 
     mattr_accessor :settings do
       IndexableSettings.new(
-        solr_url: "http://localhost:8983/",
+        solr_url: "http://localhost:8983/solr/default",
         writer_class_name: "Traject::SolrJsonWriter",
         writer_settings: {
           # as default we tell the solrjsonwriter to use no threads,
@@ -64,33 +68,14 @@ module Kithe
     #
     # Also pass in custom writer or mapper to #update_index
     def self.index_with(batching: false, auto_callbacks: true)
-      local_writer = false
-
-      if !auto_callbacks
-        original_auto_callbacks = Thread.current[:kithe_indexable_suppress_callbacks]
-        Thread.current[:kithe_indexable_suppress_callbacks] = true
-      end
-
-      if batching
-        local_writer = true
-        original_writer = Thread.current[:kithe_indexable_writer]
-        Thread.current[:kithe_indexable_writer] = Kithe::Indexable.settings.writer_instance!("solr_writer.batch_size" => 100)
-      end
-
-      yield
+      settings = ThreadSettings.push(batching: batching, auto_callbacks: auto_callbacks)
+      yield settings
     ensure
-      if !auto_callbacks
-        Thread.current[:kithe_indexable_suppress_callbacks] = original_auto_callbacks
-      end
-      if local_writer
-        Thread.current[:kithe_indexable_writer].close
-        Thread.current[:kithe_indexable_writer] = original_writer
-      end
+      settings.pop
     end
 
-    # TODO clean up the Thread.current nonsense
     def self.auto_callbacks?(model)
-      model.kithe_indexable_auto_callbacks && model.kithe_indexable_mapper && !Thread.current[:kithe_indexable_suppress_callbacks]
+      model.kithe_indexable_auto_callbacks && model.kithe_indexable_mapper && !ThreadSettings.current.suppressed_callbacks?
     end
 
     included do
@@ -138,9 +123,7 @@ module Kithe
       end
 
       def writer
-        # TODO solr_url should be from config. Actually move it to
-        # defaults in Kithe::Indexer?
-        @writer ||= Thread.current[:kithe_indexable_writer] || Kithe::Indexable.settings.writer_instance!
+        @writer ||= ThreadSettings.current.writer  || Kithe::Indexable.settings.writer_instance!
       end
 
       # A traject Indexer, probably a subclass of Kithe::Indexer, that we are going to
