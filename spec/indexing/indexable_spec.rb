@@ -76,6 +76,8 @@ describe Kithe::Indexable, type: :model do
 
     describe "index_with block" do
       describe "with batching" do
+        # TODO should this turn off softCommits? do we need a way to specify in index_with
+        # whether to do commits on every update, commits at end, and soft/hard? yes.
         it "batches solr updates" do
           stub_request(:post, @solr_update_url)
 

@@ -59,6 +59,9 @@ module Kithe
     #  * supply custom writer options.
     #  * flush custom local writer?
     #  * optionally close custom local writer?
+    #  * we need a way to specify in index_with whether to do commits on every update, commits at end, and soft/hard
+    #     * batching by default should not do softCommits, but do a commit at the end instead. Even though
+    #       by default other writes do soft commits.
     #
     # Also pass in custom writer or mapper to #update_index
     def self.index_with(batching: false)
@@ -79,6 +82,10 @@ module Kithe
         Thread.current[:kithe_indexable_writer].close
         Thread.current[:kithe_indexable_writer] = original_writer
       end
+    end
+
+    def self.auto_callbacks?(model)
+      model.kithe_indexable_auto_callbacks && model.kithe_indexable_mapper
     end
 
     included do
@@ -102,7 +109,7 @@ module Kithe
 
       # after new, update, destroy, all of em. We'll figure out what to do
       # in the RecordIndexUpdater.
-      after_commit :update_index, if: -> { kithe_indexable_auto_callbacks && kithe_indexable_mapper }
+      after_commit :update_index, if: -> { Kithe::Indexable.auto_callbacks?(self) }
     end
 
     def update_index
