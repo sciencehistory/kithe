@@ -77,7 +77,10 @@ This is a Rails 'engine' whose template was created with: `rails plugin new kith
 
 * Note we have chosen not to make it 'mountable' or 'isolated', I think that would be inappropriate for this kind of gem. It _is_ an engine so it can hook into Rails load paths and config as needed.
 
+
+
 * Note we are currently using the standard rails-generated dummy app in spec/dummy for testing, rather than [engine_cart](https://github.com/cbeer/engine_cart) or [combustion](https://github.com/pat/combustion).
+  * Before you run the tests for the first time, create the database by running: `rails db:setup`. This will create two databases, kithe_development and kithe_test.
   * We do use [appraisal](https://github.com/thoughtbot/appraisal) to test under multiple rails versions,but still wtih the standard dummy app. It works for both Rails 5.2 and 6.0, because Rails structure changes have settled down.
   * Locally you can run `bundle exec appraisal rspec` to run tests multiple times for each rails we have configured, or eg `bundle exec appraisal rails-60 rspec` for a particular one.
   * If the project `Gemfile` _or_ `Appraisal` file changes, you may need to re-run `bundle exec appraisal install` and commit changes.
