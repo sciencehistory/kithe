@@ -41,6 +41,7 @@ module Kithe
           "solr_writer.thread_pool" => 0,
           "solr_writer.batch_size" => 1,
           "solr_writer.solr_update_args" => { softCommit: true },
+          "solr_writer.http_timeout" => 3,
           "logger" => Rails.logger,
           # no skippable exceptions please
           # "solr_writer.skippable_exceptions" => []
