@@ -11,7 +11,8 @@ module Kithe
       # We don't plan to use this for writing, no instance-level writer. 0 threads.
       @default_settings ||= super.merge(
         "processing_thread_pool" => 0,
-        "writer_class_name" => "NoWriterSet"
+        "writer_class_name" => "NoWriterSet",
+        "logger" => Rails.logger
       )
     end
 
