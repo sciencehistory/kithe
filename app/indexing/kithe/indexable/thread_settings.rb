@@ -20,17 +20,17 @@ module Kithe
       # Nobody uses this it's private, use Kithe::Indexable::ThreadSettings.push, and
       # some_thread_settings.pop or Kithe::Indexable::ThreadSettings.current.pop
       def initialize(batching:, auto_callbacks:, original_settings:,
-        writer:)
+        writer:, on_finish:)
         @original_settings = original_settings
         @batching = !!batching
         @suppress_callbacks = !auto_callbacks
+        @on_finish = on_finish
 
         @writer = writer
 
         if @batching && @writer
           raise ArgumentError.new("either `batching:true` convenience, or `writer:` specified, you can't do both")
         end
-
 
         @local_writer = false
       end
@@ -51,8 +51,14 @@ module Kithe
       end
 
       def pop
-        if @local_writer
-          writer.close
+        on_finish = if @local_writer && @on_finish.nil?
+          proc {|writer| writer.close }
+        else
+          @on_finish
+        end
+
+        if on_finish
+          on_finish.call(writer)
         end
         Thread.current[THREAD_CURRENT_KEY] = @original_thread_current_settings
       end

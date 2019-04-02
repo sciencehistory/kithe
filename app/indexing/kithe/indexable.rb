@@ -40,7 +40,10 @@ module Kithe
           # default configuration.
           "solr_writer.thread_pool" => 0,
           "solr_writer.batch_size" => 1,
-          "solr_writer.solr_update_args" => { softCommit: true }
+          "solr_writer.solr_update_args" => { softCommit: true },
+          "logger" => Rails.logger,
+          # no skippable exceptions please
+          # "solr_writer.skippable_exceptions" => []
         }
       )
     end
@@ -54,21 +57,13 @@ module Kithe
     #
     # And they will use a batching Traject writer for much more efficiency.
     #
-    #
-    # What else do we want?
-    #  * supply custom writer options. (maybe not)
-    #  * flush custom local writer? (prob)
-    #  * optionally close custom local writer? (prob)
-    #  * we need a way to specify in index_with whether to do commits on every update, commits at end, and soft/hard
-    #     * batching by default should not do softCommits, but do a commit at the end instead. Even though
-    #       by default other writes do soft commits. (maybe not)
-    #
     # Also pass in custom writer or mapper to #update_index
-    def self.index_with(batching: false, auto_callbacks: true, writer: nil)
+    def self.index_with(batching: false, auto_callbacks: true, writer: nil, on_finish: nil)
       settings = ThreadSettings.push(
         batching: batching,
         auto_callbacks: auto_callbacks,
-        writer: writer)
+        writer: writer,
+        on_finish: on_finish)
 
       yield settings
     ensure

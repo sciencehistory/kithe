@@ -103,6 +103,26 @@ describe Kithe::Indexable, type: :model do
           Kithe::Indexable.index_with(batching: true) do
           end
         end
+
+        it "respects non-default on_finish" do
+          stub_request(:post, @solr_update_url)
+          stub_request(:get, "#{@solr_url}/update/json?commit=true")
+          expect(Kithe::Indexable.settings.writer_class_name.constantize).to receive(:new).and_call_original
+
+          Kithe::Indexable.index_with(batching: true, on_finish: ->(w){ w.flush; w.commit(commit: true) }) do
+            TestWork.create!(title: "test1")
+            TestWork.create!(title: "test2")
+
+            thread_settings = Kithe::Indexable::ThreadSettings.current
+            expect(thread_settings.writer).to be_present
+            expect(thread_settings.writer).to receive(:flush).and_call_original
+          end
+
+          expect(WebMock).to have_requested(:post, @solr_update_url).once
+          expect(WebMock).to have_requested(:post, @solr_update_url).
+            with { |req| JSON.parse(req.body).count == 2}
+        end
+
       end
 
       describe "auto_callbacks" do
@@ -150,6 +170,18 @@ describe Kithe::Indexable, type: :model do
         it "uses custom writer, by default without close" do
           expect(array_writer).to receive(:put).twice
           Kithe::Indexable.index_with(writer: array_writer) do
+            TestWork.create!(title: "test1")
+            TestWork.create!(title: "test2")
+          end
+        end
+
+        it "uses on_finish if specified" do
+          writer = double("writer")
+
+          allow(writer).to receive(:close)
+          expect(writer).to receive(:put).twice
+
+          Kithe::Indexable.index_with(writer: writer, on_finish: ->(w) { w.close }) do
             TestWork.create!(title: "test1")
             TestWork.create!(title: "test2")
           end
