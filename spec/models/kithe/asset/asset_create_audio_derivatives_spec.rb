@@ -1,7 +1,5 @@
-# Make a new test file cause it's a buncha func
 require 'rails_helper'
 
-# Not sure how to get our
 describe "Kithe::Asset derivative definitions", queue_adapter: :test do
   let(:a_webm_deriv_file) { Kithe::Engine.root.join("spec/test_support/audio/webm_deriv.webm") }
 
