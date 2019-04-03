@@ -6,11 +6,12 @@ module Kithe
     extend ActiveSupport::Concern
 
     class IndexableSettings
-      attr_accessor :solr_url, :writer_class_name, :writer_settings
-      def initialize(solr_url:, writer_class_name:, writer_settings:)
+      attr_accessor :solr_url, :writer_class_name, :writer_settings, :model_name_solr_field
+      def initialize(solr_url:, writer_class_name:, writer_settings:, model_name_solr_field:)
         @solr_url = solr_url
         @writer_class_name = writer_class_name
         @writer_settings = writer_settings
+        @model_name_solr_field = model_name_solr_field
       end
 
       def writer_settings
@@ -33,6 +34,7 @@ module Kithe
     mattr_accessor :settings do
       IndexableSettings.new(
         solr_url: "http://localhost:8983/solr/default",
+        model_name_solr_field: "model_name_ssi",
         writer_class_name: "Traject::SolrJsonWriter",
         writer_settings: {
           # as default we tell the solrjsonwriter to use no threads,

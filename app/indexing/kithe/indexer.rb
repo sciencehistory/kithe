@@ -4,9 +4,6 @@ module Kithe
   class Indexer < Traject::Indexer
     include Kithe::Indexer::ObjExtract
 
-    # TODO We might not actually want to do these automatically....
-    class_attribute :model_name_solr_field, instance_writer: false, default: "model_name_ssi"
-
     def self.default_settings
       # We don't plan to use this for writing, no instance-level writer. 0 threads.
       @default_settings ||= super.merge(
@@ -16,12 +13,15 @@ module Kithe
       )
     end
 
-    # Automatically index model name and friendlier_id
-    # TODO We might not actually want to do these automatically....
+    # Automatically index model name and id.
+    # So we can retrieve them later from Solr, which is crucial so we can fetch the
+    # actual object from the db.
+    #
+    # TODO We might not actually want to do these automatically, or allow it to be disabled?
     configure do
-      # hard-coded id -> id for now. id is a UUID.
+      # hard-coded id -> id for now. id is a UUID. Can be made configurable?
       to_field "id", obj_extract("id")
-      to_field model_name_solr_field, obj_extract("class", "name")
+      to_field Kithe::Indexable.settings.model_name_solr_field, obj_extract("class", "name")
     end
   end
 end
