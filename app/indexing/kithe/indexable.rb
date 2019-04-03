@@ -6,8 +6,8 @@ module Kithe
     extend ActiveSupport::Concern
 
     class IndexableSettings
-      attr_accessor :solr_url, :writer_class_name, :writer_settings, :model_name_solr_field
-      def initialize(solr_url:, writer_class_name:, writer_settings:, model_name_solr_field:)
+      attr_accessor :solr_url, :writer_class_name, :writer_settings, :model_name_solr_field, :disable_callbacks
+      def initialize(solr_url:, writer_class_name:, writer_settings:, model_name_solr_field:, disable_callbacks: false)
         @solr_url = solr_url
         @writer_class_name = writer_class_name
         @writer_settings = writer_settings
@@ -74,7 +74,10 @@ module Kithe
     end
 
     def self.auto_callbacks?(model)
-      model.kithe_indexable_auto_callbacks && model.kithe_indexable_mapper && !ThreadSettings.current.suppressed_callbacks?
+      !Kithe::Indexable.settings.disable_callbacks &&
+        model.kithe_indexable_auto_callbacks &&
+        model.kithe_indexable_mapper &&
+        !ThreadSettings.current.suppressed_callbacks?
     end
 
     included do

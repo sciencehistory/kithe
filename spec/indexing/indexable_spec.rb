@@ -99,6 +99,24 @@ describe Kithe::Indexable, type: :model do
         }
     end
 
+    describe "with global disable_callbacks" do
+      around do |example|
+        original = Kithe::Indexable.settings.disable_callbacks
+        Kithe::Indexable.settings.disable_callbacks = true
+        example.run
+        Kithe::Indexable.settings.disable_callbacks = original
+      end
+
+      it "does not index" do
+        work = TestWork.new(title: "test")
+
+        expect(work).not_to receive(:update_index)
+        work.save!
+
+        expect(WebMock).not_to have_requested(:post, @solr_update_url)
+      end
+    end
+
     describe "index_with block" do
       describe "with batching" do
         # TODO should this turn off softCommits? do we need a way to specify in index_with
