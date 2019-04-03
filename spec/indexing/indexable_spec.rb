@@ -49,6 +49,31 @@ describe Kithe::Indexable, type: :model do
           }
       end
     end
+
+    describe "with explicit mapper" do
+      let(:custom_mapper) { Kithe::Indexer.new }
+      let(:work) { TestWork.create!(title: "test") }
+
+      it "uses" do
+        stub_request(:post, @solr_update_url)
+
+        expect(custom_mapper).to receive(:process_with).with([work])
+        expect(work.kithe_indexable_mapper).not_to receive(:process_with)
+
+        work.update_index(mapper: custom_mapper)
+      end
+    end
+
+    describe "with explicit writer" do
+      let(:custom_writer) { double(:custom_writer) }
+      let(:work) { TestWork.create!(title: "test") }
+
+      it "uses" do
+        expect(custom_writer).to receive(:put)
+        work.update_index(writer: custom_writer)
+      end
+    end
+
   end
 
   describe "auto-indexing" do

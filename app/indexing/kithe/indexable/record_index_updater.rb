@@ -2,8 +2,10 @@ module Kithe
   module Indexable
     class RecordIndexUpdater
       attr_reader :record
-      def initialize(record)
+      def initialize(record, mapper:nil, writer:nil)
         @record = record
+        @writer = writer
+        @mapper = mapper
       end
 
       def update_index
@@ -23,10 +25,12 @@ module Kithe
       # A traject Indexer, probably a subclass of Kithe::Indexer, that we are going to
       # use with `process_with`.
       def mapper
-        if record.kithe_indexable_mapper.nil?
-          raise TypeError.new("Can't call update_index without `kithe_indexable_mapper` given for #{record.inspect}")
+        @mapper ||= begin
+          if record.kithe_indexable_mapper.nil?
+            raise TypeError.new("Can't call update_index without `kithe_indexable_mapper` given for #{record.inspect}")
+          end
+          record.kithe_indexable_mapper
         end
-        record.kithe_indexable_mapper
       end
 
       def should_be_in_index?

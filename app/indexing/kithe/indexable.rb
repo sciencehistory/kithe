@@ -101,8 +101,15 @@ module Kithe
       after_commit :update_index, if: -> { Kithe::Indexable.auto_callbacks?(self) }
     end
 
-    def update_index
-      RecordIndexUpdater.new(self).update_index
+    # Update the Solr index for this object -- may remove it from index or add it to
+    # index depending on state.
+    #
+    # Will use the configured kithe_indexable_mapper by default, or you can pass one in.
+    #
+    # By default will use a per-update writer, or thread/block-specific writer configured with `self.index_with`,
+    # or you can pass one in.
+    def update_index(mapper: kithe_indexable_mapper, writer:nil)
+      RecordIndexUpdater.new(self, mapper: mapper, writer: writer).update_index
     end
   end
 end
