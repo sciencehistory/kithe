@@ -19,11 +19,11 @@ module Kithe
 
       # Nobody uses this it's private, use Kithe::Indexable::ThreadSettings.push, and
       # some_thread_settings.pop or Kithe::Indexable::ThreadSettings.current.pop
-      def initialize(batching:, auto_callbacks:, original_settings:,
+      def initialize(batching:, disable_callbacks:, original_settings:,
         writer:, on_finish:)
         @original_settings = original_settings
         @batching = !!batching
-        @suppress_callbacks = !auto_callbacks
+        @disable_callbacks = disable_callbacks
         @on_finish = on_finish
 
         @writer = writer
@@ -46,8 +46,8 @@ module Kithe
         end
       end
 
-      def suppressed_callbacks?
-        @suppress_callbacks
+      def disabled_callbacks?
+        @disable_callbacks
       end
 
       def pop
@@ -75,7 +75,7 @@ module Kithe
         end
 
         # no suppressed callbacks
-        def suppressed_callbacks?
+        def disabled_callbacks?
           false
         end
       end

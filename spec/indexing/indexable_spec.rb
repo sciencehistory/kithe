@@ -187,7 +187,7 @@ describe Kithe::Indexable, type: :model do
         it "can be disabled" do
           stub_request(:post, @solr_update_url)
 
-          Kithe::Indexable.index_with(auto_callbacks: false) do
+          Kithe::Indexable.index_with(disable_callbacks: true) do
             first = TestWork.new(title: "test1")
             expect(first).not_to receive(:update_index)
 

@@ -61,10 +61,10 @@ module Kithe
     # And they will use a batching Traject writer for much more efficiency.
     #
     # Also pass in custom writer or mapper to #update_index
-    def self.index_with(batching: false, auto_callbacks: true, writer: nil, on_finish: nil)
+    def self.index_with(batching: false, disable_callbacks: false, writer: nil, on_finish: nil)
       settings = ThreadSettings.push(
         batching: batching,
-        auto_callbacks: auto_callbacks,
+        disable_callbacks: disable_callbacks,
         writer: writer,
         on_finish: on_finish)
 
@@ -77,7 +77,7 @@ module Kithe
       !Kithe::Indexable.settings.disable_callbacks &&
         model.kithe_indexable_auto_callbacks &&
         model.kithe_indexable_mapper &&
-        !ThreadSettings.current.suppressed_callbacks?
+        !ThreadSettings.current.disabled_callbacks?
     end
 
     included do
