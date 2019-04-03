@@ -7,7 +7,6 @@ describe "Kithe::Asset derivative definitions", queue_adapter: :test do
     deriv_src_path = a_webm_deriv_file
     Class.new(Kithe::Asset) do
 
-
       define_derivative(:a_webm_file) do |original_file|
         FileUtils.cp(deriv_src_path,
              Kithe::Engine.root.join("spec/test_support/audio/webm_deriv-TEMP.webm"))
