@@ -94,7 +94,7 @@ module Kithe
 
       # whether to invoke after_commit callback, default false. Set to true
       # to have auto indexing happening.
-      class_attribute :kithe_indexable_auto_callbacks
+      class_attribute :kithe_indexable_auto_callbacks, default: true
 
       # after new, update, destroy, all of em. We'll figure out what to do
       # in the RecordIndexUpdater.

@@ -16,10 +16,11 @@ describe Kithe::Indexable, type: :model do
   temporary_class("TestWork") do
     Class.new(Kithe::Work) do
       self.kithe_indexable_mapper = Kithe::Indexer.new
+      self.kithe_indexable_auto_callbacks = false
     end
   end
 
-  describe "update_index" do
+  describe "update_index without auto-indexing" do
     describe "with something that should be in index" do
       it "sends solr update" do
         stub_request(:post, @solr_update_url)
@@ -80,7 +81,6 @@ describe Kithe::Indexable, type: :model do
     temporary_class("TestWork") do
       Class.new(Kithe::Work) do
         self.kithe_indexable_mapper = Kithe::Indexer.new
-        self.kithe_indexable_auto_callbacks = true
       end
     end
 
