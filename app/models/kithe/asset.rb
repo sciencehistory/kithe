@@ -8,6 +8,10 @@ class Kithe::Asset < Kithe::Model
   belongs_to :leaf_representative, -> { none }, class_name: "Kithe::Model"
   private :representative, :representative=, :leaf_representative, :leaf_representative=
 
+  after_initialize do
+    self.kithe_model_type = "asset" if self.kithe_model_type.nil?
+  end
+
   # TODO we may need a way for local app to provide custom uploader class.
   # or just override at ./kithe/asset_uploader.rb locally?
   include Kithe::AssetUploader::Attachment.new(:file)
