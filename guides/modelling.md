@@ -42,12 +42,24 @@ The downside of single-table inheritance is that the base kithe_models table may
 
 The generalization can possibly be useful in the future in some cases. We've basically defined a single one-to-many association from any Kithe::Model to any other (work members/parent), and a single many-to-many (collection association); perhaps in the future we can generalize this for more purposes, maybe even add a 'type' qualifier to each association.
 
-**Note Well** Because of [how Rails Single-Table Inheritance interacts with dev-mode auto-loading](https://guides.rubyonrails.org/autoloading_and_reloading_constants.html#autoloading-and-sti), for any custom subclasses you define, you should add a to_prepare block to load them, perhaps in your config/application.rb. If you have a local `Work` and `Asset` class:
+### Single-Table Inheritance and fetching/determining which main subclass/model type
+
+**Note Well** Because of [how Rails Single-Table Inheritance interacts with dev-mode auto-loading](https://guides.rubyonrails.org/autoloading_and_reloading_constants.html#autoloading-and-sti), it can make things like `Kithe::Work.all` not work right in dev mode, unless you do some extra setup. For any custom subclasses you define, you should add a to_prepare block to load them, perhaps in your config/application.rb. If you have a local `Work` and `Asset` class:
 
     config.to_prepare do
       require_dependency "work"
       require_dependency "asset"
     end
+
+We define a Rails [enum](https://api.rubyonrails.org/v5.2.2.1/classes/ActiveRecord/Enum.html) for `kithe_model_type`, with values `work`, `collection`, or `asset`, that you can use to fetch any objects of these main categories where convenient, which should also avoid the STI/autoloading issues, without needing the `to_prepare`.
+
+    # should always be 'work', 'collection', or 'asset', even with complex additional
+    # inheritance hieararchy:
+    some_model.kithe_model_type
+
+    Kithe::Model.collection.where(whatever)
+    Kithe::Model.where(kithe_model_type: ["work", "asset"]) # all works or assets
+    some_model.work? # or collection? or asset?
 
 ## Primary keys:  friendlier_id
 
