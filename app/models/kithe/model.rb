@@ -5,6 +5,22 @@ class Kithe::Model < ActiveRecord::Base
   include AttrJson::NestedAttributes
   include AttrJson::Record::Dirty
 
+
+  # While Rails STI means the actual specific class is in `type`, sometimes
+  # it can be convenient to fetch on a top category of Kithe::Model without using
+  # Rails STI.
+  #
+  # using ActiveRecord enum feature, now you can do things like:
+  #
+  # * model.work? ; model.collection? ; model.asset?
+  # * model.kithe_model_type # => 'work' or 'collection' or 'asset'
+  # * Kithe::Model.where(kithe_model_type: ["work", "asset"])
+  # * Kithe::Model.collection.where(title: "whatever")
+  #
+  # Since the rails enum uses an int field, this doens't take up too much extra
+  # space in pg or anything, and is convenient.
+  enum kithe_model_type: { collection: 0, work: 1, asset: 2}
+
   attr_json_config(default_accepts_nested_attributes: { reject_if: :all_blank })
 
   validates_presence_of :title
