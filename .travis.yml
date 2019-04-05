@@ -3,8 +3,6 @@ rvm:
  - 2.5.3
 before_install:
   - sudo apt-get install -y libvips-tools
-addons:
-  postgresql: "9.6"
 services:
   - postgresql
 cache:
@@ -12,6 +10,7 @@ cache:
   directories:
     - /home/travis/.rvm/
 addons:
+  postgresql: "9.6"
   apt:
     sources:
     - sourceline: "ppa:mc3man/trusty-media"
