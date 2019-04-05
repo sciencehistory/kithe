@@ -11,12 +11,12 @@ cache:
   bundler: true
   directories:
     - /home/travis/.rvm/
-addons:
-  apt:
-    sources:
-    - sourceline: "ppa:mc3man/trusty-media"
-    packages:
-    - ffmpeg
+# addons:
+#   apt:
+#     sources:
+#     - sourceline: "ppa:mc3man/trusty-media"
+#     packages:
+#     - ffmpeg
 gemfile:
   - gemfiles/rails_52.gemfile
   - gemfiles/rails_60.gemfile
