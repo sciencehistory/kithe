@@ -41,20 +41,27 @@ describe Kithe::FfmpegTransformer do
         instance = described_class.new(output_suffix:'mp3', bitrate:'128')
       }.to raise_error(ArgumentError)
     end
-    it "only takes extra args as an array" do
+    it "requires other_ffmpeg_args to be an array" do
       expect {
         instance = described_class.new(output_suffix: 'mp3', force_mono: true, other_ffmpeg_args:'-timelimit 120')
         args = instance.settings_arguments()
       }.to raise_error(ArgumentError)
     end
-    it "adds extra arguments" do
+    it "adds extra arguments when correctly supploed" do
       instance = described_class.new(output_suffix: 'mp3', force_mono: true, other_ffmpeg_args:['-timelimit', '120'])
       args = instance.settings_arguments()
       expect(args).to match_array(["-ac", "1", "-timelimit", "120"])
     end
   end
 
-  describe "not thumbnail mode" do
+  describe "correctly performs conversions" do
+    it "raises ExitError when ffmpeg fails; does not fail silently" do
+      expect {
+        instance = described_class.new(output_suffix: 'mp3', audio_codec: 'nonexistent_codec')
+        output = instance.call(input_file)
+      }.to raise_error(TTY::Command::ExitError)
+    end
+
     it "converts to mp3" do
       instance = described_class.new(output_suffix: 'mp3', force_mono: true, bitrate: '32k')
       output = instance.call(input_file)
@@ -65,9 +72,8 @@ describe Kithe::FfmpegTransformer do
     it "converts to webm" do
       instance = described_class.new(output_suffix: 'webm', force_mono: true, bitrate: '32k')
       output = instance.call(input_file)
-      # Marcel should technically be smart enough to detect 'audio/mpeg' here,
-      # but actually returns 'video/webm' even in the absence of a video stream.
-      # Not the end of the world.
+      # Magic-number based mime detection yields 'video/webm' here, even in the absence
+      # of a video stream. The correct mimetype is really 'audio/webm.'
       expect(/webm/.match(Marcel::MimeType.for(output))).not_to be_nil
       output.close!
     end
