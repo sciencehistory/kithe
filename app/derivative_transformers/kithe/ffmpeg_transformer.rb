@@ -27,7 +27,9 @@ module Kithe
       end
     end
 
-    def settings_arguments()
+    # These are the arguments that specify the nature of the derivative transformation
+    # (rather than those specifying input and output files, which are in the call method.
+    def transform_arguments
       result  = []
       result += ["-ac", "1"] if @force_mono
       result += ["-codec:a", @audio_codec] if @audio_codec
@@ -39,8 +41,10 @@ module Kithe
     # Will raise TTY::Command::ExitError if the ffmpeg returns non-null.
     def call(original_file)
       tempfile = Tempfile.new(['temp_deriv', ".#{@output_suffix}"])
+      # -y tells ffmpeg to overwrite the abovementioned tempfile (still empty)
+      # with the output of ffmpeg.
       ffmpeg_args =  [ffmpeg_command, "-y", "-i", original_file.path]
-      ffmpeg_args += settings_arguments + [tempfile.path]
+      ffmpeg_args += transform_arguments + [tempfile.path]
       TTY::Command.new(printer: :null).run(*ffmpeg_args)
       return tempfile
     end

@@ -8,27 +8,27 @@ describe Kithe::FfmpegTransformer do
   describe "properly handles common ffmpeg arguments" do
     it "uses ffmpeg defaults for mp3" do
       instance = described_class.new(output_suffix: 'mp3')
-      args = instance.settings_arguments()
+      args = instance.transform_arguments
       expect(args).to match_array([])
     end
     it "adds a bitrate when specified" do
       instance = described_class.new(output_suffix: 'mp3', bitrate: '64k')
-      args = instance.settings_arguments()
+      args = instance.transform_arguments
       expect(args).to match_array(["-b:a", "64k"])
     end
     it "mixes down to mono when asked to" do
       instance = described_class.new(output_suffix: 'mp3', force_mono: true)
-      args = instance.settings_arguments()
+      args = instance.transform_arguments
       expect(args).to match_array(["-ac", "1"])
     end
     it "supplies default codec for webm" do
       instance = described_class.new(output_suffix: 'webm')
-      args = instance.settings_arguments()
+      args = instance.transform_arguments
       expect(args).to match_array(["-codec:a", "libopus"])
     end
     it "does not however supply a codec for mp3" do
       instance = described_class.new(output_suffix: 'mp3', bitrate: '64k', force_mono: true)
-      args = instance.settings_arguments()
+      args = instance.transform_arguments()
       expect(args).to match_array(["-ac", "1", "-b:a", "64k"])
     end
     it "requires bitrate to be a string" do
@@ -44,12 +44,12 @@ describe Kithe::FfmpegTransformer do
     it "requires other_ffmpeg_args to be an array" do
       expect {
         instance = described_class.new(output_suffix: 'mp3', force_mono: true, other_ffmpeg_args:'-timelimit 120')
-        args = instance.settings_arguments()
+        args = instance.transform_arguments
       }.to raise_error(ArgumentError)
     end
     it "adds extra arguments when correctly supploed" do
       instance = described_class.new(output_suffix: 'mp3', force_mono: true, other_ffmpeg_args:['-timelimit', '120'])
-      args = instance.settings_arguments()
+      args = instance.transform_arguments
       expect(args).to match_array(["-ac", "1", "-timelimit", "120"])
     end
   end
