@@ -188,6 +188,8 @@ You can also set promotion_directives globally, on a class attribute of `Kithe::
 Kithe::Asset.promotion_directives = { promote: :inline, create_derivatives: :inline }
 ```
 
+**Deleting** a file from storage also normally happens in the background, but you can use `set_promotion_directives(delete: :inline)` (or `false`) similarly.
+
 <a name='callbacks'></a>
 ## Promotion callbacks
 

@@ -48,7 +48,7 @@ class Shrine
       # be extensible. Also serves as some documentation of what directives available.
       class_attribute :allowed_promotion_directives,
         instance_writer: false,
-        default: [:promote, :skip_callbacks, :create_derivatives]
+        default: [:promote, :skip_callbacks, :create_derivatives, :delete]
 
       def self.load_dependencies(uploader, *)
         uploader.plugin :refresh_metadata
@@ -111,6 +111,7 @@ class Shrine
         def promote(uploaded_file = get, **options)
           # insist on a metadata extraction, add a new key `promoting: true` in case
           # anyone is interested.
+
           uploaded_file.refresh_metadata!(context.merge(options).merge(promoting: true))
 
           # Now run ordinary promotion with activemodel callbacks from

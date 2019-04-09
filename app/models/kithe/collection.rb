@@ -3,4 +3,8 @@ class Kithe::Collection < Kithe::Model
   # of association on hetereogenous fetches of Kithe::Model, so this is clever.
   has_many :derivatives, -> { none }
   private :derivatives, :derivatives=, :derivative_ids, :derivative_ids=
+
+  after_initialize do
+    self.kithe_model_type = "collection" if self.kithe_model_type.nil?
+  end
 end

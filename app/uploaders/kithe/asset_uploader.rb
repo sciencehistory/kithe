@@ -64,7 +64,23 @@ module Kithe
         raise ArgumentError.new("unrecognized :promote directive value: #{directive.inspect}")
       end
     end
-    Attacher.delete { |data| Kithe::AssetDeleteJob.perform_later(data) }
+
+    # Delete using shrine backgrounding, but can be effected
+    # by promotion_directives[:delete], similar to promotion above.
+    # Yeah, not really a "promotion" directive, oh well.
+    Attacher.delete do |data|
+      directive = data.dig("promotion_directives", :delete)
+      directive = (directive.nil? ? "background" : directive).to_s
+
+      if directive == "false"
+        #no-op
+      elsif directive == "inline"
+        self.class.delete(data)
+      else
+        # What shrine normally expects for backgrounding
+        Kithe::AssetDeleteJob.perform_later(data)
+      end
+    end
 
     plugin :add_metadata
 
