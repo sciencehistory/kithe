@@ -38,7 +38,7 @@ module Kithe
     module ObjExtract
       def obj_extract(*path)
         proc do |record, accumulator, context|
-          accumulator.concat Array(Kithe::Indexer::ObjExtract.obj_extractor(record, path))
+          accumulator.concat Array.wrap(Kithe::Indexer::ObjExtract.obj_extractor(record, path))
         end
       end
 
