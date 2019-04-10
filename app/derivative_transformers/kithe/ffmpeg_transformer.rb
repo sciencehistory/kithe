@@ -6,11 +6,11 @@ module Kithe
 
     # Specifies the most important args to send to ffmpeg for creating audio and video derivatives.
     #
-    # @output_suffix  [String] the output suffix, like `mp3` or `webm`
-    # @bitrate  [String]  Constant bitrate arg passed to ffmpeg with "-b:a", `64k`
-    # @force_mono  [Binary] Whether to mix down the audio to a single mono channel.
-    # @audio_codec  [String] the codec to use for transcoding audio. Passed to ffmpeg with -codec:a, `libopus`
-    # @other_ffmpeg_args [Array<String>] any extra arguments to pass to ffmpeg.
+    # @output_suffix [String] Mandatory. The output suffix, like `mp3` or `webm`
+    # @bitrate  [String] Optional: Constant bitrate arg passed to ffmpeg with "-b:a", `64k`
+    # @force_mono  [Binary] Optional: whether to mix down the audio to a single mono channel.
+    # @audio_codec  [String] Optional: the codec to use for transcoding audio. Passed to ffmpeg with -codec:a, `libopus`
+    # @other_ffmpeg_args [Array<String>] Optional: any extra arguments to pass to ffmpeg.
     def initialize(output_suffix:, bitrate:nil, force_mono:false, audio_codec:nil, other_ffmpeg_args:nil)
       @output_suffix, @bitrate, @force_mono, @audio_codec, @other_ffmpeg_args =
        output_suffix,  bitrate,  force_mono,  audio_codec,  other_ffmpeg_args
