@@ -2,7 +2,6 @@
 
 source "https://rubygems.org"
 
-gem "traject", git: "https://github.com/traject/traject.git"
 gem "rails", "~> 5.2.1"
 
 group :development, :test do
