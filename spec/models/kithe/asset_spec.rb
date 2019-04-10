@@ -166,13 +166,14 @@ RSpec.describe Kithe::Asset, type: :model do
     end
   end
 
-  describe "removes derivatives" do
+  describe "removes derivatives", queue_adapter: :inline do
     let(:asset_with_derivatives) do
       Kithe::Asset.create(title: "test",
         file: File.open(Kithe::Engine.root.join("spec/test_support/images/1x1_pixel.jpg"))
       ).tap do |a|
         a.file_attacher.set_promotion_directives(skip_callbacks: true)
         a.promote
+        a.reload
         a.update_derivative(:existing, StringIO.new("content"))
       end
     end
