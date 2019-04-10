@@ -26,7 +26,9 @@ The object returned does not need to be a `File` object, it can be any [IO or IO
 
 ### Kithe-provided derivative-creation tools
 
-While you can write whatever logic you want as a derivative definition, kithe at the moment packages one (more in the future) service, Kithe::VipsCliImageToJpeg, which can create a resized JPG from an image input, using a shell out to the `vips` and `vipsthumbnail` command-line tools.
+While you can write whatever logic you want as a derivative definition, kithe currently packages two (more in the future) services:
+    * Kithe::VipsCliImageToJpeg, which can create a resized JPG from an image input, using a shell out to the `vips` and `vipsthumbnail` command-line tools.
+    * Kithe::FfmpegTransformer, which creates audio files from any audio file original, using a shell out to the `ffmpeg` command-line tool.
 
 ```ruby
 class Asset < Kithe::Asset
@@ -43,6 +45,24 @@ class Asset < Kithe::Asset
   define_derivative(:thumb_small) do |original_file|
     Kithe::VipsCliImageToJpeg.new(max_width: 500, thumbnail_mode: true).call(original_file)
   end
+end
+```
+Some audio examples using `Kithe::FfmpegTransformer`.
+
+```ruby
+# Create a stereo 128k mp3 derivative. output_suffix is the only mandatory argument.
+define_derivative('mp3', content_type: "audio") do |original_file|
+  Kithe::FfmpegTransformer.new(bitrate: '128k', output_suffix: 'mp3').call(original_file)
+end
+
+# A mono webm file at only 64k:
+define_derivative('webm', content_type: "audio") do |original_file|
+  Kithe::FfmpegTransformer.new(bitrate: '64k', force_mono: true, output_suffix: 'webm').call(original_file)
+end
+
+# libopus is used by default for webm conversions, but you could specify another codec:
+define_derivative('webm', content_type: "audio") do |original_file|
+  Kithe::FfmpegTransformer.new(output_suffix: 'webm', audio_codec: 'libopencore-amrwb').call(original_file)
 end
 ```
 
@@ -74,6 +94,7 @@ class Asset < Kithe::Asset
   end
 end
 ```
+
 
 ### Specifying a derivative-specific shrine storage
 
