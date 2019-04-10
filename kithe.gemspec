@@ -29,7 +29,9 @@ Gem::Specification.new do |s|
   s.add_dependency "tty-command", ">= 0.8.2", "< 2" # still at pre-1.0 when we write this. :(
   s.add_dependency "ruby-progressbar", "~> 1.0"
   s.add_dependency "mini_mime" # already a rails dependency, but we use in derivative filename construction
+
   s.add_dependency "traject", "~> 3.0" # for Solr or other indexing
+  s.add_dependency "rsolr", "~> 2.2" # for some low-level solr stuff
 
   s.add_development_dependency "appraisal" # CI testing under multiple rails versions
 
