@@ -75,6 +75,34 @@ class Asset < Kithe::Asset
 end
 ```
 
+### Audio derivatives
+
+Audio derivatives are defined in much the same way. If you want to use `ffmpeg` for this, Kithe provides a helper class, `FfmpegTransformer`. You need to specify an `output_suffix` (e.g. `mp3`, `webm`), so `ffmpeg` knows what type of audio file to create. You may specify the following optional arguments:
+
+   * `bitrate`: the quality of the resulting derivative.
+   * `audio-codec`: the codec software to use. Not all of these are available by default; see `ffmpeg` documentation for details.
+   * `force_mono`: mixes the audio channels down to a single mono channel.
+   * `other_ffmpeg_args`: an array of strings specifying additional command-line arguments to pass to `ffmpeg`.
+
+A few examples:
+
+```ruby
+# Create a stereo 128k mp3 derivative:
+define_derivative('mp3', content_type: "audio") do |original_file|
+  Kithe::FfmpegTransformer.new(bitrate: '128k', output_suffix: 'mp3').call(original_file)
+end
+
+# A mono webm file at only 64k:
+define_derivative('webm', content_type: "audio") do |original_file|
+  Kithe::FfmpegTransformer.new(bitrate: '64k', force_mono: true, output_suffix: 'webm').call(original_file)
+end
+
+# libopus is used by default for webm conversions, but you could specify another codec:
+define_derivative('webm', content_type: "audio") do |original_file|
+  Kithe::FfmpegTransformer.new(output_suffix: 'webm', audio_codec: 'libopencore-amrwb').call(original_file)
+end
+```
+
 ### Specifying a derivative-specific shrine storage
 
 Derivatives are by default stored to the Shrine storage set for `kithe_derivatives`. If you'd
