@@ -20,7 +20,11 @@ module Kithe
   #   Blacklight conventions for dynamic field names, if you'd like to change the field name
   #   used, set `Kithe::Indexable.settings.model_name_solr_field=`)
   #
-  #   ID and model_name are set, so the AR object can be easily fetched later from Solr results.
+  # *  ID and model_name are set, so the AR object can be easily fetched later from Solr results.
+  #
+  # Note that there are no built-in facilities for automatically sending every field of your model
+  # to Solr, round-trippable or not. The expected usage pattern is sending to Solr only
+  # what you need for your use of Solr for searching.
   class Indexer < Traject::Indexer
     include Kithe::Indexer::ObjExtract
 
