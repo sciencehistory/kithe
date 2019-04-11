@@ -166,6 +166,10 @@ describe Kithe::Indexable, type: :model do
             with { |req| JSON.parse(req.body).count == 2}
         end
 
+        it "does not call on-finish if no writer was needed" do
+          Kithe::Indexable.index_with(batching: true, on_finish: ->(w){ raise "should not be called" }) do
+          end
+        end
       end
 
       describe "auto_callbacks" do

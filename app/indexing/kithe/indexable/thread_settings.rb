@@ -94,15 +94,17 @@ module Kithe
       # Remove this object from Thread.current, replacing with any previous current
       # settings.
       def pop
-        on_finish = if @local_writer && @on_finish.nil?
-          proc {|writer| writer.close }
-        else
-          @on_finish
+        # only call on-finish if we have a writer, batch writers are lazily
+        # created and maybe we never created one
+        if @writer
+          on_finish = if @local_writer && @on_finish.nil?
+            proc {|writer| writer.close }
+          else
+            @on_finish
+          end
+          on_finish.call(@writer) if on_finish
         end
 
-        if on_finish
-          on_finish.call(writer)
-        end
         Thread.current[THREAD_CURRENT_KEY] = @original_thread_current_settings
       end
 
