@@ -22,6 +22,8 @@ Kithe::Indexable.settings.solr_url = ENV['SOLR_URL']
 
 An indexer or mapper is a class that defines the logic for translating from an ActiveRecord model to a Hash of fields/value-arrays to add to Solr. Our indexing support does not assume (or provide support for) complete "round-trippable" storage to Solr; instead index to Solr only what you actually need for your use of Solr for searching support. It's up to you what fields to index, to  Solr `stored` or `indexed` fields, etc.
 
+Indexing is based on [traject](https://github.com/traject/traject), and we provide a `Kithe::Indexer` that is a sublcass of `Traject::Indexer`, with some custom functionality and default settings more suitable to us. 
+
 Create a class that sub-classes `Kithe::Indexer`, perhaps:
 
 ```ruby
