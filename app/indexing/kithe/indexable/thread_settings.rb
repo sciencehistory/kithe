@@ -1,8 +1,28 @@
 module Kithe
   module Indexable
+    # An object that is stored in Thread.current to represent current indexing/writing settings,
+    # used to implement Kithe::Indexable.index_with
+    #
+    # The public API is that Kithe::Indexable.index_with calls:
+    # * ThreadSettings.push(settings) to register current settings
+    # * ThreadSettings.current.pop at end of block to un-register them
+    #
+    # Then code in Kithe::Indexable can check `ThreadSettings.current` to get
+    # the current ThreadSettings. It returns a "null object" representing no
+    # settings if there are none, so calling code can do things like:
+    #
+    #     ThreadSettings.current.disabled_callbacks?
+    #
+    # and
+    #
+    #     ThreadSettings.current.writer
+    #
+    # without worrying about if there are current settings.
+    #
     class ThreadSettings
       THREAD_CURRENT_KEY = :kithe_indexable_current_writer_settings
 
+      # @param (see #initialize)
       def self.push(**kwargs)
         original = Thread.current[THREAD_CURRENT_KEY]
         instance = new(kwargs.merge(original_settings: original))
@@ -17,8 +37,23 @@ module Kithe
         Thread.current[THREAD_CURRENT_KEY] || NullSettings.new
       end
 
-      # Nobody uses this it's private, use Kithe::Indexable::ThreadSettings.push, and
-      # some_thread_settings.pop or Kithe::Indexable::ThreadSettings.current.pop
+      # Ordinarily you will not use this directly, it's called by .push.
+      # But param definitions are here.
+      #
+      # @param batching [Boolean] if true, set up a batching writer. Incompatible
+      #   with other writer-related settings.
+      #
+      # @param disable_callbacks [Boolean] if true, automatic after_commit callbacks
+      #   are currently disabled.
+      #
+      # @param original_settings [ThreadSettings] when .push passes this in, so it
+      #   can be restored on .pop
+      #
+      # @param writer [Traject::Writer] a writer to be used as current default for indexing.
+      #   May be set up with unusual settings, or even be an unusual writer class.
+      #
+      # @param on_finish [Proc] proc object which will be called on .pop (normally at end of
+      #   index_with block). It will be passed the operative Traject::Writer for that block.
       def initialize(batching:, disable_callbacks:, original_settings:,
         writer:, on_finish:)
         @original_settings = original_settings
@@ -37,6 +72,11 @@ module Kithe
       private_class_method :new # should use class.push and instance.pop instead.
 
 
+      # Is there a writer configured for current settings? If so, return it. May
+      # return nil.
+      #
+      # In case of `batching:true`, the batching writer will be lazily created on
+      # first time #writer is asked for.
       def writer
         @writer ||= begin
           if @batching
@@ -46,10 +86,13 @@ module Kithe
         end
       end
 
+      # Are automatic after_commit callbacks currently disabled?
       def disabled_callbacks?
         @disable_callbacks
       end
 
+      # Remove this object from Thread.current, replacing with any previous current
+      # settings.
       def pop
         on_finish = if @local_writer && @on_finish.nil?
           proc {|writer| writer.close }
@@ -65,6 +108,7 @@ module Kithe
 
       private
 
+      # "Null object" representing no current settings set.
       class NullSettings
         # need do nothing on pop, cause we're nothing.
         def pop
