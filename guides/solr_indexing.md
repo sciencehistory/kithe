@@ -1,6 +1,6 @@
 # Indexing to Solr
 
-Kithe includes support for indexing to [Solr](http://lucene.apache.org/solr/). By default it uses ActiveRecord `after_commit` callbacks to automatically index on save.  The code and APIs were written after some examination of the 'prior art' of callback-based indexing features in [sunspot](https://github.com/sunspot/sunspot) and [searchkick](https://github.com/ankane/searchkick).
+Kithe includes support for indexing to [Solr](http://lucene.apache.org/solr/). By default it uses [ActiveRecord after_commit callbacks](https://guides.rubyonrails.org/active_record_callbacks.html) to automatically index on save.  The code and APIs were written after some examination of the 'prior art' of callback-based indexing features in [sunspot](https://github.com/sunspot/sunspot) and [searchkick](https://github.com/ankane/searchkick).
 
 The indexing mapping and Solr writing are based on and use [traject](https://github.com/traject/traject).
 
