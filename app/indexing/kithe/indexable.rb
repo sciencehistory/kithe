@@ -1,7 +1,54 @@
-# TODO. Docs
-# TODO need a `with_writer` or `with_indexing` or whatever method, that prob uses a thread-current.
-# TODO, we are assuming id->id solr mapping, for deletion callbacks.
 module Kithe
+  # Kithe::Indexable is a module that can add sync'ing to Solr (or maybe other index)
+  # to a model.
+  #
+  # While it is currently only tested with Kithe::Models, it doesn't have any
+  # Kithe::Model-specific code, and should work with any ActiveRecord model class, with
+  # `include Kithe::Indexable`.
+  #
+  # For a complete overview, see the [Guide Documentation](../../../guides/solr_indexing.md)
+  #
+  # The Solr instance to send updates to is global configuration:
+  #     Kithe::Indexable.settings.solr_url = "http://localhost:8983/solr/collection_name"
+  #
+  # To configure how a model is mapped to a Solr document, you create a `Kithe::Indexer` sub-class, which
+  # can use our obj_extract method, as well as any other traject indexer code.
+  #
+  # ```ruby
+  # class WorkIndexer < KitheIndexer
+  #   to_field "additional_title_ssim", obj_extract("additional_titles")
+  #   to_field "author_names_ssim", obj_extract("authors"), transform(->(auth) { "#{auth.lastname} #{auth.firstname}" })
+  # end
+  #
+  # Then you specify *an instance* as the indexer to use for mapping in your model class:
+  #
+  # ```ruby
+  # class Work < Kithe::Work
+  #   self.kithe_indexable_mapper = WorkIndexer.new
+  # end
+  # ```
+  #
+  # Now by default every time you save or destroy a Work object, it will be sync'd to Solr.
+  #
+  # For efficiency, if you're going to be making a bunch of model saves, you will want to
+  # have them batched when sent to Solr:
+  #
+  # ```ruby
+  # Kithe::Indexable.index_with(batching: true) do
+  #   SomeModel.transaction do
+  #     some_model.save
+  #     other_model.save
+  #   end
+  # end
+  #
+  # You don't need to use an ActiveRecord transaction, but if you do it should be _inside_ the
+  # `index_with` block.
+  #
+  # To force a sync to solr, you can call `model.update_index` on any Kithe::Indexable model.
+  #
+  # There are also various ways to disable the automatic indexing callbacks, and other customizations.
+  # See the [Solr Indexing Guide](../../../guides/solr_indexing.md)
+  #
   module Indexable
     extend ActiveSupport::Concern
 
@@ -99,6 +146,9 @@ module Kithe
     # And they will use a batching Traject writer for much more efficiency.
     #
     # Also pass in custom writer or mapper to #update_index
+    #
+    # If using ActiveRecord transactions, `.transaction do` should be INSIDE `index_with`,
+    # not outside.
     def self.index_with(batching: false, disable_callbacks: false, writer: nil, on_finish: nil)
       settings = ThreadSettings.push(
         batching: batching,
