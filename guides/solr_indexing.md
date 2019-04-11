@@ -124,6 +124,7 @@ Perhaps you have indexing set up, by setting a `kithe_indexable_mapper` in your 
 * Disable for a particular instance, using that same class_attribute:
   `some_model.kithe_indexable_auto_callbacks = false`
 * Disable for a given block of code, using `index_with`:
+
       Kithe::Indexable.index_with(disable_callbacks: true) do
         # you can save and destroy indexable models, the code
         # to sync with solr will not be called at all
