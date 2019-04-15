@@ -40,6 +40,10 @@ Some guide documentation is available to explain each of kithe's major functiona
 
   * [Derivatives](./guides/derivatives.md) A flexible and reliable derivatives architecture, designed to ensure data consistency without race conditions, and support efficient DB usage patterns.
 
+* [Solr Indexing](./guides/solr_indexing.md): Uses [traject](https://github.com/traject/traject) for defining mappings from your model objects to what you want in a Solr index. Uses ActiveRecord callbacks to automatically sync saves to solr, with many opportunities for customization.
+  * Not coupled to any other kithe components, could be used independently, hypothetically on any ActiveRecord model.
+  * Written after review of "prior art"  in [sunspot](https://github.com/sunspot/sunspot) and [searchkick](https://github.com/ankane/searchkick) (which both used AR callback-based indexing), and others.
+
 ### Also
 
 * [Kithe::Parameters](./app/models/kithe/parameters.rb) provides some shortcuts around Rails "strong params" for attr_json serialized attributes.
@@ -66,7 +70,7 @@ Note that at present kithe will end up forcing your app to use `:sql` [style sch
 
 ## To be done
 
-There is also definitely planned to be solr indexing and some blacklight integration support. (These currently considered requirements for getting the Science History Institute's app to production, depending on the kithe features).
+Considering some blacklight integration support.
 
 Other components/features may become more clear as we continue to develop. It's possible that kithe won't (at least for a long time) contain controllers themselves (it may contain some helper methods for controllers), or generalized permissions architecture. Both of these are some of the things most particular to specific apps, that are hard to generalize without creating monsters.
 

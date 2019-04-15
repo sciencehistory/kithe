@@ -4,6 +4,7 @@ class Kithe::Model < ActiveRecord::Base
   include AttrJson::Record
   include AttrJson::NestedAttributes
   include AttrJson::Record::Dirty
+  include Kithe::Indexable
 
 
   # While Rails STI means the actual specific class is in `type`, sometimes
