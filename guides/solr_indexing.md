@@ -22,7 +22,7 @@ Kithe::Indexable.settings.solr_url = ENV['SOLR_URL']
 
 An indexer or mapper is a class that defines the logic for translating from an ActiveRecord model to a Hash of fields/value-arrays to add to Solr. Our indexing support does not assume (or provide support for) complete "round-trippable" storage to Solr; instead index to Solr only what you actually need for your use of Solr for searching support. It's up to you what fields to index, to  Solr `stored` or `indexed` fields, etc.
 
-Indexing is based on [traject](https://github.com/traject/traject), and we provide a `Kithe::Indexer` that is a sublcass of `Traject::Indexer`, with some custom functionality and default settings more suitable to us. 
+Indexing is based on [traject](https://github.com/traject/traject), and we provide a `Kithe::Indexer` that is a sublcass of `Traject::Indexer`, with some custom functionality and default settings more suitable to us.
 
 Create a class that sub-classes `Kithe::Indexer`, perhaps:
 
@@ -226,6 +226,14 @@ Kithe::Indexable.index_with(writer: writer, on_finish: ->(writer) { writer.flush
   # do some things that trigger solr updates
 end
 ```
+
+## Asynchronous patterns for performance?
+
+We don't have any yet.
+
+If you don't need "realtime visible" solr updates, you might want the indexing triggered after save to happen asynchronously, to avoid slowing down your controller responses. While launching an ActiveJob might seem like the initial path, this is not optimal becuase the naive implementation will still lead to an ActiveJob per record that needs updating, with a separate solr http update request per record. You might ideally want some alternate queue of IDs waiting to be updated, with some regular job that can pull from the queue and batch update the all at once. The searchkick gem provides such a mechanism, but it gets kind of complex. Maybe in the future.
+
+Alternately or additionally, we could use some of the concurrency built into traject. If you don't need realtime-visible solr updates, we could enable the threading support in the Traject indexer and/or writer, to have some operations occur in an in-process thread -- could be especially interesting for batch updates. This would also need further analysis, the current way kithe uses traject isn't suitable for entirely out-of-band async processing.
 
 ## Use with non Kithe::Model ActiveRecord classes?
 
