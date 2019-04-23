@@ -195,6 +195,20 @@ describe Work, indexable_callbacks: true do
 end
 ```
 
+## Debugging your indexing
+
+A convenient way to see what your indexer is producing, and without actually indexing, is to use the Traject::DebugWriter. Here might be a rake task that lets you call `rake debug_indexing[#{friendlier_id}]` to see output in textual format.
+
+```ruby
+desc "print out mapped index hash for specified ID"
+task :debug_indexing, [:friendlier_id] => [:environment] do |t, args|
+  Kithe::Model.find_by_friendlier_id(args[:friendlier_id]).
+    update_index(writer: Traject::DebugWriter.new({}))
+end
+```
+
+Instead of sending the index mapping output to your default (Solr) writer, it'll just send it to the screen in a format meant to be human readable.
+
 ## Customizing Solr updating patterns
 
 By default, Kithe::Indexable uses the `Traject::SolrJsonWriter` to send updates,
