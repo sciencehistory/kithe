@@ -83,10 +83,20 @@ module Kithe
     # using Rsolr. Pretty trivial.
     #
     # Intended for dev/test instances, not really production.
-    def self.delete_all(solr_url: Kithe::Indexable.settings.solr_url)
+    # @param commit :soft, :hard, or false. Default :hard
+    def self.delete_all(solr_url: Kithe::Indexable.settings.solr_url, commit: :hard)
       rsolr = RSolr.connect :url => solr_url
-      rsolr.delete_by_query("*:*")
-      rsolr.commit
+
+      # RSolr is a bit under-doc'd, but this SEEMS to work to send a commit
+      # or softCommit instruction with the delete request.
+      params = {}
+      if commit == :hard
+        params[:commit] = true
+      elsif commit == :soft
+        params[:softCommit] = true
+      end
+
+      rsolr.delete_by_query("*:*", params: params)
     end
   end
 end
