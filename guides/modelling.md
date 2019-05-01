@@ -4,7 +4,7 @@ Kithe provides a base for some modelling of some key domain objects, that is *in
 
 Kithe provides three classes of models:  Work, Asset, and Collection.
 
-They all live in the postgres database; using [ActiveRecord single-table inheritance](https://guides.rubyonrails.org/association_basics.html#single-table-inheritance), they actually all live in the same `kithe_models` database, with the parent ruby class `Kithe::Model`. This is meant to support hetereogenous assocications and fetches in convenient and high-performance ways.
+They all live in the postgres database; using [ActiveRecord single-table inheritance](https://guides.rubyonrails.org/association_basics.html#single-table-inheritance), they actually all live in the same `kithe_models` database, with the parent ruby class `Kithe::Model`. This is meant to support hetereogenous assocications and fetches in convenient and high-performance ways (eg "members" association which can contain Works or Assets). It also makes it trivial to use db constraints to ensure uniqueness of primary keys and other IDs accross *all* model types, as has been traditional in samvera apps.
 
 **Kithe::Work** is the basic unit of interest for a digital collections/repo app. It might represent a scanned book; a photograph or set of photographs; a PDF dissertation (possibly with accompanying material); etc.   An app is expected to have one (_or more_) custom sub-classes of Kithe::Work, with custom defined metadata. (See "attr_json and custom app classes" section below)  In addition to metadata, each work can have zero or more attached children/`members`, which can be either other Works or **Assets**, and have an order. A Work may belong to zero or more *Collections*.
 
