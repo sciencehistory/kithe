@@ -164,4 +164,20 @@ describe "Indexer end-to-end" do
       )
     end
   end
+
+  describe "custom model_name_solr_field" do
+    around do |example|
+      original = Kithe::Indexable.settings.model_name_solr_field
+      Kithe::Indexable.settings.model_name_solr_field = "my_model_name"
+      example.run
+      Kithe::Indexable.settings.model_name_solr_field = original
+    end
+
+    it "indexes specified attribute to id" do
+      result = indexer.map_record(work)
+      expect(result).to include(
+        "my_model_name" => ["TestWork"]
+      )
+    end
+  end
 end
