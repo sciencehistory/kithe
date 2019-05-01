@@ -53,12 +53,15 @@ module Kithe
     extend ActiveSupport::Concern
 
     class IndexableSettings
-      attr_accessor :solr_url, :writer_class_name, :writer_settings, :model_name_solr_field, :disable_callbacks
-      def initialize(solr_url:, writer_class_name:, writer_settings:, model_name_solr_field:, disable_callbacks: false)
+      attr_accessor :solr_url, :writer_class_name, :writer_settings,
+                    :model_name_solr_field, :solr_id_value_attribute, :disable_callbacks
+      def initialize(solr_url:, writer_class_name:, writer_settings:,
+                     model_name_solr_field:, solr_id_value_attribute:, disable_callbacks: false)
         @solr_url = solr_url
         @writer_class_name = writer_class_name
         @writer_settings = writer_settings
         @model_name_solr_field = model_name_solr_field
+        @solr_id_value_attribute = solr_id_value_attribute
       end
 
       # Use configured solr_url, and merge together with configured
@@ -94,6 +97,9 @@ module Kithe
     #
     #     Kithe::Indexable.settings.model_name_solr_field = "my_model_name_field"
     #
+    # * solr_id_value_attribute: What attribute from your AR models to send to Solr
+    #   `id` uniqueKey field, default the AR `id` pk, you may wish to set to `friendlier_id`.
+    #
     # * writer_settings: Settings to be passed to the Traject writer, by default a
     #   Traject::SolrJsonWriter. To maintain the default settings, best to merge
     #   your new ones into defaults.
@@ -118,6 +124,7 @@ module Kithe
       IndexableSettings.new(
         solr_url: "http://localhost:8983/solr/default",
         model_name_solr_field: "model_name_ssi",
+        solr_id_value_attribute: "id",
         writer_class_name: "Traject::SolrJsonWriter",
         writer_settings: {
           # as default we tell the solrjsonwriter to use no threads,
