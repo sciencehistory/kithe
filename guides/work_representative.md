@@ -57,8 +57,9 @@ You may be fetching a hetereogenous list that includes Assets, Works, and maybe 
 No problem, like so:
 
 ```ruby
-results = Kithe::Model.all.includes(:derivatives, representative: :derivatives)
+results = Kithe::Model.all.includes(:derivatives, leaf_representative: :derivatives)
 ```
 
-All representatives and derivatives will be eager-loaded by ActiveRecord, and for anything in your results list you can ask for `thing.representative` or `thing.representative.derivatives` without triggering additional db fetches (you are avoiding the "n+1 problem").
+All "leaf" representatives and derivatives will be eager-loaded by ActiveRecord, and for anything in your results list you can ask for `thing.representative` or `thing.representative.derivatives` without triggering additional db fetches (you are avoiding the "n+1 problem").
 
+So you might then get the actual "derivative" object to display for any hit, with eg `some_model.leaf_representative.derivative_for(:thumbnail)`, without accidentally triggering n+1 queries.
