@@ -44,6 +44,8 @@ Some guide documentation is available to explain each of kithe's major functiona
   * Not coupled to any other kithe components, could be used independently, hypothetically on any ActiveRecord model.
   * Written after review of "prior art"  in [sunspot](https://github.com/sunspot/sunspot) and [searchkick](https://github.com/ankane/searchkick) (which both used AR callback-based indexing), and others.
 
+* A [recommended approach for using Blacklight](./guides/blacklight_approach.md) with search result view templates based on actual ActiveRecord models. It is totally optional to use Blacklight at all with kithe, or to use this approach if you do.
+
 ### Also
 
 * [Kithe::Parameters](./app/models/kithe/parameters.rb) provides some shortcuts around Rails "strong params" for attr_json serialized attributes.
