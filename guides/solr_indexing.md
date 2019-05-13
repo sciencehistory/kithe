@@ -12,7 +12,7 @@ The kithe indexing code does not assume you are using Blacklight, although you c
 
 ```ruby
 # perhaps in config/initializers/kithe_indexable.rb
-Kithe::Indexable.settings.solr_url = ENV['SOLR_URL']
+Kithe.indexable_settings.solr_url = ENV['SOLR_URL']
 
 # or wherever else you'd like to get it from, use your own conditional logic
 # for different url depending on Rails.env, etc.
@@ -62,7 +62,7 @@ You will generally need the pk and class name of the object in the Solr index so
 
 The object primary key in `id`, which for Kithe::Models is a UUIDv4, will be sent to Solr field `id`. (Not currently customizable or disable-able)
 
-The object class name will by default be sent to Solr field `model_name_ssi`. You can change this field with `Kithe::Indexable.settings.model_name_solr_field=`, or set it to false to disable.
+The object class name will by default be sent to Solr field `model_name_ssi`. You can change this field with `Kithe.indexable_settings.model_name_solr_field=`, or set it to false to disable.
 
 ### Set the indexer on your work class, enabling automatic callback-based indexing
 
@@ -120,7 +120,7 @@ As `index_with(batching: true)` only creates a Traject::Writer lazily on demand,
 
 Perhaps you have indexing set up, by setting a `kithe_indexable_mapper` in your model class, but you want to disable the automatic callbacks, either temporarily or permanently. There are a variety you can do that.
 
-* Disable globally and universally:  `Kithe::Indexable.settings.disable_callbacks = true`
+* Disable globally and universally:  `Kithe.indexable_settings.disable_callbacks = true`
 * Disable globally for a particular class, using a Rails class_attribute:
   `SomeClass.kithe_indexable_auto_callbacks = false`
 * Disable for a particular instance, using that same class_attribute:
@@ -171,14 +171,14 @@ For RSpec, add to your `spec_helper.rb` or `rails_helper.rb`:
 ```ruby
 RSpec.configure do |config|
   config.before(:suite) do
-    Kithe::Indexable.settings.disable_callbacks = true
+    Kithe.indexable_settings.disable_callbacks = true
   end
 
   config.around(:each, :indexable_callbacks) do |example|
-    original = Kithe::Indexable.settings.disable_callbacks
-    Kithe::Indexable.settings.disable_callbacks = !example.metadata[:indexable_callbacks]
+    original = Kithe.indexable_settings.disable_callbacks
+    Kithe.indexable_settings.disable_callbacks = !example.metadata[:indexable_callbacks]
     example.run
-    Kithe::Indexable.settings.disable_callbacks = original
+    Kithe.indexable_settings.disable_callbacks = original
   end
 end
 ```
@@ -216,7 +216,7 @@ and every time it sends an update to Solr, it does it with a softCommit.
 
 You can customize the Trjaect::Writer class used globally:
 
-    Kithe::Indexable.settings.writer_class_name = "Whatever::CompatibleTrajectWriter"
+    Kithe.indexable_settings.writer_class_name = "Whatever::CompatibleTrajectWriter"
 
 This would also be a way to get indexing to go to something other than Solr, if an appropriate `Traject::Writer` were written.
 

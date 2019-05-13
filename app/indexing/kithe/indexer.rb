@@ -18,14 +18,14 @@ module Kithe
   # * A Kithe::Indexer will automatically index the source record #id to Solr object
   #   #id, and the source record class name to Solr field `model_name_ssi`. (That uses
   #   Blacklight conventions for dynamic field names, if you'd like to change the field name
-  #   used, set `Kithe::Indexable.settings.model_name_solr_field=`)
+  #   used, set `Kithe.indexable_settings.model_name_solr_field=`)
   #
   # *  ID and model_name are set, so the AR object can be easily fetched later from Solr results.
   #   * You can customize what Solr field the model_name is sent to with
-  #     `Kithe::Indexable.settings.model_name_solr_field=`, by default `model_name_ssi`, using
+  #     `Kithe.indexable_settings.model_name_solr_field=`, by default `model_name_ssi`, using
   #     a blacklight dynamic field template `*_ssi`.
   #   * You can customize what ActiveRecord model property is sent to Solr `id` field with
-  #     `Kithe::Indexable.settings.solr_id_value_attribute=`, by default the AR pk in model#id.
+  #     `Kithe.indexable_settings.solr_id_value_attribute=`, by default the AR pk in model#id.
   #
   # Note that there are no built-in facilities for automatically sending every field of your model
   # to Solr, round-trippable or not. The expected usage pattern is sending to Solr only
@@ -48,8 +48,8 @@ module Kithe
     #
     # TODO We might not actually want to do these automatically, or allow it to be disabled?
     configure do
-      to_field "id", obj_extract(Kithe::Indexable.settings.solr_id_value_attribute)
-      to_field Kithe::Indexable.settings.model_name_solr_field, obj_extract("class", "name")
+      to_field "id", obj_extract(Kithe.indexable_settings.solr_id_value_attribute)
+      to_field Kithe.indexable_settings.model_name_solr_field, obj_extract("class", "name")
     end
   end
 end
