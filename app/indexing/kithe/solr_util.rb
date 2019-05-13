@@ -30,6 +30,8 @@ module Kithe
       return enum_for(:solr_index_orphan_ids) unless block_given?
 
       model_name_solr_field = Kithe.indexable_settings.model_name_solr_field
+      model_solr_id_attr   = Kithe.indexable_settings.solr_id_value_attribute
+
       solr_page = -1
 
       rsolr = RSolr.connect :url => solr_url
@@ -46,7 +48,7 @@ module Kithe
 
         break if solr_ids.empty?
 
-        (solr_ids - Kithe::Model.where(id: solr_ids).pluck(:id)).each do |orphaned_id|
+        (solr_ids - Kithe::Model.where(model_solr_id_attr => solr_ids).pluck(model_solr_id_attr)).each do |orphaned_id|
           yield orphaned_id
         end
       end
