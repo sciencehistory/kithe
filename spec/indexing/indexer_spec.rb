@@ -151,10 +151,10 @@ describe "Indexer end-to-end" do
 
   describe "custom solr_id_value_attribute" do
     around do |example|
-      original = Kithe::Indexable.settings.solr_id_value_attribute
-      Kithe::Indexable.settings.solr_id_value_attribute = :friendlier_id
+      original = Kithe.indexable_settings.solr_id_value_attribute
+      Kithe.indexable_settings.solr_id_value_attribute = :friendlier_id
       example.run
-      Kithe::Indexable.settings.solr_id_value_attribute = original
+      Kithe.indexable_settings.solr_id_value_attribute = original
     end
 
     it "indexes specified attribute to id" do
@@ -167,10 +167,10 @@ describe "Indexer end-to-end" do
 
   describe "custom model_name_solr_field" do
     around do |example|
-      original = Kithe::Indexable.settings.model_name_solr_field
-      Kithe::Indexable.settings.model_name_solr_field = "my_model_name"
+      original = Kithe.indexable_settings.model_name_solr_field
+      Kithe.indexable_settings.model_name_solr_field = "my_model_name"
       example.run
-      Kithe::Indexable.settings.model_name_solr_field = original
+      Kithe.indexable_settings.model_name_solr_field = original
     end
 
     it "indexes specified attribute to id" do

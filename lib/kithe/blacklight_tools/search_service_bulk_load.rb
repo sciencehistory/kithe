@@ -8,7 +8,7 @@ module Kithe
     #
     # * Assumes all documents that come back in the Solr results was indexed Kithe::Model, and
     #   their Solr ID's are the Kithe::Model `id` pk, or from the AR model attribute name
-    #   set in `Kithe::Indexable.settings.solr_id_value_attribute`
+    #   set in `Kithe.indexable_settings.solr_id_value_attribute`
     #
     # * Requires your SolrDocument class to have a `model` attribute, you can just add
     #   `attr_accessor :model` to your local SolrDocument class BL generated in
@@ -34,11 +34,11 @@ module Kithe
         if bulk_load_records
           id_hash = response.documents.collect {|r| [r.id, r] }.to_h
 
-          scope = Kithe::Model.where(Kithe::Indexable.settings.solr_id_value_attribute => id_hash.keys)
+          scope = Kithe::Model.where(Kithe.indexable_settings.solr_id_value_attribute => id_hash.keys)
           scope = scope.instance_exec(&bulk_load_scope) if bulk_load_scope
 
           scope.find_each do |model|
-            id_hash[model.send(Kithe::Indexable.settings.solr_id_value_attribute)].model = model
+            id_hash[model.send(Kithe.indexable_settings.solr_id_value_attribute)].model = model
           end
 
           orphaned_solr_docs = id_hash.values.select { |doc| doc.model.nil? }

@@ -5,12 +5,12 @@ describe Kithe::Indexable, type: :model do
     @solr_url = "http://localhost:8983/solr/collection1"
     @solr_update_url = "#{@solr_url}/update/json?softCommit=true"
 
-    @original_solr_url = Kithe::Indexable.settings.solr_url
-    Kithe::Indexable.settings.solr_url =@solr_url
+    @original_solr_url = Kithe.indexable_settings.solr_url
+    Kithe.indexable_settings.solr_url =@solr_url
   end
 
   after do
-    Kithe::Indexable.settings.solr_url = @original_solr_url
+    Kithe.indexable_settings.solr_url = @original_solr_url
   end
 
   temporary_class("TestWork") do
@@ -101,10 +101,10 @@ describe Kithe::Indexable, type: :model do
 
     describe "with global disable_callbacks" do
       around do |example|
-        original = Kithe::Indexable.settings.disable_callbacks
-        Kithe::Indexable.settings.disable_callbacks = true
+        original = Kithe.indexable_settings.disable_callbacks
+        Kithe.indexable_settings.disable_callbacks = true
         example.run
-        Kithe::Indexable.settings.disable_callbacks = original
+        Kithe.indexable_settings.disable_callbacks = original
       end
 
       it "does not index" do
@@ -125,7 +125,7 @@ describe Kithe::Indexable, type: :model do
         thread_settings = nil
         it "batches solr updates" do
           stub_request(:post, @solr_update_url)
-          expect(Kithe::Indexable.settings.writer_class_name.constantize).to receive(:new).and_call_original
+          expect(Kithe.indexable_settings.writer_class_name.constantize).to receive(:new).and_call_original
 
           Kithe::Indexable.index_with(batching: true) do
             TestWork.create!(title: "test1")
@@ -142,7 +142,7 @@ describe Kithe::Indexable, type: :model do
         end
 
         it "creates no writer if no updates happen" do
-          expect(Kithe::Indexable.settings.writer_class_name.constantize).not_to receive(:new)
+          expect(Kithe.indexable_settings.writer_class_name.constantize).not_to receive(:new)
           Kithe::Indexable.index_with(batching: true) do
           end
         end
@@ -150,7 +150,7 @@ describe Kithe::Indexable, type: :model do
         it "respects non-default on_finish" do
           stub_request(:post, @solr_update_url)
           stub_request(:get, "#{@solr_url}/update/json?commit=true")
-          expect(Kithe::Indexable.settings.writer_class_name.constantize).to receive(:new).and_call_original
+          expect(Kithe.indexable_settings.writer_class_name.constantize).to receive(:new).and_call_original
 
           Kithe::Indexable.index_with(batching: true, on_finish: ->(w){ w.flush; w.commit(commit: true) }) do
             TestWork.create!(title: "test1")

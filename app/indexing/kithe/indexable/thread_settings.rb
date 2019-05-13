@@ -81,7 +81,7 @@ module Kithe
         @writer ||= begin
           if @batching
             @local_writer = true
-            Kithe::Indexable.settings.writer_instance!("solr_writer.batch_size" => 100)
+            Kithe.indexable_settings.writer_instance!("solr_writer.batch_size" => 100)
           end
         end
       end

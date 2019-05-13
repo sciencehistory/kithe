@@ -16,7 +16,7 @@ module Kithe
     #        delete(id)
     #     end
     #
-    # It is searching for any Solr object with a `Kithe::Indexable.settings.model_name_solr_field`
+    # It is searching for any Solr object with a `Kithe.indexable_settings.model_name_solr_field`
     # field (default `model_name_ssi`). Then, it takes the ID and makes sure it exists in
     # the database using Kithe::Model. At the moment we are assuming everything is in Kithe::Model,
     # rather than trying to use the `model_name_ssi` to fetch from different tables. Could
@@ -26,10 +26,10 @@ module Kithe
     #
     # A bit hacky implementation, it might be nice to support a progress bar, we
     # don't now.
-    def self.solr_orphan_ids(batch_size: 100, solr_url: Kithe::Indexable.settings.solr_url)
+    def self.solr_orphan_ids(batch_size: 100, solr_url: Kithe.indexable_settings.solr_url)
       return enum_for(:solr_index_orphan_ids) unless block_given?
 
-      model_name_solr_field = Kithe::Indexable.settings.model_name_solr_field
+      model_name_solr_field = Kithe.indexable_settings.model_name_solr_field
       solr_page = -1
 
       rsolr = RSolr.connect :url => solr_url
@@ -53,7 +53,7 @@ module Kithe
     end
 
     # Finds any Solr objects that have a `model_name_ssi` field
-    # (or `Kithe::Indexable.settings.model_name_solr_field` if non-default), but don't
+    # (or `Kithe.indexable_settings.model_name_solr_field` if non-default), but don't
     # exist in the rdbms, and deletes them from Solr, then issues a commit.
     #
     # Under normal use, you shouldn't have to do this, but can if your Solr index
@@ -65,7 +65,7 @@ module Kithe
     # A bit hacky implementation, it might be nice to have a progress bar, we don't now.
     #
     # Does return an array of any IDs deleted.
-    def self.delete_solr_orphans(batch_size: 100, solr_url: Kithe::Indexable.settings.solr_url)
+    def self.delete_solr_orphans(batch_size: 100, solr_url: Kithe.indexable_settings.solr_url)
       rsolr = RSolr.connect :url => solr_url
       deleted_ids = []
 
@@ -84,7 +84,7 @@ module Kithe
     #
     # Intended for dev/test instances, not really production.
     # @param commit :soft, :hard, or false. Default :hard
-    def self.delete_all(solr_url: Kithe::Indexable.settings.solr_url, commit: :hard)
+    def self.delete_all(solr_url: Kithe.indexable_settings.solr_url, commit: :hard)
       rsolr = RSolr.connect :url => solr_url
 
       # RSolr is a bit under-doc'd, but this SEEMS to work to send a commit
