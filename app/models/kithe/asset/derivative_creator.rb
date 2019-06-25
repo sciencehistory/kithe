@@ -80,14 +80,10 @@ class Kithe::Asset::DerivativeCreator
   def applicable_definitions
     # Find all matching definitions, and put them in the candidates hash,
     # so we can choose the best one for each
-    candidates = definitions.find_all do |d|
-      (only.nil? ? d.default_create : only.include?(d.key)) &&
-      (except.nil? || ! except.include?(d.key)) &&
-      ( d.content_type.nil? ||
-        d.content_type == asset.content_type ||
-        (d.content_type.kind_of?(Array) && d.content_type.include?(asset.content_type)) ||
-        d.content_type == asset.content_type.sub(%r{/.+\Z}, '')
-      )
+    candidates = definitions.find_all do |defn|
+      (only.nil? ? defn.default_create : only.include?(defn.key)) &&
+      (except.nil? || ! except.include?(defn.key)) &&
+      defn.applies_to?(asset)
     end
 
     # Now we gotta filter out any duplicate keys based on our priority rules, but keep
