@@ -18,6 +18,19 @@ class Kithe::Asset::DerivativeDefinition
     end
   end
 
+  # Do content-type restrictions defined for this definition match a given asset?
+  def applies_to?(asset)
+    return true if content_type.nil?
+
+    return true if content_type == asset.content_type
+
+    return false if asset.content_type.nil?
+
+    return true if (content_type.kind_of?(Array) && content_type.include?(asset.content_type))
+
+    content_type == asset.content_type.sub(%r{/.+\Z}, '')
+  end
+
   private
 
   def proc_accepts_record_keyword?
