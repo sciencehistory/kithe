@@ -63,3 +63,11 @@ results = Kithe::Model.all.includes(:derivatives, leaf_representative: :derivati
 All "leaf" representatives and derivatives will be eager-loaded by ActiveRecord, and for anything in your results list you can ask for `thing.representative` or `thing.representative.derivatives` without triggering additional db fetches (you are avoiding the "n+1 problem").
 
 So you might then get the actual "derivative" object to display for any hit, with eg `some_model.leaf_representative.derivative_for(:thumbnail)`, without accidentally triggering n+1 queries.
+
+Because this particular `includes` is a _bit_ tricky and so commonly needed, it's built into kithe.
+Use `with_representative_derivatives` wherever you can use a Rails scope to pre-load all leaf_representatives and all their derivatives.
+
+```ruby
+  some_work.members.with_representative_derivatives
+  Kithe::Work.with_representative_derivatives.where(something: something)
+```
