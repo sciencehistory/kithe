@@ -22,5 +22,13 @@ FactoryBot.define do
         end
       end
     end
+
+    # No bytestreams, but a derivative
+    trait :faked_derivatives do
+      derivatives {[
+        Kithe::Derivative.new(key: "one"),
+        Kithe::Derivative.new(key: "two")
+      ]}
+    end
   end
 end

@@ -73,5 +73,24 @@ module Kithe
       end
     end
 
+    describe "with_representative_derivatives scope" do
+      let(:work) {
+        FactoryBot.create(:kithe_work, title: "test for preload",
+          members: [
+            FactoryBot.create(:kithe_work, representative: FactoryBot.create(:kithe_asset, :faked_derivatives)),
+            FactoryBot.create(:kithe_asset, :faked_derivatives),
+            FactoryBot.create(:kithe_asset, :faked_derivatives)
+          ])
+      }
+      it "pre-loads all representatives and derivatives" do
+        members = work.members.with_representative_derivatives.to_a
+
+        members.each do |member|
+          expect(member.association(:leaf_representative)).to be_loaded
+          expect(member.leaf_representative.association(:derivatives)).to be_loaded
+        end
+      end
+    end
+
   end
 end
