@@ -34,6 +34,7 @@ Gem::Specification.new do |s|
   s.add_dependency "rsolr", "~> 2.2" # for some low-level solr stuff
 
   s.add_development_dependency "appraisal" # CI testing under multiple rails versions
+  s.add_development_dependency "dimensions" # checking image width of transformers in tests
 
 
   s.add_development_dependency "pg"
