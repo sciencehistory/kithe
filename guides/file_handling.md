@@ -193,13 +193,13 @@ Kithe::Asset.promotion_directives = { promote: :inline, create_derivatives: :inl
 <a name='callbacks'></a>
 ## Promotion callbacks
 
-As another kithe customization, we have implemented an [ActiveRecord callback](https://api.rubyonrails.org/classes/ActiveRecord/Callbacks.html) on Kithe::Asset, for the `promote` event. Especially since promotion usually happens in the background, it can be useful to be able to hook into it.
+As another kithe customization, we have implemented an [ActiveRecord callback](https://api.rubyonrails.org/classes/ActiveRecord/Callbacks.html) on Kithe::Asset, for the `promotion` event. Especially since promotion usually happens in the background, it can be useful to be able to hook into it.
 
 In your local Kithe::Asset subclass you can define before, after, or around callbacks.
 
 ```ruby
 class LocalAsset < Kithe::Asset
-  before_promote do
+  before_promotion do
     if want_to_cancel?(self)
       # consistent with other AR callbacks, throw :abort will cancel
       # the promotion process.
@@ -207,7 +207,7 @@ class LocalAsset < Kithe::Asset
     end
   end
 
-  after_promote :some_method_in_your_class, if: ->(model) {  }
+  after_promotion :some_method_in_your_class, if: ->(model) {  }
 ```
 
 At the point the before callback is triggered, metadata has already been extracted, and you have access to it. If you abort the promotion, the extracted metadata will not be saved, and promotion won't happen. It's up to you and your app to log or store or notify that this happened in whatever way makes sense, kithe data structures won't make it clear why promotion didn't happen.
