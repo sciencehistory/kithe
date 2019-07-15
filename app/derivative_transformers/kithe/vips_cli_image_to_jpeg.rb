@@ -64,9 +64,12 @@ module Kithe
         vips_args.concat ["--size", "#{max_width}x65500"]
         vips_args.concat ["-o", "#{tempfile.path}#{vips_jpg_params}"]
       else
-        vips_args.concat [vips_thumbnail_command, original_file.path]
-        vips_args.concat maybe_profile_normalization_args
-        vips_args.concat ["-o", "#{tempfile.path}#{vips_jpg_params}"]
+        # If we arne't making a thumbnail, we need to use `vips copy` instead of `vipsthumbnail`,
+        # to avoid it changing height/width on us. There might be another way.
+        #
+        # Yes, this means we can't do thumbnail-mode normalizations.
+        vips_args.concat [vips_command, "copy", original_file.path]
+        vips_args.concat ["#{tempfile.path}#{vips_jpg_params}"]
       end
 
       TTY::Command.new(printer: :null).run(*vips_args)
