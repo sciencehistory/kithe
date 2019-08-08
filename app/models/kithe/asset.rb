@@ -255,17 +255,12 @@ class Kithe::Asset < Kithe::Model
   def schedule_derivatives
     return unless self.derivative_definitions.present? # no need to schedule if we don't have any
 
-    directive = file_attacher.promotion_directives[:create_derivatives]
-    directive = (directive.nil? ? "background" : directive).to_s
-
-    if directive == "false"
-      # no-op
-    elsif directive == "inline"
-      Kithe::CreateDerivativesJob.perform_now(self)
-    elsif directive == "background"
-      Kithe::CreateDerivativesJob.perform_later(self)
-    else
-      raise ArgumentError.new("unrecognized :create_derivatives directive value: #{directive}")
+    Kithe::TimingPromotionDirective.new(key: :create_derivatives, directives: file_attacher.promotion_directives) do |directive|
+      if directive.inline?
+        Kithe::CreateDerivativesJob.perform_now(self)
+      elsif directive.background?
+        Kithe::CreateDerivativesJob.perform_later(self)
+      end
     end
   end
 

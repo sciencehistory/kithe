@@ -47,21 +47,16 @@ module Kithe
     #     asset.file_attacher.set_promotion_directives(promote: false)
     #     asset.file_attacher.set_promotion_directives(promote: "inline")
     Attacher.promote do |data|
-      directive = data.dig("promotion_directives", :promote)
-      directive = (directive.nil? ? "background" : directive).to_s
-
-      if directive == "false"
-        # no op
-      elsif directive == "inline"
-        # Foreground, but you'll still need to #reload your asset to see changes,
-        # since backgrounding mechanism still reloads a new instance, sorry.
-        #Kithe::AssetPromoteJob.perform_now(data)
-        self.class.promote(data)
-      elsif directive == "background"
-        # What shrine normally expects for backgrounding
-        Kithe::AssetPromoteJob.perform_later(data)
-      else
-        raise ArgumentError.new("unrecognized :promote directive value: #{directive.inspect}")
+      Kithe::TimingPromotionDirective.new(key: :promote, directives: data["promotion_directives"]) do |directive|
+        if directive.inline?
+          # Foreground, but you'll still need to #reload your asset to see changes,
+          # since backgrounding mechanism still reloads a new instance, sorry.
+          #Kithe::AssetPromoteJob.perform_now(data)
+          self.class.promote(data)
+        elsif directive.background?
+          # What shrine normally expects for backgrounding
+          Kithe::AssetPromoteJob.perform_later(data)
+        end
       end
     end
 
@@ -69,16 +64,13 @@ module Kithe
     # by promotion_directives[:delete], similar to promotion above.
     # Yeah, not really a "promotion" directive, oh well.
     Attacher.delete do |data|
-      directive = data.dig("promotion_directives", :delete)
-      directive = (directive.nil? ? "background" : directive).to_s
-
-      if directive == "false"
-        #no-op
-      elsif directive == "inline"
-        self.class.delete(data)
-      else
-        # What shrine normally expects for backgrounding
-        Kithe::AssetDeleteJob.perform_later(data)
+      Kithe::TimingPromotionDirective.new(key: :delete, directives: data["promotion_directives"]) do |directive|
+        if directive.inline?
+          self.class.delete(data)
+        elsif directive.background?
+          # What shrine normally expects for backgrounding
+          Kithe::AssetDeleteJob.perform_later(data)
+        end
       end
     end
 
