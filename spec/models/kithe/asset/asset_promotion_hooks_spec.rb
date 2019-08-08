@@ -216,13 +216,13 @@ describe "Kithe::Asset promotion hooks", queue_adapter: :inline do
     it "can set from class attribute" do
       Kithe::Asset.promotion_directives = { promote: :inline }
       asset = Kithe::Asset.new
-      expect(asset.file_attacher.promotion_directives).to eq(promote: :inline)
+      expect(asset.file_attacher.promotion_directives).to eq("promote" => "inline")
     end
 
     it "can set from instance writer" do
       asset = Kithe::Asset.new
       asset.set_promotion_directives(promote: :inline)
-      expect(asset.file_attacher.promotion_directives).to eq(promote: :inline)
+      expect(asset.file_attacher.promotion_directives).to eq("promote" => "inline")
     end
   end
 end

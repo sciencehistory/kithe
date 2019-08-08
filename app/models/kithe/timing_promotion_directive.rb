@@ -21,7 +21,7 @@ module Kithe
     attr_reader :directive_key, :directives
 
     def initialize(key:, directives: )
-      @directive_key = key.to_sym
+      @directive_key = key.to_s
       @directives = directives
 
       unless ALLOWED_VALUES.include?(directive_value)

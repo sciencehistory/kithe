@@ -81,6 +81,10 @@ class Shrine
         #     some_model.file_attacher.set_promotion_directives(skip_callbacks: true)
         #     some_model.save!
         def set_promotion_directives(hash)
+          # ActiveJob sometimes has trouble if there are symbols in there, somewhat
+          # unpredictably.
+          hash = hash.collect { |k, v| [k.to_s, v === Symbol ? v.to_s : v.to_s]}.to_h
+
           unrecognized = hash.keys.collect(&:to_sym) - KithePromotionHooks.allowed_promotion_directives
           unless unrecognized.length == 0
             raise ArgumentError.new("Unrecognized promotion directive key: #{unrecognized.join('')}")
@@ -106,7 +110,7 @@ class Shrine
 
         # Overridden to:
         # a) refresh metadata as part of promotion (adds `promoting: true` to context for such)
-        # b) call promotion callbacks on Asset model, unless `promotion_directives[:skip_callbacks]`
+        # b) call promotion callbacks on Asset model, unless `promotion_directives["skip_callbacks"]`
         #    has been set.
         def promote(uploaded_file = get, **options)
           # insist on a metadata extraction, add a new key `promoting: true` in case
@@ -117,7 +121,7 @@ class Shrine
           # Now run ordinary promotion with activemodel callbacks from
           # the Asset, which will automatically allow them to cancel promotion using
           # ordinary activemodel callbacck technique of `throw :abort`.
-          if ( !promotion_directives[:skip_callbacks] &&
+          if ( !promotion_directives["skip_callbacks"] &&
                context[:record] &&
                context[:record].class.respond_to?(:_promotion_callbacks) )
             context[:record].run_callbacks(:promotion) do
