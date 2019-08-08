@@ -33,7 +33,10 @@ module Kithe
     plugin :determine_mime_type, analyzer: :marcel
 
     # Will save height and width to metadata for image types. (Won't for non-image types)
-    plugin :store_dimensions
+    # on_error: :ignore is consistent with behavior < 2.19.0 shrine. We don't want
+    # to log on errors of unrecognized file type for extracting height/width, that's
+    # fine.
+    plugin :store_dimensions, on_error: :ignore
 
     # promotion and deletion will be in background.
     plugin :backgrounding

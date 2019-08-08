@@ -9,7 +9,11 @@ module Kithe
     plugin :activerecord
 
     plugin :determine_mime_type, analyzer: :marcel
-    plugin :store_dimensions
+    # Will save height and width to metadata for image types. (Won't for non-image types)
+    # on_error: :ignore is consistent with behavior < 2.19.0 shrine. We don't want
+    # to log on errors of unrecognized file type for extracting height/width, that's
+    # fine.
+    plugin :store_dimensions, on_error: :ignore
 
     # Useful in case consumers want it, and doesn't harm anything to be available.
     # https://github.com/shrinerb/shrine/blob/master/doc/plugins/rack_response.md
