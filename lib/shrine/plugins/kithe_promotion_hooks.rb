@@ -81,10 +81,6 @@ class Shrine
         #     some_model.file_attacher.set_promotion_directives(skip_callbacks: true)
         #     some_model.save!
         def set_promotion_directives(hash)
-          # ActiveJob sometimes has trouble if there are symbols in there, somewhat
-          # unpredictably.
-          hash = hash.collect { |k, v| [k.to_s, v === Symbol ? v.to_s : k.to_s]}.to_h
-
           unrecognized = hash.keys.collect(&:to_sym) - KithePromotionHooks.allowed_promotion_directives
           unless unrecognized.length == 0
             raise ArgumentError.new("Unrecognized promotion directive key: #{unrecognized.join('')}")
