@@ -5,16 +5,17 @@
 #
 # FUTURE: more args to customize classses and labels.
 class Kithe::RepeatableInputGenerator
-  attr_reader :form_builder, :attribute_name
+  attr_reader :form_builder, :attribute_name, :html_attributes
   # the block that captures what the caller wants to be repeatable content.
   # It should take one block arg, a form_builder.
   attr_reader :caller_content_block
 
-  def initialize(form_builder, attribute_name, caller_content_block, primitive: nil, build: nil)
+  def initialize(form_builder, attribute_name, caller_content_block, primitive: nil, html_attributes: nil, build: nil)
     @form_builder = form_builder
     @attribute_name = attribute_name
     @caller_content_block = caller_content_block
     @primitive = primitive
+    @html_attributes = html_attributes
 
     unless attr_json_registration && attr_json_registration.type.is_a?(AttrJson::Type::Array)
       raise ArgumentError, "can only be used with attr_json-registered attributes"
@@ -22,6 +23,10 @@ class Kithe::RepeatableInputGenerator
 
     unless base_model.class.method_defined?("#{attribute_name}_attributes=".to_sym)
       raise ArgumentError, "Needs a '#{attribute_name}_attributes=' method, usually from attr_json_accepts_nested_attributes_for"
+    end
+
+    if html_attributes.present? && (!primitive? || caller_content_block)
+      raise ArgumentError, "html_attributes argument is only valid if primitive field without block given"
     end
 
     # kinda cheesy, but seems good enough?
@@ -122,7 +127,14 @@ class Kithe::RepeatableInputGenerator
     # For now we disable rails automatic generation of `id` attribute, becuase it
     # would not be unique. FUTURE: perhaps we'll generate unique IDs, need to deal
     # with cocoon JS for added elements.
-    template.text_field_tag(primitive_input_name, value, id: nil, class: "form-control input-primitive")
+
+    tag_attributes = {
+      id: nil,
+      class: "form-control input-primitive"
+    }
+    tag_attributes.merge!(html_attributes) if html_attributes
+
+    template.text_field_tag(primitive_input_name, value, tag_attributes)
   end
 
   # We use _attributes setter, and make sure to set to array value.

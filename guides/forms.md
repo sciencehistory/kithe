@@ -81,6 +81,14 @@ If you only want a repeatable text box, you can simply not use a block argument:
 <% end %>
 ```
 
+You can also specify additional HTML attributes for the input tag, in standard Rails style, say if you need a data tag to trigger some JS functionality:
+
+```
+<%= kithe_form_for(@work) do |form| %>
+   <%= form.repeatable_attr_input(:array_of_strings, html_attributes: { "data-something" => "value" }) %>
+<% end %>
+```
+
 If you do need to customize the repeatable HTML unit -- say you need it to be a select menu instead of a text entry -- you can provide a block. The yielded block arguments are different: There's no sub-form-builder involved. Instead, yielded are a string input name you should use in whatever input you build, and the value to build the current unit with.
 
 ```ruby

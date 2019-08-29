@@ -216,6 +216,24 @@ describe Kithe::RepeatableInputGenerator, type: :helper do
       expect(id_values.count).to eq(id_values.uniq.count)
     end
 
+    describe(:with_html_attributes) do
+      let(:generator) do
+        generator = nil
+        helper.simple_form_for(instance, url: "http://example/target") do |form|
+          generator = Kithe::RepeatableInputGenerator.new(form,
+            :string_array, nil,
+            html_attributes: { data: { foo: "bar" } } )
+        end
+        generator
+      end
+
+      it "has attributes on input" do
+        links = assert_select('input[name="test_work[string_array_attributes][]"]:not([type=hidden])')
+        expect(links.all? {|el| el['data-foo'] == "bar"}).to be(true)
+      end
+
+    end
+
     describe "build: :at_least_one" do
       let(:generator) do
         generator = nil
