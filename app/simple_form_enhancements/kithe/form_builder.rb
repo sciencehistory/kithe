@@ -24,13 +24,18 @@ class Kithe::FormBuilder < SimpleForm::FormBuilder
   #   you'd pass to a form builder.
   # @param build [Boolean] nil default, or set to :at_least_one to have an empty input
   #   generated even if the model includes no elements.
+  # @param html_attributes [Hash] hash of additional attributes to add to a generated simple
+  #   primitive <input> tag. Useful for data- attributes for custom JS behavior. Only valid
+  #   if the generator will be generating a simple primtiive input for you, otherwise will
+  #   raise ArgumentError if you try.
   # @yield [builder] For model-type attributes (not primitives), yields a sub-builder similar to `fields_for`.
+  # @yiieldparam [SimpleForm::FormBuilder] builder
   # @yield [input_name, value] For primitive-type attributes, different yield.
-  # @yieldparam [String] that should be used as HTML "name" attribute on input
-  # @yieldparam value that should be used as existing value when generating input for
+  # @yieldparam [String] input_name  that should be used as HTML "name" attribute on input
+  # @yieldparam [String] value that should be used as existing value when generating input for
   #   primitive, usually by passing to `value` attribute in some input builder.
-  def repeatable_attr_input(attr_name, build: nil, &block)
+  def repeatable_attr_input(attr_name, html_attributes: nil, build: nil, &block)
     #repeatable_main_content(attr_name, &block)
-    Kithe::RepeatableInputGenerator.new(self, attr_name, block, build: build).render
+    Kithe::RepeatableInputGenerator.new(self, attr_name, block, html_attributes: html_attributes, build: build).render
   end
 end
