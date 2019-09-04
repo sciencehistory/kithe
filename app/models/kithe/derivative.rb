@@ -11,5 +11,9 @@ module Kithe
     include Kithe::DerivativeUploader::Attachment.new(:file, store: :kithe_derivatives)
 
     delegate :content_type, :size, :height, :width, :url, to: :file, allow_nil: true
+
+    def file
+      @__file ||= super
+    end
   end
 end
