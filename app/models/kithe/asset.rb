@@ -226,8 +226,12 @@ class Kithe::Asset < Kithe::Model
     Kithe::Asset.where(id: self.id).where("file_data -> 'metadata' ->> 'sha512' = ?", self.sha512).lock.first
   end
 
+  # Intentionally only true if there WAS a sha512 before AND it's changed.
+  # Allowing false on nil previous sha512 allows certain conditions, mostly only
+  # in testing, where you want to assign a derivative to not-yet-promoted file.
   def saved_change_to_file_sha?
     saved_change_to_file_data? &&
+      saved_change_to_file_data.first.try(:dig, "metadata", "sha512") != nil &&
       saved_change_to_file_data.first.try(:dig, "metadata", "sha512") !=
         saved_change_to_file_data.second.try(:dig, "metadata", "sha512")
   end
