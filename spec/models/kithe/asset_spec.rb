@@ -192,5 +192,17 @@ RSpec.describe Kithe::Asset, type: :model do
       expect{ existing_derivative.reload }.to raise_error(ActiveRecord::RecordNotFound)
       expect(existing_stored_file.exists?).to be(false)
     end
+
+    it "allows derivative to be set on un-promoted file though" do
+      # mostly needed for testing scenarios, not otherwise expected.
+      filepath = Kithe::Engine.root.join("spec/test_support/images/1x1_pixel.jpg")
+      asset = Kithe::Asset.new(file: File.open(filepath), title: "test").tap do |a|
+        a.file_attacher.set_promotion_directives(skip_callbacks: true)
+      end
+      asset.derivatives << Kithe::Derivative.new(file: File.open(filepath), key: "test")
+      asset.save!
+      asset.reload
+      expect(asset.derivatives.count).to eq 1
+    end
   end
 end
