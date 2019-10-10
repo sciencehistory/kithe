@@ -20,7 +20,7 @@ Gem::Specification.new do |s|
   s.add_dependency "rails", ">= 5.2.1", "< 6.1"
   s.add_dependency "attr_json", "< 2.0.0"
 
-  s.add_dependency "simple_form", "~> 4.0"
+  s.add_dependency "simple_form", ">= 4.0", "< 6.0"
   s.add_dependency "shrine", "~> 2.14" # file attachment handling
   s.add_dependency "shrine-url", "~> 2.0"
   s.add_dependency "fastimage", "~> 2.0.0" # use by default for image dimensions
