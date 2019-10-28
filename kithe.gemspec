@@ -9,8 +9,8 @@ Gem::Specification.new do |s|
   s.version     = Kithe::VERSION
   s.authors     = ["Jonathan Rochkind"]
   s.email       = ["jrochkind@sciencehistory.org"]
-  #s.homepage    = "TODO"
-  s.summary     = "An in-progress experiment in shareable tools/components for building a digital collections app in Rails."
+  s.homepage    = "https://github.com/sciencehistory/kithe"
+  s.summary     = "Shareable tools/components for building a digital collections app in Rails."
   #s.description = "TODO: Description of Kithe."
   s.license     = "MIT"
 
