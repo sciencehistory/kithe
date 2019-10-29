@@ -1,5 +1,5 @@
 # Kithe
-An in-progress experiment in shareable tools/components for building a digital collections app in Rails.
+An experiment in shareable tools/components for building a digital collections app in Rails.
 
 [![Build Status](https://travis-ci.org/sciencehistory/kithe.svg?branch=master)](https://travis-ci.org/sciencehistory/kithe)
 [![Gem Version](https://badge.fury.io/rb/kithe.svg)](https://badge.fury.io/rb/kithe)
@@ -16,13 +16,14 @@ In that it provides tools and not a turnkey app, develping an app based on kythe
 
 If you are comparing it to a "solution bundle" digital collections platform, kithe may seem like more work. But experience has shown me that in our domain, historically "solution bundles" can be less of a "turnkey" approach than they seem, and can have greater development cost over total app lifecycle than anticipated. If you have similar experience that leads you to consider a more 'bespoke' app approach -- you may want to consider kithe. We hope to provide architecturally simple support and standardization for your custom app, taking care of some of the common "hard parts" and leaving you with flexibility to build out the app that meets your needs.
 
-Kithe is at the beginning stages of development. It is pre-1.0 and can change in backwards incompat ways. It is probably not ready for using seriously unless you really know what you're getting into. But trying it out is very invited and encouraged.
+Kithe has beeen developed in tandem with the Science History Institute's in-development [replacement digital collections](https://github.com/sciencehistory/scihist_digicoll) app, and you can look there for a model/canonical/demo kithe use.
 
-You are encouraged to try out kithe, but also welcome to copy any code or just ideas from kithe.
+The Science History Institute app is live and working, so kithe is 1.0. We are serious about [semantic verisioning](https://semver.org/) and will endeavor to release backwards breaking changes only with a major release, and minimize major releases.
+
+While it is working well for us, since it hasn't had wide use, it could still be considered somewhat of an experiment. But you are invited to try it out and see how it works. You are welcome to use it, but also welcome to copy any code or just ideas from kithe.
 
 Any questions or feedback of any kind are very welcome and encouraged, in the github project issues, samvera slack, or wherever is convenient.
 
-Kithe is being developed in tandem with the Science History Institute's in-development [replacement digital collections](https://github.com/sciencehistory/scihist_digicoll) app, and you can look there for a model/canonical/demo kithe use.
 
 # Kithe parts
 
