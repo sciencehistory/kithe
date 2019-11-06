@@ -19,7 +19,12 @@ module Kithe
   #
   # FUTURE: Look at using client-side-calculated checksums to verify end-to-end.
   # https://github.com/shrinerb/shrine/wiki/Using-Checksums-in-Direct-Uploads
+  #
+  # When magicc-byte analyzer can't determine mime type, will fall back to  `mediainfo`
+  # CLI _if_ the command is present. Should be much more customizable.
   class AssetUploader < Shrine
+    class_attribute :mediainfo_detector, default: !`which mediainfo`.blank?
+
     plugin :activerecord
 
     # useful in forms to preserve entry on re-showing a form on validation error,
@@ -30,7 +35,20 @@ module Kithe
     # ActiveStorage uses. It is very similar to :mimemagic (and uses mimemagic
     # under the hood), but mimemagic seems not to be maintained with up to date
     # magic db? https://github.com/minad/mimemagic/pull/66
-    plugin :determine_mime_type, analyzer: :marcel
+    plugin :determine_mime_type, analyzer: -> (io, analyzers) do
+      mime_type = analyzers[:marcel].call(io)
+
+      # But marcel is not able to catch some of our MP3s as audio/mpeg,
+      # let's try mediainfo command line. mediainfo is one of the tools
+      # the Harvard Fits tool uses. https://github.com/MediaArea/MediaInfo
+      if mediainfo_detector && mime_type == "application/octet-stream" || mime_type.blank?
+        mime_type = Kithe::MediainfoAnalyzer.new.call(io)
+      end
+
+      mime_type = "application/octet-stream" if mime_type.blank?
+
+      mime_type
+    end
 
     # Will save height and width to metadata for image types. (Won't for non-image types)
     plugin :store_dimensions
