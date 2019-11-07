@@ -55,9 +55,10 @@ module Kithe
   #
   # The settings need to live here not in Kithe::Indexable, to avoid terrible
   # Rails dev-mode class-reloading weirdnesses. This module is not reloaded.
-  mattr_accessor :indexable_settings do
-  # set up default settings
-  IndexableSettings.new(
+  class << self
+    attr_accessor :indexable_settings
+  end
+  self.indexable_settings = IndexableSettings.new(
     solr_url: "http://localhost:8983/solr/default",
     model_name_solr_field: "model_name_ssi",
     solr_id_value_attribute: "id",
@@ -77,6 +78,5 @@ module Kithe
     },
     disable_callbacks: false
   )
-end
 
 end
