@@ -29,13 +29,9 @@ module Kithe
     #
     # io argument will have `rewind` called before returning.
     def call(io, _options ={})
-      # To use 'mediainfo' we do have to download a local copy into a tempfile, this could
-      # take a while for a big file. could improve performance by recognizing if the io already is a file
-      # with a path or whatever, but doesn't happen in our current app.
-      Tempfile.create do |tempfile|
-        IO.copy_stream(io, tempfile)
-        io.rewind if io.respond_to?(:rewind)
-
+      # To use 'mediainfo' we need a local file, which if the file is currently remote means we
+      # will have to download a local copy into a tempfile, this could take a while for a big file.
+      Shrine.with_file(io) do |tempfile|
         out, err = tty_command.run("#{mediainfo_command} --Inform=\"General;%InternetMediaType%\"", tempfile.path)
 
         mime_type = out.chomp
