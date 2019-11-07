@@ -21,10 +21,9 @@ module Kithe
   # https://github.com/shrinerb/shrine/wiki/Using-Checksums-in-Direct-Uploads
   #
   # When magicc-byte analyzer can't determine mime type, will fall back to  `mediainfo`
-  # CLI _if_ the command is present. Should be much more customizable.
+  # CLI _if_ `Kithe.use_mediainfo` is true (defaults to true if mediainfo CLI is
+  # available). (We need better ways to customize uploader.)
   class AssetUploader < Shrine
-    class_attribute :mediainfo_detector, default: !`which mediainfo`.blank?
-
     plugin :activerecord
 
     # useful in forms to preserve entry on re-showing a form on validation error,
@@ -41,7 +40,7 @@ module Kithe
       # But marcel is not able to catch some of our MP3s as audio/mpeg,
       # let's try mediainfo command line. mediainfo is one of the tools
       # the Harvard Fits tool uses. https://github.com/MediaArea/MediaInfo
-      if mediainfo_detector && mime_type == "application/octet-stream" || mime_type.blank?
+      if Kithe.use_mediainfo && mime_type == "application/octet-stream" || mime_type.blank?
         mime_type = Kithe::MediainfoAnalyzer.new.call(io)
       end
 
