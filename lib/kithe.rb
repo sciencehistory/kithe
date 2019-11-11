@@ -79,4 +79,12 @@ module Kithe
     disable_callbacks: false
   )
 
+  class << self
+    # Currently used by Kithe::AssetUploader, a bit of a hacky
+    # design, we should improve with better way to customize uploaders.
+    attr_accessor :use_mediainfo
+  end
+  # default to if we can find the CLI.
+  self.use_mediainfo = !`which mediainfo`.blank?
+
 end
