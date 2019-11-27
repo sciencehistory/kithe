@@ -22,6 +22,12 @@ describe "ObjExtract traject macro" do
       result = indexer.map_record(OpenStruct.new(title: "title value"))
       expect(result["result"]).to eq(["title value"])
     end
+
+    it "ignores empty string" do
+      result = indexer.map_record(OpenStruct.new(title: ""))
+      expect(result["result"]).to be_nil
+      expect(result.keys).not_to include("result")
+    end
   end
 
   describe "primitive array attribute" do
@@ -45,6 +51,17 @@ describe "ObjExtract traject macro" do
       result = indexer.map_record(OpenStruct.new(title: ["title value1", "title value2"]))
       expect(result["result"]).to eq(["title value1", "title value2"])
     end
+
+    it "filters out empty strings" do
+      result = indexer.map_record(OpenStruct.new(title: ["value1", "value2", "", ""]))
+      expect(result["result"]).to eq(["value1", "value2"])
+    end
+
+    it "ignores all empty string value" do
+      result = indexer.map_record(OpenStruct.new(title: ["", ""]))
+      expect(result["result"]).to be_nil
+      expect(result.keys).not_to include("result")
+    end
   end
 
   describe "model attribute" do
@@ -62,6 +79,12 @@ describe "ObjExtract traject macro" do
     it "indexes nil without raising" do
       result = indexer.map_record(OpenStruct.new(creator: nil))
       expect(result).to eq({})
+    end
+
+    it "ignores empty string" do
+      result = indexer.map_record(OpenStruct.new(creator: OpenStruct.new(type: "engraver", name: "")))
+      expect(result["result"]).to be_nil
+      expect(result.keys).not_to include("result")
     end
 
     describe "as array" do
@@ -83,6 +106,12 @@ describe "ObjExtract traject macro" do
           ])
         )
         expect(result).to eq({ "result" => ["Joe Shmoe", "Mary Sue"]})
+      end
+
+      it "ignores empty string" do
+        result = indexer.map_record(OpenStruct.new(creator: [OpenStruct.new(type: "engraver", name: "")]))
+        expect(result["result"]).to be_nil
+        expect(result.keys).not_to include("result")
       end
     end
 
@@ -123,6 +152,11 @@ describe "ObjExtract traject macro" do
       result = indexer.map_record(OpenStruct.new(creator: []))
       expect(result).to eq({})
     end
-  end
 
+    it "ignores empty string" do
+      result = indexer.map_record(OpenStruct.new(creator: {type: "engraver", name: ""}))
+      expect(result["result"]).to be_nil
+      expect(result.keys).not_to include("result")
+    end
+  end
 end
