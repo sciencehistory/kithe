@@ -59,9 +59,9 @@ module Kithe
           nil
         elsif rest.empty?
           if result.kind_of?(Array)
-            result.collect(&:presence).compact # remove empty string and nil
+            result.collect { |v| v == "" ? nil : v  }.compact # remove empty string and nil
           else
-            result.presence # turn empty strings to nil
+            result == "" ? nil : result # turn empty strings to nil
           end
         else
           # recurse

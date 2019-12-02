@@ -28,6 +28,11 @@ describe "ObjExtract traject macro" do
       expect(result["result"]).to be_nil
       expect(result.keys).not_to include("result")
     end
+
+    it "indexes false" do
+      result = indexer.map_record(OpenStruct.new(title: false))
+      expect(result["result"]).to eq([false])
+    end
   end
 
   describe "primitive array attribute" do
@@ -61,6 +66,11 @@ describe "ObjExtract traject macro" do
       result = indexer.map_record(OpenStruct.new(title: ["", ""]))
       expect(result["result"]).to be_nil
       expect(result.keys).not_to include("result")
+    end
+
+    it "allows false values" do
+      result = indexer.map_record(OpenStruct.new(title: [false]))
+      expect(result["result"]).to eq([false])
     end
   end
 
