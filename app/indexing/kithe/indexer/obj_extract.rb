@@ -33,6 +33,8 @@ module Kithe
     # accumulator. Since most writers at the end of the traject chain expect strings, you may want
     # to use subsequent transformation steps to transform those objects into strings with custom logic.
     #
+    # Empty string values (`""`) are ignored/removed from output.
+    #
     # FUTURE: Should we extract this to traject itself?  Not sure if we'll end up putting kithe-tied func
     # in here, or how generalizable it is.
     module ObjExtract
@@ -46,15 +48,21 @@ module Kithe
         first, *rest = *path
 
         result = if obj.kind_of?(Array)
-          obj.flat_map {|item| obj_extractor(item, path)}
+          obj.flat_map { |item| obj_extractor(item, path) }
         elsif obj.kind_of?(Hash)
           obj[first]
         else
           obj.send(first)
         end
 
-        if result.nil? || rest.empty?
-          result
+        if result.nil?
+          nil
+        elsif rest.empty?
+          if result.kind_of?(Array)
+            result.collect(&:presence).compact # remove empty string and nil
+          else
+            result.presence # turn empty strings to nil
+          end
         else
           # recurse
           obj_extractor(result, rest)
