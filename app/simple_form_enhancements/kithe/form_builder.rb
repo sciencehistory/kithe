@@ -34,8 +34,13 @@ class Kithe::FormBuilder < SimpleForm::FormBuilder
   # @yieldparam [String] input_name  that should be used as HTML "name" attribute on input
   # @yieldparam [String] value that should be used as existing value when generating input for
   #   primitive, usually by passing to `value` attribute in some input builder.
-  def repeatable_attr_input(attr_name, html_attributes: nil, build: nil, &block)
+  # @yieldparam [Hash] hash of additional keyword args to pass to underlying simple_form
+  #    #input method. Eg `required`.
+  def repeatable_attr_input(attr_name, html_attributes: nil, build: nil, simple_form_input_args: {},  &block)
     #repeatable_main_content(attr_name, &block)
-    Kithe::RepeatableInputGenerator.new(self, attr_name, block, html_attributes: html_attributes, build: build).render
+    Kithe::RepeatableInputGenerator.new(self, attr_name, block,
+      html_attributes: html_attributes,
+      simple_form_input_args: simple_form_input_args,
+      build: build).render
   end
 end

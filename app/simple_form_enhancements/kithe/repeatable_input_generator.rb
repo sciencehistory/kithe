@@ -5,17 +5,18 @@
 #
 # FUTURE: more args to customize classses and labels.
 class Kithe::RepeatableInputGenerator
-  attr_reader :form_builder, :attribute_name, :html_attributes
+  attr_reader :form_builder, :attribute_name, :html_attributes, :simple_form_input_args
   # the block that captures what the caller wants to be repeatable content.
   # It should take one block arg, a form_builder.
   attr_reader :caller_content_block
 
-  def initialize(form_builder, attribute_name, caller_content_block, primitive: nil, html_attributes: nil, build: nil)
+  def initialize(form_builder, attribute_name, caller_content_block, primitive: nil, html_attributes: nil, build: nil, simple_form_input_args: {})
     @form_builder = form_builder
     @attribute_name = attribute_name
     @caller_content_block = caller_content_block
     @primitive = primitive
     @html_attributes = html_attributes
+    @simple_form_input_args = simple_form_input_args
 
     unless attr_json_registration && attr_json_registration.type.is_a?(AttrJson::Type::Array)
       raise ArgumentError, "can only be used with attr_json-registered attributes"
@@ -47,7 +48,7 @@ class Kithe::RepeatableInputGenerator
     end
 
     # simple_form #input method, with a block for custom input content.
-    form_builder.input(attribute_name, wrapper: :vertical_collection) do
+    form_builder.input(attribute_name, wrapper: :vertical_collection, **simple_form_input_args) do
       template.safe_join([
         placeholder_hidden_input,
         existing_value_inputs,
