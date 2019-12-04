@@ -163,6 +163,22 @@ describe Kithe::RepeatableInputGenerator, type: :helper do
         end
       end
     end
+
+    describe "specified simple_form_input_arg required" do
+      let(:instance) { TestWork.new }
+
+      let(:generator) do
+        generator = nil
+        helper.simple_form_for(instance, url: "http://example/target") do |form|
+          generator = Kithe::RepeatableInputGenerator.new(form, :multi_model, block, simple_form_input_args: { required: true })
+        end
+        generator
+      end
+
+      it "outputs as required" do
+        assert_select("abbr[title='required']")
+      end
+    end
   end
 
   describe "for a repeated primitive string" do
