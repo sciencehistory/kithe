@@ -57,7 +57,9 @@ class Kithe::Model < ActiveRecord::Base
   # loading on hetereogenous fetches
   belongs_to :representative, class_name: "Kithe::Model", optional: true
   belongs_to :leaf_representative, class_name: "Kithe::Model", optional: true
-  before_save :set_leaf_representative, if: ->(model) { model.will_save_change_to_representative_id? }
+  # If representative has changed, and the caller isn't manually changing leaf_representative,
+  # then re-calculate it.
+  before_save :set_leaf_representative, if: ->(model) { model.will_save_change_to_representative_id? && !model.will_save_change_to_leaf_representative_id? }
 
   after_save :update_referencing_leaf_representatives
   before_destroy :nullify_representative_ids

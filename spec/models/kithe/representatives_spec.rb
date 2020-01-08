@@ -25,7 +25,7 @@ RSpec.describe "Model representatives", type: :model do
     let(:work) { FactoryBot.create(:kithe_work, title: "top", representative: intermediate_work)}
     let(:intermediate_work) { FactoryBot.create(:kithe_work, title: "intermediate", representative: asset)}
 
-    it "is set" do
+    it "is automatically set" do
       expect(intermediate_work.leaf_representative).to eq(asset)
       expect(work.leaf_representative).to eq(asset)
 
@@ -34,7 +34,23 @@ RSpec.describe "Model representatives", type: :model do
       expect(work.leaf_representative).to be(nil)
     end
 
-    it "can be set if wrong" do
+    it "is not automatically set if you are manually setting it" do
+      expect(work).not_to receive(:set_leaf_representative)
+
+      work.representative = asset
+      work.leaf_representative = intermediate_work
+      work.save!
+
+
+
+      # it's wrong, but we set it intentionally. The actual use
+      # case is when we're setting it to something RIGHT, and want to
+      # avoid the extra work of the automatic lookup, cause we're setting it.
+      # Or when we're doing bulk data imports etc.
+      expect(work.leaf_representative_id).to eq(intermediate_work.id)
+    end
+
+    it "set_leaf_representative can fix wrong value" do
       wrong_asset = FactoryBot.create(:kithe_asset)
       work.update(leaf_representative_id: wrong_asset.id)
 
