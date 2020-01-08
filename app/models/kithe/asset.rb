@@ -3,6 +3,7 @@ class Kithe::Asset < Kithe::Model
 
   # These associations exist for hetereogenous eager-loading, but hide em.
   # They are defined as self-pointing below.
+  # ignored_columns doesn't do everything we'd like, but it's something: https://github.com/rails/rails/issues/34344
   self.ignored_columns = %w(representative_id leaf_representative_id)
   belongs_to :representative, -> { none }, class_name: "Kithe::Model"
   belongs_to :leaf_representative, -> { none }, class_name: "Kithe::Model"
