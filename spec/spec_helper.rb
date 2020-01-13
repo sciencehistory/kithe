@@ -123,6 +123,22 @@ RSpec.configure do |config|
 =end
 end
 
+# Workaround ruby 2.7.0 StringIO enccoding weirdness, which hopefully
+# will be fixed in shrine 3.x before we get there. if you can remove this patch
+# and tests still pass, you're good.
+#
+# https://github.com/shrinerb/shrine/pull/443
+#
+require 'sane_patch'
+SanePatch.patch("shrine", "< 3") do
+  require 'shrine/storage/memory'
+  class Shrine::Storage::Memory
+    def open(id, *)
+      str = store.fetch(id)
+      StringIO.new(str).set_encoding(str.encoding, str.encoding)
+    end
+  end
+end
 
 
 
