@@ -13,7 +13,7 @@ module ShrineSpecSupport
     uploader = test_uploader(*args, &block)
     Object.send(:remove_const, "TestUser") if defined?(TestUser) # for warnings
     user_class = Object.const_set("TestUser", Struct.new(:avatar_data, :id))
-    user_class.include uploader.class::Attachment.new(:avatar, attachment_options)
+    user_class.include uploader.class::Attachment.new(:avatar, **attachment_options)
     user_class.new.avatar_attacher
   end
 
