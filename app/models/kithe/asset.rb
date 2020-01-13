@@ -199,7 +199,7 @@ class Kithe::Asset < Kithe::Model
       record: self
     }.merge(context)
 
-    file_attacher.promote(file_attacher.get, context)
+    file_attacher.promote(file_attacher.get, **context)
   end
 
   # The derivative creator sets metadata when it's created all derivatives

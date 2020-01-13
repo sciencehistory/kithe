@@ -25,7 +25,7 @@ module Kithe
       # @param (see #initialize)
       def self.push(**kwargs)
         original = Thread.current[THREAD_CURRENT_KEY]
-        instance = new(kwargs.merge(original_settings: original))
+        instance = new(**kwargs.merge(original_settings: original))
         Thread.current[THREAD_CURRENT_KEY] = instance
 
         instance

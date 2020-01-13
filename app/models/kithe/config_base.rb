@@ -114,6 +114,12 @@ module Kithe
     def self.define_key(*args)
       instance.define_key(*args)
     end
+    class << self
+      # https://www.ruby-lang.org/en/news/2019/12/12/separation-of-positional-and-keyword-arguments-in-ruby-3-0/
+      if RUBY_VERSION >= "2.7"
+        ruby2_keywords :define_key
+      end
+    end
 
     def self.lookup(*args)
       instance.lookup(*args)
