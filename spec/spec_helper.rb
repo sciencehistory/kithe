@@ -125,4 +125,14 @@ end
 
 
 
+require 'shrine/storage/memory'
+class Shrine::Storage::Memory
+  def open(id, *)
+    str = store.fetch(id)
+    StringIO.new(str).set_encoding(str.encoding, str.encoding)
+  end
+end
+
+
+
 
