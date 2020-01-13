@@ -33,6 +33,7 @@ Gem::Specification.new do |s|
   s.add_dependency "traject", "~> 3.0", ">= 3.1.0.rc1" # for Solr or other indexing
   s.add_dependency "rsolr", "~> 2.2" # for some low-level solr stuff
 
+
   s.add_development_dependency "appraisal" # CI testing under multiple rails versions
   s.add_development_dependency "dimensions" # checking image width of transformers in tests
 
@@ -41,4 +42,5 @@ Gem::Specification.new do |s|
   s.add_development_dependency "yard-activesupport-concern"
   s.add_development_dependency "shrine-memory"
   s.add_development_dependency "webmock", "~> 3.0"
+  s.add_development_dependency 'sane_patch', "< 2"
 end
