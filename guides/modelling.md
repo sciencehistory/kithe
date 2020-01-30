@@ -51,7 +51,9 @@ The generalization can possibly be useful in the future in some cases. We've bas
       require_dependency "asset"
     end
 
-We define a Rails [enum](https://api.rubyonrails.org/v5.2.2.1/classes/ActiveRecord/Enum.html) for `kithe_model_type`, with values `work`, `collection`, or `asset`, that you can use to fetch any objects of these main categories where convenient, which should also avoid the STI/autoloading issues, without needing the `to_prepare`.
+**OR, for Rails6 with zeitwerk auto-loading, see: https://guides.rubyonrails.org/autoloading_and_reloading_constants.html#single-table-inheritance**
+
+We define a Rails [enum](https://api.rubyonrails.org/v5.2.2.1/classes/ActiveRecord/Enum.html) for `kithe_model_type`, with values `work`, `collection`, or `asset`, that you can use to fetch any objects of these main categories where convenient, which in some cases can be used to avoid the STI/autoloading issues, without needing the `to_prepare`.
 
     # should always be 'work', 'collection', or 'asset', even with complex additional
     # inheritance hieararchy:
