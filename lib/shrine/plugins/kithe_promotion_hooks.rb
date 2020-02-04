@@ -115,8 +115,7 @@ class Shrine
         def promote(storage: store_key, **options)
           # insist on a metadata extraction, add a new key `promoting: true` in case
           # anyone is interested.
-
-          file.refresh_metadata!(promoting: true)
+          file.refresh_metadata!(**context.merge(options).merge(promoting: true))
 
           # Now run ordinary promotion with activemodel callbacks from
           # the Asset, which will automatically allow them to cancel promotion using
