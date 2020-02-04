@@ -19,7 +19,7 @@ class Kithe::Asset < Kithe::Model
 
   # TODO we may need a way for local app to provide custom uploader class.
   # or just override at ./kithe/asset_uploader.rb locally?
-  include Kithe::AssetUploader::Attachment.new(:file)
+  include Kithe::AssetUploader::Attachment(:file)
 
   # for convenience, let's delegate some things to shrine parts
   delegate :content_type, :original_filename, :size, :height, :width, :page_count,
