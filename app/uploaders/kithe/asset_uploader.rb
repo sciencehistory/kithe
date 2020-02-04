@@ -93,9 +93,6 @@ module Kithe
 
     plugin :add_metadata
 
-    # So we can assign a hash representing cached file
-    plugin :parsed_json
-
     # Makes files stored as /asset/#{asset_pk}/#{random_uuid}.#{original_suffix}
     plugin :kithe_storage_location
 
