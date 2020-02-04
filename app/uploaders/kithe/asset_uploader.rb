@@ -63,8 +63,8 @@ module Kithe
     # feature can be used to make promotion not happen at all, or happen in foreground.
     #     asset.file_attacher.set_promotion_directives(promote: false)
     #     asset.file_attacher.set_promotion_directives(promote: "inline")
-    Attacher.promote_block do |**data|
-      Kithe::TimingPromotionDirective.new(key: :promote, directives: data["promotion_directives"]) do |directive|
+    Attacher.promote_block do |**options|
+      Kithe::TimingPromotionDirective.new(key: :promote, directives: options["promotion_directives"]) do |directive|
         if directive.inline?
           # Foreground, but you'll still need to #reload your asset to see changes,
           # since backgrounding mechanism still reloads a new instance, sorry.
@@ -80,13 +80,13 @@ module Kithe
     # Delete using shrine backgrounding, but can be effected
     # by promotion_directives[:delete], similar to promotion above.
     # Yeah, not really a "promotion" directive, oh well.
-    Attacher.destroy_block do |**data|
-      Kithe::TimingPromotionDirective.new(key: :delete, directives: data["promotion_directives"]) do |directive|
+    Attacher.destroy_block do |**options|
+      Kithe::TimingPromotionDirective.new(key: :delete, directives: options["promotion_directives"]) do |directive|
         if directive.inline?
           destroy
         elsif directive.background?
           # What shrine normally expects for backgrounding
-          Kithe::AssetDeleteJob.perform_later(data)
+          Kithe::AssetDeleteJob.perform_later(self.class.name, data)
         end
       end
     end
