@@ -191,7 +191,7 @@ class Kithe::Asset < Kithe::Model
   #
   # Note that calling `file_attacher.promote` on it's own won't do quite the right thing,
   # and won't respect that the file is already cached.
-  def promote(action: :store, context: {})
+  def promote(action: :store, **context)
     return unless file_attacher.cached?
 
     context = {
@@ -199,7 +199,7 @@ class Kithe::Asset < Kithe::Model
       record: self
     }.merge(context)
 
-    file_attacher.promote(file_attacher.get, **context)
+    file_attacher.promote(**context)
   end
 
   # The derivative creator sets metadata when it's created all derivatives
