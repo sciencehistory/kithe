@@ -110,7 +110,7 @@ module Kithe
     # checksums until then anyway.
     plugin :signature
     add_metadata do |io, context|
-      if context[:action] == :store
+      if context[:promoting]
         {
           md5: calculate_signature(io, :md5),
           sha1: calculate_signature(io, :sha1),
