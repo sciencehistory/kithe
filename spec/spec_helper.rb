@@ -130,7 +130,7 @@ end
 # https://github.com/shrinerb/shrine/pull/443
 #
 require 'sane_patch'
-SanePatch.patch("shrine", "< 3") do
+SanePatch.patch("shrine", "< 3.2.2") do
   require 'shrine/storage/memory'
   class Shrine::Storage::Memory
     def open(id, *)
