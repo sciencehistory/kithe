@@ -112,11 +112,11 @@ class Shrine
         # a) refresh metadata as part of promotion (adds `promoting: true` to context for such)
         # b) call promotion callbacks on Asset model, unless `promotion_directives["skip_callbacks"]`
         #    has been set.
-        def promote(uploaded_file = get, **options)
+        def promote(storage: store_key, **options)
           # insist on a metadata extraction, add a new key `promoting: true` in case
           # anyone is interested.
 
-          uploaded_file.refresh_metadata!(**context.merge(options).merge(promoting: true))
+          file.refresh_metadata!(promoting: true)
 
           # Now run ordinary promotion with activemodel callbacks from
           # the Asset, which will automatically allow them to cancel promotion using
@@ -125,10 +125,10 @@ class Shrine
                context[:record] &&
                context[:record].class.respond_to?(:_promotion_callbacks) )
             context[:record].run_callbacks(:promotion) do
-              super(uploaded_file, **options)
+              super
             end
           else
-            super(uploaded_file, **options)
+            super
           end
         end
       end
