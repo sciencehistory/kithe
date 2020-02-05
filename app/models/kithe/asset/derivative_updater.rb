@@ -62,7 +62,7 @@ class Kithe::Asset::DerivativeUpdater
   # This method calls itself recursively to do that. Gives up after max_optimistic_tries,
   # at which point it'll just raise the constraint violation exception.
   def optimistically_save_derivative(uploaded_file:, derivative:, tries: 0)
-    derivative.file_attacher.set(uploaded_file)
+    derivative.file_attacher.change(uploaded_file)
     save_deriv_ensuring_unchanged_asset(derivative)
   rescue ActiveRecord::RecordNotUnique => e
     if tries < max_optimistic_tries
