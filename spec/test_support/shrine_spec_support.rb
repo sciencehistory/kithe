@@ -3,6 +3,7 @@ module ShrineSpecSupport
   # https://github.com/shrinerb/shrine/blob/203c2c9a0c83815c9ded1b09d5d006b2a523579c/test/support/generic_helper.rb#L6
   def test_uploader(storage_key = :store, &block)
     uploader_class = Class.new(Shrine)
+    uploader_class.plugin :model
     uploader_class.storages[:cache] = Shrine::Storage::Test.new
     uploader_class.storages[:store] = Shrine::Storage::Test.new
     uploader_class.class_eval(&block) if block
@@ -13,7 +14,7 @@ module ShrineSpecSupport
     uploader = test_uploader(*args, &block)
     Object.send(:remove_const, "TestUser") if defined?(TestUser) # for warnings
     user_class = Object.const_set("TestUser", Struct.new(:avatar_data, :id))
-    user_class.include uploader.class::Attachment.new(:avatar, **attachment_options)
+    user_class.include uploader.class::Attachment(:avatar, **attachment_options)
     user_class.new.avatar_attacher
   end
 
