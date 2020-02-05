@@ -76,7 +76,7 @@ RSpec.describe Kithe::Derivative, type: :model, queue_adapter: :test do
     end
 
     it "can add a derivative with custom metadata" do
-      derivative = asset.update_derivative(key, dummy_io, metadata: { foo: "bar" })
+      derivative = asset.update_derivative(key, dummy_io, metadata: { "foo" => "bar" })
       expect(derivative).to be_present
       expect(derivative.file.metadata["size"]).to eq(dummy_content.length)
       expect(derivative.file.metadata["foo"]).to eq("bar")
