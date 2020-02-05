@@ -80,7 +80,7 @@ describe "Kithe::Asset derivative definitions", queue_adapter: :test do
     asset.create_derivatives
 
     jpg_deriv = asset.derivatives.find {|d| d.key == "a_jpg"}
-    expect(jpg_deriv.file.storage_key).to eq("kithe_derivatives")
+    expect(jpg_deriv.file.storage_key).to eq(:kithe_derivatives)
   end
 
 
@@ -126,7 +126,7 @@ describe "Kithe::Asset derivative definitions", queue_adapter: :test do
       deriv = asset.derivatives.first
 
       expect(deriv).to be_present
-      expect(deriv.file.storage_key).to eq("store")
+      expect(deriv.file.storage_key).to eq(:store)
     end
   end
 
