@@ -51,8 +51,7 @@ class Kithe::Asset::DerivativeUpdater
 
     # add our derivative key to context when uploading, so Kithe::DerivativeUploader can
     # use it if needed.
-    uploaded_file = uploader.upload(io, record: deriv, metadata: metadata.merge(kithe_derivative_key: key))
-
+    uploaded_file = uploader.upload(io, record: deriv, metadata: metadata, kithe_derivative_key: key)
     optimistically_save_derivative(uploaded_file: uploaded_file, derivative: deriv)
   end
 

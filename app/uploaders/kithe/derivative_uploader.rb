@@ -35,10 +35,11 @@ module Kithe
     def extract_metadata(io, context = {})
       result = super
 
-      if context.dig(:metadata, :kithe_derivative_key) &&
+      if context[:kithe_derivative_key] &&
          context[:record]
         extension = MiniMime.lookup_by_content_type(result["mime_type"] || "")&.extension
-        result["filename"] = "#{context[:record].asset.friendlier_id}_#{context[:metadata][:kithe_derivative_key]}.#{extension}"
+        result["filename"] = "#{context[:record].asset.friendlier_id}_#{context[:kithe_derivative_key]}.#{extension}"
+        result["kithe_derivative_key"] = context[:kithe_derivative_key]
       end
 
       return result
