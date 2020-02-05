@@ -183,14 +183,14 @@ class Kithe::Asset < Kithe::Model
 
   # Runs the shrine promotion step, that we normally have in backgrounding, manually
   # and in foreground. You might use this if a promotion failed and you need to re-run it,
-  # perhaps in bulk. It's also useful in tests.
+  # perhaps in bulk. It's also useful in tests. Also persists, using shrine `atomic_promote`.
   #
   # This will no-op unless the attached file is stored in cache -- that is, it
   # will no-op if the file has already been promoted. In this way it matches ordinary
   # shrine promotion. (Do we need an option to force promotion anyway?)
   #
-  # Note that calling `file_attacher.promote` on it's own won't do quite the right thing,
-  # and won't respect that the file is already cached.
+  # Note that calling `file_attacher.promote` or `atomic_promote` on it's own won't do
+  # quite the same things.
   def promote(action: :store, **context)
     return unless file_attacher.cached?
 
@@ -199,7 +199,7 @@ class Kithe::Asset < Kithe::Model
       record: self
     }.merge(context)
 
-    file_attacher.promote(**context)
+    file_attacher.atomic_promote(**context)
   end
 
   # The derivative creator sets metadata when it's created all derivatives
