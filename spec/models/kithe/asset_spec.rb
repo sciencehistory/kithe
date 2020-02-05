@@ -107,7 +107,7 @@ RSpec.describe Kithe::Asset, type: :model do
       asset.save!
       asset.reload
 
-      expect(asset.file.storage_key).to eq(asset.file_attacher.store.storage_key.to_s)
+      expect(asset.file.storage_key).to eq(asset.file_attacher.store.storage_key.to_sym)
       expect(asset.stored?).to be true
       expect(asset.file.read).to include("Example Response")
       expect(asset.file.id).to end_with(".html") # no query params
@@ -120,6 +120,7 @@ RSpec.describe Kithe::Asset, type: :model do
       asset.file = {"id" => "http://www.example.com/bar.html?foo=bar",
                     "storage" => "remote_url",
                     "headers" => {"Authorization" => "Bearer TestToken"}}
+
       asset.save!
 
       expect(

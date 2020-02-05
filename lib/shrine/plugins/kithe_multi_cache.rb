@@ -24,9 +24,6 @@ class Shrine
     # And the data can be saved, and the remote url (shrine-url) file will be promoted as usual,
     # even though it's not registered as the cache storage.
     #
-    # NOTE: This implementation can be made a lot simpler once this PR is in a shrine release:
-    # https://github.com/shrinerb/shrine/pull/319
-    # https://github.com/shrinerb/shrine/commit/88c23d54814568b04987680f00b6b36f421c8d81
     module KitheMultiCache
       def self.configure(uploader, options = {})
         uploader.opts[:kithe_multi_cache_keys]  = Array(options[:additional_cache]).collect(&:to_sym)
