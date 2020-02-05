@@ -52,7 +52,7 @@ RSpec.describe Kithe::Derivative, type: :model, queue_adapter: :test do
       # file is stored
       expect(derivative.key).to eq(key)
       expect(derivative.file).to be_present
-      expect(derivative.file.storage_key).to eq("kithe_derivatives")
+      expect(derivative.file.storage_key).to eq(:kithe_derivatives)
       expect(derivative.file.read).to eq(dummy_content)
 
       # some metadata we got
@@ -72,7 +72,7 @@ RSpec.describe Kithe::Derivative, type: :model, queue_adapter: :test do
       expect(derivative).to be_present
       derivative.reload
       expect(derivative.file).to be_present
-      expect(derivative.file.storage_key).to eq("store")
+      expect(derivative.file.storage_key).to eq(:store)
     end
 
     it "can add a derivative with custom metadata" do
