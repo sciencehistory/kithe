@@ -9,7 +9,10 @@ module Kithe
     plugin :activerecord
 
     plugin :determine_mime_type, analyzer: :marcel
-    plugin :store_dimensions
+
+    # ignore error, often from storing a non-image file which can't have dimensions
+    # extracted. behavior consistent with shrine 2.x.
+    plugin :store_dimensions, on_error: :ignore
 
     # Useful in case consumers want it, and doesn't harm anything to be available.
     # https://github.com/shrinerb/shrine/blob/master/doc/plugins/rack_response.md

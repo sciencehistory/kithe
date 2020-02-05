@@ -50,7 +50,8 @@ module Kithe
     end
 
     # Will save height and width to metadata for image types. (Won't for non-image types)
-    plugin :store_dimensions
+    # ignore errors (often due to storing a non-image file), consistent with shrine 2.x behavior.
+    plugin :store_dimensions, on_error: :ignore
 
     # promotion and deletion will be in background.
     plugin :backgrounding
