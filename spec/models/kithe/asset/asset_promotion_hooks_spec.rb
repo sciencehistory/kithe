@@ -178,7 +178,7 @@ describe "Kithe::Asset promotion hooks", queue_adapter: :inline do
     let!(:existing_file) {  saved_asset.file }
 
     it "can cancel deletion" do
-      expect(Kithe::AssetUploader::Attacher).not_to receive(:delete)
+      expect_any_instance_of(Kithe::AssetUploader::Attacher).not_to receive(:destroy)
 
 
       saved_asset.set_promotion_directives(delete: false)
