@@ -67,9 +67,6 @@ module Kithe
     Attacher.promote_block do |**options|
       Kithe::TimingPromotionDirective.new(key: :promote, directives: options["promotion_directives"]) do |directive|
         if directive.inline?
-          # Foreground, but you'll still need to #reload your asset to see changes,
-          # since backgrounding mechanism still reloads a new instance, sorry.
-          #Kithe::AssetPromoteJob.perform_now(data)
           promote
         elsif directive.background?
           # What shrine normally expects for backgrounding
@@ -92,6 +89,8 @@ module Kithe
       end
     end
 
+    plugin :kithe_metadata_on_promote
+
     plugin :add_metadata
 
     # Makes files stored as /asset/#{asset_pk}/#{random_uuid}.#{original_suffix}
@@ -111,7 +110,7 @@ module Kithe
     # checksums until then anyway.
     plugin :signature
     add_metadata do |io, context|
-      if context[:promoting]
+      if context[:action] != :cache
         {
           md5: calculate_signature(io, :md5),
           sha1: calculate_signature(io, :sha1),
