@@ -1,6 +1,18 @@
 require "kithe/engine"
 require 'kithe/indexable_settings'
 
+# For reasons we don't fully understand, yell is messing up the Rails6 zeitwerk
+# auto-loader in some cases, in our consuming app that uses kithe.
+# https://github.com/rudionrails/yell/issues/60
+#
+# Manually requiring yell here seems to avoid it. We believe switching yell to use
+# Module#prepend might also resolve.
+# https://github.com/rudionrails/yell/pull/61
+#
+# We don't actually use yell in kithe, it's just here via traject. If traject stops using yell,
+# we can stop require'ing it here, it's just a weird workaround.
+require 'yell'
+
 module Kithe
   # for ruby-progressbar
   STANDARD_PROGRESS_BAR_FORMAT = "%a %t: |%B| %R/s %c/%u %p%% %e"
