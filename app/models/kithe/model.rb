@@ -1,6 +1,10 @@
 require 'attr_json'
+require "kithe/sti_preload"
 
 class Kithe::Model < ActiveRecord::Base
+  # Handle zeitwerk auto-loading for Single-Table Inheritance automatically
+  include Kithe::StiPreload
+
   include AttrJson::Record
   include AttrJson::NestedAttributes
   include AttrJson::Record::Dirty

@@ -44,16 +44,14 @@ The generalization can possibly be useful in the future in some cases. We've bas
 
 ### Single-Table Inheritance and fetching/determining which main subclass/model type
 
-**Note Well** Because of [how Rails Single-Table Inheritance interacts with dev-mode auto-loading](https://guides.rubyonrails.org/autoloading_and_reloading_constants.html#autoloading-and-sti), it can make things like `Kithe::Work.all` not work right in dev mode, unless you do some extra setup. For any custom subclasses you define, you should add a to_prepare block to load them, perhaps in your config/application.rb. If you have a local `Work` and `Asset` class:
+Single-Table Inheritance can interact poorly with Rails dev-mode auto-loading.
 
-    config.to_prepare do
-      require_dependency "work"
-      require_dependency "asset"
-    end
+But we are using the [Rails-recommended pattern](https://guides.rubyonrails.org/v6.0/autoloading_and_reloading_constants.html#single-table-inheritance) for handling this automatically, so it should work fine. While this became the Rails recommended pattern only with Rails6 and the `zeitwerk` loader, it takes care of things in previous versions of Rails too.
 
-**OR, for Rails6 with zeitwerk auto-loading, see: https://guides.rubyonrails.org/autoloading_and_reloading_constants.html#single-table-inheritance**
 
-We define a Rails [enum](https://api.rubyonrails.org/v5.2.2.1/classes/ActiveRecord/Enum.html) for `kithe_model_type`, with values `work`, `collection`, or `asset`, that you can use to fetch any objects of these main categories where convenient, which in some cases can be used to avoid the STI/autoloading issues, without needing the `to_prepare`.
+### More efficiently fetching all sub-classes of primary type
+
+We define a Rails [enum](https://api.rubyonrails.org/v5.2.2.1/classes/ActiveRecord/Enum.html) for `kithe_model_type`, with values `work`, `collection`, or `asset`, that you can use to fetch any objects of these main categories where convenient, which can also avoid the STI/autoloading issues.
 
     # should always be 'work', 'collection', or 'asset', even with complex additional
     # inheritance hieararchy:
