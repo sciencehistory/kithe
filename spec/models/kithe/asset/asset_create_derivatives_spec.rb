@@ -27,8 +27,12 @@ describe "Kithe::Asset derivative definitions", queue_adapter: :test do
     ).tap do |a|
       # We want to promote without create_derivatives being automatically called
       # as usual, so we can test create_derivatives manually.
-      a.file_attacher.set_promotion_directives(skip_callbacks: true)
+      a.file_attacher.set_promotion_directives(create_derivatives: false)
       a.promote
+
+      # Precondition assumptions for our test setup to be valid
+      expect(a.file_attacher.stored?).to be(true)
+      expect(a.derivatives).to be_empty
     end
   end
 

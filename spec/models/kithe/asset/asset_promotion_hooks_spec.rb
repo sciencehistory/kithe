@@ -15,6 +15,28 @@ describe "Kithe::Asset promotion hooks", queue_adapter: :inline do
     )
   }
 
+  describe "before_promotion" do
+    temporary_class("TestAsset") do
+      Class.new(Kithe::Asset) do
+        before_promotion do
+          $metadata_in_before_promotion = self.file.metadata
+        end
+      end
+    end
+    before do
+      $metadata_in_before_promotion = nil
+    end
+
+    # we have a built-in before_promotion for metadata extraction,
+    # make sure it happens before any additional before_promotions,
+    # so they can eg use it to cancel
+    it "has access to automatic metadata extraction" do
+      unsaved_asset.save!
+      expect($metadata_in_before_promotion).to be_present
+      expect($metadata_in_before_promotion['sha512']).to be_present
+    end
+  end
+
   describe "before_promotion cancellation" do
     temporary_class("TestAsset") do
       Class.new(Kithe::Asset) do
@@ -28,23 +50,80 @@ describe "Kithe::Asset promotion hooks", queue_adapter: :inline do
       end
     end
 
-    it "works" do
-      expect_any_instance_of(Kithe::AssetUploader::Attacher).not_to receive(:store!)
+    describe "with inline promotion", queue_adapter: :test do
+      before do
+        unsaved_asset.file_attacher.set_promotion_directives(promote: :inline)
+      end
 
-      unsaved_asset.save!
-      unsaved_asset.reload
-      expect(unsaved_asset.stored?).to be(false)
-    end
+      it "cancels" do
+        expect_any_instance_of(Kithe::AssetUploader::Attacher).not_to receive(:promote)
 
-    describe "with promotion_directives[:skip_callbacks]" do
-      it "doesn't cancel" do
-        expect_any_instance_of(Kithe::AssetUploader::Attacher).to receive(:store!).and_call_original
-
-        unsaved_asset.file_attacher.set_promotion_directives(skip_callbacks: true)
         unsaved_asset.save!
         unsaved_asset.reload
+        expect(unsaved_asset.reload.stored?).to be(false)
+      end
 
-        expect(unsaved_asset.stored?).to be(true)
+      describe "with promotion_directives[:skip_callbacks]" do
+        it "doesn't cancel" do
+          expect_any_instance_of(Kithe::AssetUploader::Attacher).to receive(:promote).and_call_original
+
+          unsaved_asset.file_attacher.set_promotion_directives(skip_callbacks: true)
+          unsaved_asset.save!
+          unsaved_asset.reload
+
+          expect(unsaved_asset.stored?).to be(true)
+        end
+      end
+    end
+
+    describe "with backgrounding promotion", queue_adapter: :inline do
+      it "cancels" do
+        expect_any_instance_of(Kithe::AssetUploader::Attacher).not_to receive(:promote)
+
+        unsaved_asset.save!
+        unsaved_asset.reload
+        expect(unsaved_asset.stored?).to be(false)
+      end
+
+      describe "with promotion_directives[:skip_callbacks]" do
+        it "doesn't cancel" do
+          expect_any_instance_of(Kithe::AssetUploader::Attacher).to receive(:promote).and_call_original
+
+          unsaved_asset.file_attacher.set_promotion_directives(skip_callbacks: true)
+          unsaved_asset.save!
+          unsaved_asset.reload
+
+          expect(unsaved_asset.stored?).to be(true)
+        end
+      end
+    end
+
+    describe "calling Asset#promote directly", queue_adapter: :inline do
+      before do
+        unsaved_asset.file_attacher.set_promotion_directives(promote: false)
+        unsaved_asset.save!
+        # precondition
+        expect(unsaved_asset.reload.file_attacher.cached?).to be(true)
+      end
+
+      it "cancels" do
+        expect_any_instance_of(Kithe::AssetUploader::Attacher).not_to receive(:promote)
+
+        unsaved_asset.promote
+        unsaved_asset.reload
+        expect(unsaved_asset.stored?).to be(false)
+      end
+
+      describe "with promotion_directives[:skip_callbacks]" do
+        it "doesn't cancel" do
+          expect_any_instance_of(Kithe::AssetUploader::Attacher).to receive(:promote).and_call_original
+
+          unsaved_asset.file_attacher.set_promotion_directives(skip_callbacks: true)
+          unsaved_asset.promote
+          unsaved_asset.reload
+
+          expect(unsaved_asset.stored?).to be(true)
+        end
       end
     end
   end

@@ -3,7 +3,7 @@ class Shrine
     # This adds some features around shrine promotion that we found useful for dealing
     # with backgrounding promotion.
     #
-    # * It will run shrine uploader metadata extraction routines on _any promotion_,
+    # * TODO: Don't hard-code here. It will run shrine uploader metadata extraction routines on _any promotion_,
     #   also adding a `promoting: true` key to the shrine context for that metadata
     #   extraction. (Using shrine refresh_metadata plugin)
     #
@@ -43,29 +43,17 @@ class Shrine
     #
     #       Kithe::Asset.promotion_directives = { promote: :inline, create_derivatives: :inline }
     #
-    class KithePromotionHooks
+    class KithePromotionDirectives
       # whitelist of allowed promotion_directive keys, so we can raise on typos but still
       # be extensible. Also serves as some documentation of what directives available.
       class_attribute :allowed_promotion_directives,
         instance_writer: false,
         default: [:promote, :skip_callbacks, :create_derivatives, :delete]
 
-      def self.load_dependencies(uploader, *)
-        uploader.plugin :refresh_metadata
-        uploader.plugin :backgrounding
-      end
-
-      module AttacherClassMethods
-        # Overridden to restore any serialized promotion_directives to context[:promotion_directives],
-        # in backgrounding promotion.
-        def load(data)
-          super.tap do |attacher|
-            if data["promotion_directives"]
-              attacher.context[:promotion_directives] = data["promotion_directives"]
-            end
-          end
-        end
-      end
+      # def self.load_dependencies(uploader, *)
+      #   uploader.plugin :refresh_metadata
+      #   uploader.plugin :backgrounding
+      # end
 
       module AttacherMethods
 
@@ -85,7 +73,7 @@ class Shrine
           # unpredictably.
           hash = hash.collect { |k, v| [k.to_s, v === Symbol ? v.to_s : v.to_s]}.to_h
 
-          unrecognized = hash.keys.collect(&:to_sym) - KithePromotionHooks.allowed_promotion_directives
+          unrecognized = hash.keys.collect(&:to_sym) - KithePromotionDirectives.allowed_promotion_directives
           unless unrecognized.length == 0
             raise ArgumentError.new("Unrecognized promotion directive key: #{unrecognized.join('')}")
           end
@@ -97,41 +85,8 @@ class Shrine
         def promotion_directives
           context[:promotion_directives] ||= {}
         end
-
-        # Overridden so our context[:promotion_directives] is serialized for
-        # backgrounding.
-        def dump
-          super.tap do |hash|
-            if context[:promotion_directives]
-              hash["promotion_directives"] = context[:promotion_directives]
-            end
-          end
-        end
-
-        # Overridden to:
-        # a) refresh metadata as part of promotion (adds `promoting: true` to context for such)
-        # b) call promotion callbacks on Asset model, unless `promotion_directives["skip_callbacks"]`
-        #    has been set.
-        def promote(storage: store_key, **options)
-          # insist on a metadata extraction, add a new key `promoting: true` in case
-          # anyone is interested.
-          file.refresh_metadata!(**context.merge(options).merge(promoting: true))
-
-          # Now run ordinary promotion with activemodel callbacks from
-          # the Asset, which will automatically allow them to cancel promotion using
-          # ordinary activemodel callbacck technique of `throw :abort`.
-          if ( !promotion_directives["skip_callbacks"] &&
-               context[:record] &&
-               context[:record].class.respond_to?(:_promotion_callbacks) )
-            context[:record].run_callbacks(:promotion) do
-              super
-            end
-          else
-            super
-          end
-        end
       end
     end
-    register_plugin(:kithe_promotion_hooks, KithePromotionHooks)
+    register_plugin(:kithe_promotion_directives, KithePromotionDirectives)
   end
 end

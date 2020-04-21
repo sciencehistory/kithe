@@ -30,6 +30,10 @@ module Kithe
     # so it can be submitted again.
     plugin :cached_attachment_data
 
+    # Used in a before_promotion hook to have our metadata extraction happen on
+    # promotion, possibly in the background.
+    plugin :refresh_metadata
+
     # Marcel analyzer is pure-ruby and fast. It's from Basecamp and is what
     # ActiveStorage uses. It is very similar to :mimemagic (and uses mimemagic
     # under the hood), but mimemagic seems not to be maintained with up to date
@@ -53,7 +57,7 @@ module Kithe
     # ignore errors (often due to storing a non-image file), consistent with shrine 2.x behavior.
     plugin :store_dimensions, on_error: :ignore
 
-    # promotion and deletion will be in background.
+    # promotion and deletion will (sometimes) be in background.
     plugin :backgrounding
 
     # Useful in case consumers want it, and doesn't harm anything to be available.
@@ -67,10 +71,12 @@ module Kithe
     Attacher.promote_block do
       Kithe::TimingPromotionDirective.new(key: :promote, directives: self.promotion_directives) do |directive|
         if directive.inline?
-          promote
+          Kithe::PromotionCallbacks.with_promotion_callbacks(context[:record]) do
+            promote
+          end
         elsif directive.background?
-          # What shrine normally expects for backgrounding
-          Kithe::AssetPromoteJob.perform_later(self.class.name, record.class.name, record.id, name, file_data)
+          # What shrine normally expects for backgrounding, plus promotion_directives
+          Kithe::AssetPromoteJob.perform_later(self.class.name, record.class.name, record.id, name, file_data, self.promotion_directives)
         end
       end
     end
@@ -88,8 +94,6 @@ module Kithe
         end
       end
     end
-
-    plugin :kithe_metadata_on_promote
 
     plugin :add_metadata
 
@@ -120,8 +124,10 @@ module Kithe
     end
     metadata_method :md5, :sha1, :sha512
 
-    # This makes sure metadata is extracted on promotion, and also supports promotion
-    # callbacks (before/after/around) on the Kithe::Asset classes.
-    plugin :kithe_promotion_hooks
+
+    # Gives us (set_)promotion_directives methods on our attacher to
+    # house lifecycle directives, about whether promotion, deletion,
+    # derivatives happen in foreground, background, or not at all.
+    plugin :kithe_promotion_directives
   end
 end
