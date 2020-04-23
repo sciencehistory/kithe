@@ -71,9 +71,7 @@ module Kithe
     Attacher.promote_block do
       Kithe::TimingPromotionDirective.new(key: :promote, directives: self.promotion_directives) do |directive|
         if directive.inline?
-          Kithe::PromotionCallbacks.with_promotion_callbacks(context[:record]) do
-            promote
-          end
+          promote
         elsif directive.background?
           # What shrine normally expects for backgrounding, plus promotion_directives
           Kithe::AssetPromoteJob.perform_later(self.class.name, record.class.name, record.id, name, file_data, self.promotion_directives)

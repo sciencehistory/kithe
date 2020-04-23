@@ -85,6 +85,20 @@ class Shrine
         def promotion_directives
           context[:promotion_directives] ||= {}
         end
+
+        # temporary to be refactored and doc'd
+        # Wrap in promotion callbacks only if we are in inline mode, otherwise we
+        # don't want to do callbacks here. They'll instead either not be run at all (if promotion is
+        # disabled), or be taken care of in later bg job for promotion background.
+        def activerecord_after_save
+          if self.promotion_directives["promote"] == "inline"
+            Kithe::PromotionCallbacks.with_promotion_callbacks(context[:record]) do
+              super
+            end
+          else
+            super
+          end
+        end
       end
     end
     register_plugin(:kithe_promotion_directives, KithePromotionDirectives)

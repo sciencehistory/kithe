@@ -135,7 +135,7 @@ describe "Kithe::Asset promotion hooks", queue_adapter: :inline do
       receiver = after_promotion_receiver
       Class.new(Kithe::Asset) do
         after_promotion do
-          receiver.call
+          receiver.call(self)
         end
       end
     end
@@ -143,6 +143,29 @@ describe "Kithe::Asset promotion hooks", queue_adapter: :inline do
     it "is called" do
       expect(after_promotion_receiver).to receive(:call)
       unsaved_asset.save!
+    end
+
+    describe "with inline promotion" do
+      before do
+        unsaved_asset.file_attacher.set_promotion_directives(promote: :inline)
+      end
+
+      # this is actually what's checking for following example...
+      let(:after_promotion_receiver) do
+        proc do |asset|
+          expect(asset.changed?).to be(false)
+
+          asset.reload
+
+          expect(asset.stored?).to be(true)
+          expect(asset.sha512).to be_present
+        end
+      end
+
+      it "asset has metadata and is finalized" do
+        expect(after_promotion_receiver).to receive(:call).and_call_original
+        unsaved_asset.save!
+      end
     end
 
     describe "with promotion_directives[:skip_callbacks]" do
