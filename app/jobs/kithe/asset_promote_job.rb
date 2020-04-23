@@ -9,9 +9,7 @@ module Kithe
       attacher = attacher_class.retrieve(model: record, name: name, file: file_data)
       attacher.set_promotion_directives(promotion_directives)
 
-      Kithe::PromotionCallbacks.with_promotion_callbacks(record) do
-        attacher.atomic_promote
-      end
+      attacher.atomic_promote
     rescue Shrine::AttachmentChanged, ActiveRecord::RecordNotFound
       # attachment has changed or record has been deleted, nothing to do
     end

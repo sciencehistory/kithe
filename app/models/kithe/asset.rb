@@ -202,9 +202,7 @@ class Kithe::Asset < Kithe::Model
       record: self
     }.merge(context)
 
-    Kithe::PromotionCallbacks.with_promotion_callbacks(self) do
-      file_attacher.atomic_promote(**context)
-    end
+    file_attacher.atomic_promote(**context)
   end
 
   # The derivative creator sets metadata when it's created all derivatives

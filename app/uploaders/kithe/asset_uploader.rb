@@ -127,5 +127,7 @@ module Kithe
     # house lifecycle directives, about whether promotion, deletion,
     # derivatives happen in foreground, background, or not at all.
     plugin :kithe_promotion_directives
+
+    plugin :kithe_promotion_callbacks
   end
 end
