@@ -31,7 +31,7 @@ module Kithe
     # auto-loaded by the app, as kithe does not require Blacklight and loading
     # this file without Blacklight would produce an error. Thus the need
     # for the explicit "require"
-    class BulkLoadingSearchService < Blacklight::SearchService
+    class BulkLoadingSearchService < ::Blacklight::SearchService
       include Kithe::BlacklightTools::SearchServiceBulkLoad
     end
   end
