@@ -75,7 +75,7 @@ class Kithe::Asset::DerivativeUpdater
       uploaded_file.delete if uploaded_file
       raise e
     end
-  rescue StandardError
+  rescue StandardError => e
     # aggressively clean up our file on errors!
     uploaded_file.delete if uploaded_file
     raise e
