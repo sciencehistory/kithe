@@ -19,6 +19,7 @@ class Shrine
     class KitheControllableBackgrounding
       def self.load_dependencies(uploader, *)
         uploader.plugin :backgrounding
+        uploader.plugin :kithe_promotion_directives
       end
 
       def self.configure(uploader, options = {})
