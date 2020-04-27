@@ -97,7 +97,7 @@ class Shrine
             raise ArgumentError.new("Unrecognized promotion directive key: #{unrecognized.join('')}")
           end
 
-          promotion_directives.merge!(hash)
+          context[:promotion_directives] = promotion_directives.merge(hash).freeze
         end
 
         # context[:promotion_directives], lazily initializing to hash for convenience.
