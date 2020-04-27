@@ -40,41 +40,12 @@ module Kithe
     # ignore errors (often due to storing a non-image file), consistent with shrine 2.x behavior.
     plugin :store_dimensions, on_error: :ignore
 
-    # promotion and deletion will (sometimes) be in background.
-    plugin :backgrounding
-
     # Useful in case consumers want it, and doesn't harm anything to be available.
     # https://github.com/shrinerb/shrine/blob/master/doc/plugins/rack_response.md
     plugin :rack_response
 
-    # Normally we promote in background with backgrounding, but the set_promotion_directives
-    # feature can be used to make promotion not happen at all, or happen in foreground.
-    #     asset.file_attacher.set_promotion_directives(promote: false)
-    #     asset.file_attacher.set_promotion_directives(promote: "inline")
-    Attacher.promote_block do
-      Kithe::TimingPromotionDirective.new(key: :promote, directives: self.promotion_directives) do |directive|
-        if directive.inline?
-          promote
-        elsif directive.background?
-          # What shrine normally expects for backgrounding, plus promotion_directives
-          Kithe::AssetPromoteJob.perform_later(self.class.name, record.class.name, record.id, name.to_s, file_data, self.promotion_directives)
-        end
-      end
-    end
-
-    # Delete using shrine backgrounding, but can be effected
-    # by promotion_directives[:delete], similar to promotion above.
-    # Yeah, not really a "promotion" directive, oh well.
-    Attacher.destroy_block do
-      Kithe::TimingPromotionDirective.new(key: :delete, directives: self.promotion_directives) do |directive|
-        if directive.inline?
-          destroy
-        elsif directive.background?
-          # What shrine normally expects for backgrounding
-          Kithe::AssetDeleteJob.perform_later(self.class.name, data)
-        end
-      end
-    end
+    # Set up logic for backgrounding, which can be set by promotion_directives
+    plugin :kithe_controllable_backgrounding
 
     plugin :add_metadata
 
