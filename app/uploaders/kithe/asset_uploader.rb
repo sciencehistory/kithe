@@ -74,7 +74,7 @@ module Kithe
           promote
         elsif directive.background?
           # What shrine normally expects for backgrounding, plus promotion_directives
-          Kithe::AssetPromoteJob.perform_later(self.class.name, record.class.name, record.id, name, file_data, self.promotion_directives)
+          Kithe::AssetPromoteJob.perform_later(self.class.name, record.class.name, record.id, name.to_s, file_data, self.promotion_directives)
         end
       end
     end
