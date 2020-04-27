@@ -47,8 +47,6 @@ module Kithe
     # Set up logic for backgrounding, which can be set by promotion_directives
     plugin :kithe_controllable_backgrounding
 
-    plugin :add_metadata
-
     # Makes files stored as /asset/#{asset_pk}/#{random_uuid}.#{original_suffix}
     plugin :kithe_storage_location
 
@@ -58,24 +56,10 @@ module Kithe
     # WARNING: There's no whitelist, will accept any url. Is this a problem?
     plugin :kithe_accept_remote_url
 
-    # We want to store md5 and sha1 checksums (legacy compat), as well as
-    # sha512 (more recent digital preservation recommendation: https://ocfl.io/draft/spec/#digests)
-    #
-    # We only calculate them on `store` action to avoid double-computation, and because for
-    # direct uploads/backgrounding, we haven't actually gotten the file in our hands to compute
-    # checksums until then anyway.
-    plugin :signature
-    add_metadata do |io, context|
-      if context[:action] != :cache
-        {
-          md5: calculate_signature(io, :md5),
-          sha1: calculate_signature(io, :sha1),
-          sha512: calculate_signature(io, :sha512)
-        }
-      end
-    end
-    metadata_method :md5, :sha1, :sha512
 
+    # Ensures md5, sha1, and sha512 are stored as metadata, calculated on promotion.
+    # sha512 is used by other shrine logic as a fingerprint of identity.
+    plugin :kithe_checksum_signatures
 
     # Gives us (set_)promotion_directives methods on our attacher to
     # house lifecycle directives, about whether promotion, deletion,
