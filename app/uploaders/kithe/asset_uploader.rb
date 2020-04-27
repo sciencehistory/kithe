@@ -20,7 +20,7 @@ module Kithe
   # FUTURE: Look at using client-side-calculated checksums to verify end-to-end.
   # https://github.com/shrinerb/shrine/wiki/Using-Checksums-in-Direct-Uploads
   #
-  # When magicc-byte analyzer can't determine mime type, will fall back to  `mediainfo`
+  # When magic-byte analyzer can't determine mime type, will fall back to  `mediainfo`
   # CLI _if_ `Kithe.use_mediainfo` is true (defaults to true if mediainfo CLI is
   # available). (We need better ways to customize uploader.)
   class AssetUploader < Shrine
@@ -34,8 +34,6 @@ module Kithe
     # promotion, possibly in the background.
     plugin :refresh_metadata
 
-    plugin :kithe_determine_mime_type
-
     # Will save height and width to metadata for image types. (Won't for non-image types)
     # ignore errors (often due to storing a non-image file), consistent with shrine 2.x behavior.
     plugin :store_dimensions, on_error: :ignore
@@ -44,11 +42,17 @@ module Kithe
     # https://github.com/shrinerb/shrine/blob/master/doc/plugins/rack_response.md
     plugin :rack_response
 
-    # Set up logic for backgrounding, which can be set by promotion_directives
-    plugin :kithe_controllable_backgrounding
 
-    # Makes files stored as /asset/#{asset_pk}/#{random_uuid}.#{original_suffix}
-    plugin :kithe_storage_location
+
+
+
+
+    # kithe-standard logic for sniffing mime type.
+    plugin :kithe_determine_mime_type
+
+    # Ensures md5, sha1, and sha512 are stored as metadata, calculated on promotion.
+    # sha512 is used by other shrine logic as a fingerprint of identity.
+    plugin :kithe_checksum_signatures
 
     # Allows you to assign hashes like:
     #    { "id" => "http://url", "storage" => "remote_url", headers: { "Authorization" => "Bearer whatever"}}
@@ -56,10 +60,12 @@ module Kithe
     # WARNING: There's no whitelist, will accept any url. Is this a problem?
     plugin :kithe_accept_remote_url
 
+    # Determines storage path/location/id, so files will be stored as:
+    #      /asset/#{asset_pk}/#{random_uuid}.#{original_suffix}
+    plugin :kithe_storage_location
 
-    # Ensures md5, sha1, and sha512 are stored as metadata, calculated on promotion.
-    # sha512 is used by other shrine logic as a fingerprint of identity.
-    plugin :kithe_checksum_signatures
+    # Set up logic for backgrounding, which can be set by promotion_directives
+    plugin :kithe_controllable_backgrounding
 
     # Gives us (set_)promotion_directives methods on our attacher to
     # house lifecycle directives, about whether promotion, deletion,
