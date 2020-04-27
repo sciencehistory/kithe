@@ -64,7 +64,7 @@ module Kithe
     #      /asset/#{asset_pk}/#{random_uuid}.#{original_suffix}
     plugin :kithe_storage_location
 
-    # Set up logic for backgrounding, which can be set by promotion_directives
+    # Set up logic for shrine backgrounding, which in kithe can be set by promotion_directives
     plugin :kithe_controllable_backgrounding
 
     # Gives us (set_)promotion_directives methods on our attacher to
@@ -72,6 +72,7 @@ module Kithe
     # derivatives happen in foreground, background, or not at all.
     plugin :kithe_promotion_directives
 
+    # Makes our before/after promotion callbacks get called.
     plugin :kithe_promotion_callbacks
   end
 end
