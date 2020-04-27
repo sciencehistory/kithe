@@ -326,5 +326,12 @@ describe "Kithe::Asset promotion hooks", queue_adapter: :inline do
       asset.set_promotion_directives(promote: :inline)
       expect(asset.file_attacher.promotion_directives).to eq("promote" => "inline")
     end
+
+    it "setting from instance writer is aggregative" do
+      Kithe::Asset.promotion_directives = { promote: :inline }
+      asset = Kithe::Asset.new
+      asset.set_promotion_directives(create_derivatives: false)
+      expect(asset.file_attacher.promotion_directives).to eq("promote" => "inline", "create_derivatives" => "false")
+    end
   end
 end

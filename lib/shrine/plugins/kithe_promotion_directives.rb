@@ -3,45 +3,69 @@ class Shrine
     # This adds some features around shrine promotion that we found useful for dealing
     # with backgrounding promotion.
     #
-    # * TODO: Don't hard-code here. It will run shrine uploader metadata extraction routines on _any promotion_,
-    #   also adding a `promoting: true` key to the shrine context for that metadata
-    #   extraction. (Using shrine refresh_metadata plugin)
+    # By default the kithe setup:
     #
-    # * We separately give our Kithe::Asset model class an activemodel callback
-    #   "promotion" hook. This plugin will call those callbacks around promotion (whether background
-    #   or foreground) -- before, after, or around.
+    # * Does "promotion" in background job -- metadata extraction, and moving file from 'cache' to 'store'
+    # * Runs ActiveSupport-style callbacks around promotion (before_promotion, after_promotion)
+    # * Uses these callbacks to make sure we extract metadata on promotion (which shrine doesn't do by default)
+    # * Uses these callbacks to trigger our custom create_derivatives code *after* promotion
     #
-    #   If a callback does a `throw :abort` before promotion, it can cancel promotion. This could
-    #   be used to cancel promotion for a validation failure of some kind -- you'd want to somehow
-    #   store or notify what happened, otherwise to the app and it's users it will just look like
-    #   the thing was never promoted for unknown reasons.
+    # There are times you want to customize these life cycle actions, either disabling them, or switching
+    # them from a background job to happen inline in the foreground. Some use cases for this are: 1) in
+    # automated testing; 2) when you are running a batch job (eg batch import), you might want to
+    # disable some expensive things per-record to instead do them all in batch at the end, or
+    # run them inline to keep from clogging up your bg job queue, and have better 'backpressure'.
     #
-    #   After promotion hooks can be used to hook into things you want to do only after a promotion;
-    #   since promotion is backgrounded it would be otherwise inconvenient to execute something
-    #   only after promotion completes.
+    # We provide something we call "promotion directives" to let you customize these. You can set
+    # them on a shrine Attacher; or on a Kithe `Asset` model individually, or globally on the class.
     #
-    #   The default Kithe::Asset hooks into after_promotion to run derivatives creation
-    #   routines.
+    # ## Directives
     #
-    # * A special :promotion_directives key in the shrine context, which will be serialized
-    #   and restored to be preserved even accross background promotion. It is intended to hold
-    #   a hash of arbitrary key/values.  The special key :skip_callbacks, when set to a truthy
-    #   value, will prevent the promotion callbacks discussed above from happening. So if you want
-    #   to save a Kithe::Asset and have promotion happen as usual, but _not_ trigger any callbacks
-    #   (including derivative creation):
+    # * `promote`: default `:background`; set to `:inline` to do promotion inline instead of a background
+    #    job, or `false` to make promotion not happen automatically at all.
+    #
+    # * `skip_callbacks`: default `false`, set to `true` to disable our custom promotion callbacks
+    #    entirely, including disabling our default callbacks such as derivative creation and
+    #    promotion metadata extraction.
+    #
+    # * `create_derivatives`: default `background` (create a separate bg job). Also can be `false`
+    #    to disable, or `inline` to create derivatives 'inline' when the after_promotion hook
+    #    occurs -- which could already be in a bg job depending on `promote` directive!
+    #
+    # * `delete`: should _deletion_ of shrine attachment happen in a bg job? Default `:background`,
+    #    can also be `false` (can't think of a good use case), or `:inline`.
+    #
+    # # Examples of setting
+    #
+    # ## Globally on Kithe::Asset
+    #
+    # Useful for batch processing or changing test defaults.
+    #
+    #    Kithe::Asset.promotion_directives = { promote: :inline, create_derivatives: false }
+    #
+    # ## On a Kithe::Asset individual model
+    #
+    #    asset = Kithe:Assst.new
+    #    asset.set_promotion_directives(create_derivatives: :inline)
+    #
+    # (Aggregates on top of whatever was set at class level of previously set with `Asset#set_promotion_directives)`,
+    # does not replace previously settings but merges into them!
+    #
+    # ## Directly on a shrine attacher
     #
     #   some_asset.file = some_assignable_file
     #   some_asset.file_attacher.set_promotion_directives(skip_callbacks: true)
     #   some_asset.save!
     #
-    #   You can add other arbitrary keys which your own code in an uploader or promotion
-    #   callback may consult, with `set_promotion_directives` as above. To consult, check
-    #   attacher.promotion_directives[:some_key]
+    # (Aggregates on top of whatever was already set, merges into it, does not replace!)
     #
-    #   You can also set promotion directives globally for Kithe::Asset or a sub-class, in
-    #   a class method. Especially useful for batch processing.
+    # ## Checking current settings
     #
-    #       Kithe::Asset.promotion_directives = { promote: :inline, create_derivatives: :inline }
+    #     some_asset.promotion_directives
+    #
+    # or
+    #
+    #     some_asset.file_attacher.promotion_directives
     #
     class KithePromotionDirectives
       # whitelist of allowed promotion_directive keys, so we can raise on typos but still
@@ -50,14 +74,9 @@ class Shrine
         instance_writer: false,
         default: [:promote, :skip_callbacks, :create_derivatives, :delete]
 
-      # def self.load_dependencies(uploader, *)
-      #   uploader.plugin :refresh_metadata
-      #   uploader.plugin :backgrounding
-      # end
-
       module AttacherMethods
 
-        # Set one or more promotion directives, in context[:promotion_directives], that
+        # Set one or more promotion directives, stored context[:promotion_directives], that
         # will be serialized and restored to context for bg promotion. The values are intended
         # to be simple strings or other json-serializable primitives.
         #
