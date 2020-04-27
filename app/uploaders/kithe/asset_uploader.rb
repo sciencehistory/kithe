@@ -34,24 +34,7 @@ module Kithe
     # promotion, possibly in the background.
     plugin :refresh_metadata
 
-    # Marcel analyzer is pure-ruby and fast. It's from Basecamp and is what
-    # ActiveStorage uses. It is very similar to :mimemagic (and uses mimemagic
-    # under the hood), but mimemagic seems not to be maintained with up to date
-    # magic db? https://github.com/minad/mimemagic/pull/66
-    plugin :determine_mime_type, analyzer: -> (io, analyzers) do
-      mime_type = analyzers[:marcel].call(io)
-
-      # But marcel is not able to catch some of our MP3s as audio/mpeg,
-      # let's try mediainfo command line. mediainfo is one of the tools
-      # the Harvard Fits tool uses. https://github.com/MediaArea/MediaInfo
-      if Kithe.use_mediainfo && mime_type == "application/octet-stream" || mime_type.blank?
-        mime_type = Kithe::MediainfoAnalyzer.new.call(io)
-      end
-
-      mime_type = "application/octet-stream" if mime_type.blank?
-
-      mime_type
-    end
+    plugin :kithe_determine_mime_type
 
     # Will save height and width to metadata for image types. (Won't for non-image types)
     # ignore errors (often due to storing a non-image file), consistent with shrine 2.x behavior.
