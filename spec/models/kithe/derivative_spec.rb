@@ -63,7 +63,7 @@ RSpec.describe Kithe::Derivative, type: :model, queue_adapter: :test do
       expect(derivative.file.metadata["filename"]).to eq("#{asset.friendlier_id}_some_derivative.jpeg")
 
       # path on storage is nice and pretty
-      expect(derivative.file.id).to match %r{\A#{asset.id}/#{key}/[a-f0-9]+\.jpg\Z}
+      expect(derivative.file.id).to match %r{\A#{asset.id}/#{key}/[a-f0-9]+\.jpeg\Z}
     end
 
     it "can add a derivative with custom storage location" do
