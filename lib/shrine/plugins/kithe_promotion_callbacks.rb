@@ -24,6 +24,11 @@ class Shrine
     # was convenient and avoided confusion to isolate wrapping in a class method that can be used
     # anywhere, and only depends on args passed in, no implicit state anywhere.
     class KithePromotionCallbacks
+
+      def self.load_dependencies(uploader, *)
+        uploader.plugin :kithe_promotion_directives
+      end
+
       # promotion logic differs somewhat in different modes of use (bg or inline promotion),
       # so we extract the wrapping logic here. Exactly what the logic wrapped is can
       # differ.

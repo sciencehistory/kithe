@@ -26,13 +26,13 @@ class Kithe::Asset < Kithe::Model
     :md5, :sha1, :sha512,
     to: :file, allow_nil: true
   delegate :stored?, to: :file_attacher
-  delegate :set_promotion_directives, to: :file_attacher
+  delegate :set_promotion_directives, :promotion_directives, to: :file_attacher
 
   after_save :remove_invalid_derivatives
 
-  # will be sent to file_attacher.promotion_directives=, provided by our
+  # will be sent to file_attacher.set_promotion_directives, provided by our
   # kithe_promotion_hooks shrine plugin.
-  class_attribute :promotion_directives, instance_writer: false, default: {}
+  class_attribute :promotion_directives, instance_accessor: false, default: {}
 
   class_attribute :derivative_definitions, instance_writer: false, default: []
 
@@ -252,8 +252,10 @@ class Kithe::Asset < Kithe::Model
 
   def initialize(*args)
     super
-    if promotion_directives.present?
-      file_attacher.set_promotion_directives(promotion_directives)
+
+    # copy class-level global promotion directives as initial instance value
+    if self.class.promotion_directives.present?
+      self.set_promotion_directives(self.class.promotion_directives)
     end
   end
 
