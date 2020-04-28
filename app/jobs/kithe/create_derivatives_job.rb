@@ -6,8 +6,7 @@ module Kithe
     # This error typically occurs when several large assets, whose derivatives
     # take a long time to generate, are deleted immediately after ingest.
     rescue_from(ActiveJob::DeserializationError) do |exception|
-      Rails.logger.error("Unable to derivatives for this asset, as it was unavailable.")
-      Rails.logger.error("Details: #{exception.inspect}")
+      Rails.logger.error("Unable to create derivatives for this asset, as it was unavailable. Details: #{exception}")
     end
   end
 end
