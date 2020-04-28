@@ -105,6 +105,36 @@ class Shrine
           context[:promotion_directives] ||= {}
         end
       end
+
+      # VERY hacky way to try to preserve promotion_directives on Asset.reload.
+      #
+      # This may not be necessary in a future shrine version if shrine resolves
+      # issue. See: https://github.com/shrinerb/shrine/issues/463
+      #
+      # It is the activerecord plugin implementation that erases all shrine context
+      # (and thus our promotion directives) on reload.
+      # https://github.com/shrinerb/shrine/blob/b5fc2e1432e51e6fde87c120bc6cf6abeb286c68/lib/shrine/plugins/activerecord.rb#L56-L60
+      #
+      # It is quite tricky to override the activerecord plugin's own override, because
+      # of the way shrine does these overrides. We've figured out a pretty crazy way
+      # below.
+      module AttachmentMethods
+        def included(model)
+          super
+
+          original_reload = instance_method(:reload)
+
+          define_method :reload do |*args|
+            previous_promotion_directives = file_attacher.promotion_directives
+
+            result = original_reload.bind(self).call(*args)
+            file_attacher.set_promotion_directives(previous_promotion_directives)
+
+            result
+          end
+        end
+      end
+
     end
     register_plugin(:kithe_promotion_directives, KithePromotionDirectives)
   end

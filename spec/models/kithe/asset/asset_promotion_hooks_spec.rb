@@ -392,5 +392,16 @@ describe "Kithe::Asset promotion hooks", queue_adapter: :inline do
       asset.set_promotion_directives(create_derivatives: false)
       expect(asset.file_attacher.promotion_directives).to eq("promote" => "inline", "create_derivatives" => "false")
     end
+
+    it "setting from instance writer survives reload" do
+      asset = Kithe::Asset.create(title: "test")
+      asset.set_promotion_directives(create_derivatives: false)
+      expect(asset.file_attacher.promotion_directives).to eq("create_derivatives" => "false")
+
+      asset.reload
+
+      expect(asset.file_attacher.promotion_directives).to eq("create_derivatives" => "false")
+    end
+
   end
 end
