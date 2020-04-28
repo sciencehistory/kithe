@@ -98,6 +98,64 @@ describe "Kithe::Asset promotion hooks", queue_adapter: :inline do
       end
     end
 
+
+    describe "assigning directly to store" do
+      temporary_class("TestAsset") do
+        Class.new(Kithe::Asset) do
+          before_promotion do
+            raise "Should not call before_promotion"
+          end
+
+          after_promotion do
+            raise "Should not call after_promotion"
+          end
+        end
+      end
+
+      let(:asset) {
+        TestAsset.create(title: "test")
+      }
+
+      let(:filepath) { Kithe::Engine.root.join("spec/test_support/images/1x1_pixel.jpg") }
+
+      describe "with inline promoting" do
+        before do
+          asset.file_attacher.set_promotion_directives(promote: :inline)
+        end
+
+        it "should not call callbacks" do
+          expect_any_instance_of(Kithe::AssetUploader::Attacher).not_to receive(:promote)
+
+          asset.file_attacher.attach(File.open(filepath))
+          asset.save!
+
+          expect(asset.changed?).to be(false)
+          asset.reload
+          expect(asset.file).to be_present
+          expect(asset.stored?).to be(true)
+        end
+      end
+
+      describe "with background promoting", queue_adapter: :inline do
+        before do
+          asset.file_attacher.set_promotion_directives(promote: :background)
+        end
+
+        it "should not call callbacks" do
+          expect_any_instance_of(Kithe::AssetUploader::Attacher).not_to receive(:promote)
+
+          asset.file_attacher.attach(File.open(filepath))
+          asset.save!
+
+          expect(asset.changed?).to be(false)
+          asset.reload
+          expect(asset.file).to be_present
+          expect(asset.stored?).to be(true)
+        end
+      end
+    end
+
+
     describe "calling Asset#promote directly", queue_adapter: :inline do
       before do
         unsaved_asset.file_attacher.set_promotion_directives(promote: false)
