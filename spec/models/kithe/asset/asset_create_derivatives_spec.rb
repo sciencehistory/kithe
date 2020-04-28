@@ -54,6 +54,27 @@ describe "Kithe::Asset derivative definitions", queue_adapter: :test do
     expect(asset.derivatives_created?).to be(true)
   end
 
+
+  describe "Original deleted before derivatives can be created", queue_adapter: :inline do
+    let(:short_lived_asset) do
+      TestAssetSubclass.create!(title: "test",
+        file: File.open(Kithe::Engine.root.join("spec/test_support/images/1x1_pixel.jpg")))
+    end
+    it """catches the ActiveJob::DeserializationError
+      if the asset is no longer in the database
+      once the derivative creation job starts up.""" do
+      id_to_delete = short_lived_asset.id
+      Kithe::Derivative.where(asset_id: id_to_delete).delete_all
+      Kithe::Model.where(id: id_to_delete).delete_all
+
+      # short_lived_asset is no longer in the DB.
+      # Let's try and create derivatives for it:
+      expect do
+        Kithe::CreateDerivativesJob.perform_later(short_lived_asset)
+      end.not_to raise_error
+    end
+  end
+
   describe "under normal operation", queue_adapter: :inline do
     let(:asset) do
       TestAssetSubclass.create!(title: "test",
