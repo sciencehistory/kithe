@@ -89,15 +89,15 @@ class Shrine
         #     some_model.save!
         def set_promotion_directives(hash)
           # ActiveJob sometimes has trouble if there are symbols in there, somewhat
-          # unpredictably.
-          hash = hash.collect { |k, v| [k.to_s, v === Symbol ? v.to_s : v.to_s]}.to_h
+          # unpredictably. And for other reasons, standardize on everything a string.
+          hash = hash.collect { |k, v| [k.to_s, v.to_s]}.to_h
 
           unrecognized = hash.keys.collect(&:to_sym) - KithePromotionDirectives.allowed_promotion_directives
           unless unrecognized.length == 0
             raise ArgumentError.new("Unrecognized promotion directive key: #{unrecognized.join('')}")
           end
 
-          promotion_directives.merge!(hash)
+          context[:promotion_directives] = promotion_directives.merge(hash).freeze
         end
 
         # context[:promotion_directives], lazily initializing to hash for convenience.

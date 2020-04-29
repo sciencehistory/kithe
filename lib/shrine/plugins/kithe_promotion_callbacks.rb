@@ -28,7 +28,6 @@ class Shrine
         uploader.plugin :kithe_promotion_directives
       end
 
-
       # promotion logic differs somewhat in different modes of use (bg or inline promotion),
       # so we extract the wrapping logic here. Exactly what the logic wrapped is can
       # differ.
@@ -60,9 +59,10 @@ class Shrine
         #
         # But we only want to do it here for 'inline' promotion mode. For 'false'
         # disabled promotion, we don't want to run callbacks at all; and for 'background'
-        # this is too early, we want callbacks to run in bg job, not here.
+        # this is too early, we want callbacks to run in bg job, not here. AND only
+        # if we're actually promoting, otherwise we don't want to run callbacks!
         def activerecord_after_save
-          if self.promotion_directives["promote"] == "inline"
+          if self.promotion_directives["promote"] == "inline" && promote?
             Shrine::Plugins::KithePromotionCallbacks.with_promotion_callbacks(record) do
               super
             end
