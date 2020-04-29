@@ -20,7 +20,7 @@ module Kithe
   # FUTURE: Look at using client-side-calculated checksums to verify end-to-end.
   # https://github.com/shrinerb/shrine/wiki/Using-Checksums-in-Direct-Uploads
   #
-  # When magicc-byte analyzer can't determine mime type, will fall back to  `mediainfo`
+  # When magic-byte analyzer can't determine mime type, will fall back to  `mediainfo`
   # CLI _if_ `Kithe.use_mediainfo` is true (defaults to true if mediainfo CLI is
   # available). (We need better ways to customize uploader.)
   class AssetUploader < Shrine
@@ -34,69 +34,25 @@ module Kithe
     # promotion, possibly in the background.
     plugin :refresh_metadata
 
-    # Marcel analyzer is pure-ruby and fast. It's from Basecamp and is what
-    # ActiveStorage uses. It is very similar to :mimemagic (and uses mimemagic
-    # under the hood), but mimemagic seems not to be maintained with up to date
-    # magic db? https://github.com/minad/mimemagic/pull/66
-    plugin :determine_mime_type, analyzer: -> (io, analyzers) do
-      mime_type = analyzers[:marcel].call(io)
-
-      # But marcel is not able to catch some of our MP3s as audio/mpeg,
-      # let's try mediainfo command line. mediainfo is one of the tools
-      # the Harvard Fits tool uses. https://github.com/MediaArea/MediaInfo
-      if Kithe.use_mediainfo && mime_type == "application/octet-stream" || mime_type.blank?
-        mime_type = Kithe::MediainfoAnalyzer.new.call(io)
-      end
-
-      mime_type = "application/octet-stream" if mime_type.blank?
-
-      mime_type
-    end
-
     # Will save height and width to metadata for image types. (Won't for non-image types)
     # ignore errors (often due to storing a non-image file), consistent with shrine 2.x behavior.
     plugin :store_dimensions, on_error: :ignore
-
-    # promotion and deletion will (sometimes) be in background.
-    plugin :backgrounding
 
     # Useful in case consumers want it, and doesn't harm anything to be available.
     # https://github.com/shrinerb/shrine/blob/master/doc/plugins/rack_response.md
     plugin :rack_response
 
-    # Normally we promote in background with backgrounding, but the set_promotion_directives
-    # feature can be used to make promotion not happen at all, or happen in foreground.
-    #     asset.file_attacher.set_promotion_directives(promote: false)
-    #     asset.file_attacher.set_promotion_directives(promote: "inline")
-    Attacher.promote_block do
-      Kithe::TimingPromotionDirective.new(key: :promote, directives: self.promotion_directives) do |directive|
-        if directive.inline?
-          promote
-        elsif directive.background?
-          # What shrine normally expects for backgrounding, plus promotion_directives
-          Kithe::AssetPromoteJob.perform_later(self.class.name, record.class.name, record.id, name.to_s, file_data, self.promotion_directives)
-        end
-      end
-    end
 
-    # Delete using shrine backgrounding, but can be effected
-    # by promotion_directives[:delete], similar to promotion above.
-    # Yeah, not really a "promotion" directive, oh well.
-    Attacher.destroy_block do
-      Kithe::TimingPromotionDirective.new(key: :delete, directives: self.promotion_directives) do |directive|
-        if directive.inline?
-          destroy
-        elsif directive.background?
-          # What shrine normally expects for backgrounding
-          Kithe::AssetDeleteJob.perform_later(self.class.name, data)
-        end
-      end
-    end
 
-    plugin :add_metadata
 
-    # Makes files stored as /asset/#{asset_pk}/#{random_uuid}.#{original_suffix}
-    plugin :kithe_storage_location
+
+
+    # kithe-standard logic for sniffing mime type.
+    plugin :kithe_determine_mime_type
+
+    # Ensures md5, sha1, and sha512 are stored as metadata, calculated on promotion.
+    # sha512 is used by other shrine logic as a fingerprint of identity.
+    plugin :kithe_checksum_signatures
 
     # Allows you to assign hashes like:
     #    { "id" => "http://url", "storage" => "remote_url", headers: { "Authorization" => "Bearer whatever"}}
@@ -104,30 +60,19 @@ module Kithe
     # WARNING: There's no whitelist, will accept any url. Is this a problem?
     plugin :kithe_accept_remote_url
 
-    # We want to store md5 and sha1 checksums (legacy compat), as well as
-    # sha512 (more recent digital preservation recommendation: https://ocfl.io/draft/spec/#digests)
-    #
-    # We only calculate them on `store` action to avoid double-computation, and because for
-    # direct uploads/backgrounding, we haven't actually gotten the file in our hands to compute
-    # checksums until then anyway.
-    plugin :signature
-    add_metadata do |io, context|
-      if context[:action] != :cache
-        {
-          md5: calculate_signature(io, :md5),
-          sha1: calculate_signature(io, :sha1),
-          sha512: calculate_signature(io, :sha512)
-        }
-      end
-    end
-    metadata_method :md5, :sha1, :sha512
+    # Determines storage path/location/id, so files will be stored as:
+    #      /asset/#{asset_pk}/#{random_uuid}.#{original_suffix}
+    plugin :kithe_storage_location
 
+    # Set up logic for shrine backgrounding, which in kithe can be set by promotion_directives
+    plugin :kithe_controllable_backgrounding
 
     # Gives us (set_)promotion_directives methods on our attacher to
     # house lifecycle directives, about whether promotion, deletion,
     # derivatives happen in foreground, background, or not at all.
     plugin :kithe_promotion_directives
 
+    # Makes our before/after promotion callbacks get called.
     plugin :kithe_promotion_callbacks
   end
 end
