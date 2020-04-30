@@ -1,4 +1,6 @@
 class Kithe::Asset < Kithe::Model
+  include Kithe::Asset::SetShrineUploader
+
   has_many :derivatives, foreign_key: "asset_id", inverse_of: "asset", dependent: :destroy # dependent destroy to get shrine destroy logic for assets
 
   # These associations exist for hetereogenous eager-loading, but hide em.
