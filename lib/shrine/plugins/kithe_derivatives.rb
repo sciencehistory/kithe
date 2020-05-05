@@ -6,6 +6,9 @@ class Shrine
     # for using shrine's built-in derivatives. The metadata for shrine
     # derivatives is stored in the same JSON as the main file.
     #
+    # * default kithe storage location of :kithe_derivatives
+    # * nice metadata["filename"] for derivatives, instead of default shrine fairly
+    #   random (filename ends up used by default in content-disposition headers when delivered)
     class KitheDerivatives
       def self.load_dependencies(uploader, *)
         uploader.plugin :derivatives, storage: -> (derivative) do
