@@ -42,10 +42,7 @@ module Kithe
     # https://github.com/shrinerb/shrine/blob/master/doc/plugins/rack_response.md
     plugin :rack_response
 
-
-
-
-
+    plugin :infer_extension, inferrer: :mini_mime
 
     # kithe-standard logic for sniffing mime type.
     plugin :kithe_determine_mime_type
@@ -74,5 +71,8 @@ module Kithe
 
     # Makes our before/after promotion callbacks get called.
     plugin :kithe_promotion_callbacks
+
+    # some configuration and convenience methods for shrine derivatives.
+    plugin :kithe_derivatives
   end
 end

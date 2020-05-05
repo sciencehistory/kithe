@@ -1,5 +1,7 @@
 require 'rails_helper'
 
+# TODO delete when we delete old kithe v1 derivatives
+
 RSpec.describe Kithe::Derivative, type: :model, queue_adapter: :test do
   let(:key) { "some_thumb" }
   let(:asset) { FactoryBot.create(:kithe_asset, :with_faked_metadata, faked_metadata: { sha512: "fakesha512" }) }
