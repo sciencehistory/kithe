@@ -57,6 +57,7 @@ module Kithe
     #
     # headers key optional, client headers will be supplied when fetching remote urls. Urls will
     # be fetched on promotion. Useful with browse-everything.
+    #
     # WARNING: There's no whitelist, will accept any url. Is this a problem?
     plugin :kithe_accept_remote_url
 
