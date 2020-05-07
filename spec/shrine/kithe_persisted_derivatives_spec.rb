@@ -56,6 +56,17 @@ describe Shrine::Plugins::KithePersistedDerivatives, queue_adapter: :test do
       expect(asset.file_derivatives[:sample].storage_key).to eq(:cache)
     end
 
+    it "can supply custom metadata" do
+      file = sample_deriv_file!
+      asset.file_attacher.add_persisted_derivatives({sample: file}, metadata: { extra: "value" })
+
+      asset.reload
+
+      expect(asset.file_derivatives[:sample].metadata["extra"]).to eq("value")
+      # and still has default metadata
+      expect(asset.file_derivatives[:sample].metadata["size"]).to be_present
+    end
+
     describe "model with unsaved changes" do
       before do
         asset.title = "changed title"

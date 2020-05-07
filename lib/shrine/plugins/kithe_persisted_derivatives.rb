@@ -28,7 +28,7 @@ class Shrine
         # derivatives (saves to db), in a realiably concurrency-safe way.
         #
         # Generally can take any options that shrine `add_derivatives`
-        # can take, including a custom `storage` argument.
+        # can take, including custom `storage` or `metadata` arguments.
         #
         # Like shrine add_derivatives, it will assume the files passed in are
         # temporary, and delete them for you. If you want to disable this behavior:
