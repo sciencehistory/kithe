@@ -96,6 +96,45 @@ class Shrine
           local_files = process_derivatives(*args, **options)
           add_persisted_derivatives(local_files, storage: storage, allow_other_changes: allow_other_changes)
         end
+
+        # Kind of like built-in Shrine #remove_derivatives, but also takes care of
+        # persisting AND deleting the removed derivative file from storage --
+        # all in concurrency-safe way, including not making sure to overwrite
+        # any unrelated derivatives someone else was adding.
+        #
+        # Can take the same sorts of path arguments as Shrine derivative #remove_derivatives
+        #
+        #     asset.file_attacher.remove_persisted_derivatives(:small_thumb)
+        #     asset.file_attacher.remove_persisted_derivatives(:small_thumb, :large_thumb)
+        #     asset.file_attacher.remove_persisted_derivatives(:small_thumb, :large_thumb, allow_other_changes: true)
+        def remove_persisted_derivatives(*paths, **options)
+          return if paths.empty?
+
+          other_changes_allowed = !!options.delete(:allow_other_changes)
+          if record && !other_changes_allowed && record.changed?
+            raise TypeError.new("Can't safely add_persisted_derivatives on model with unsaved changes. Pass `allow_other_changes: true` to force.")
+          end
+
+          removed_derivatives = nil
+          atomic_persist do |reloaded_attacher|
+            set_derivatives(reloaded_attacher.derivatives)
+            removed_derivatives = remove_derivatives(*paths)
+          end
+
+          if removed_derivatives
+            map_derivative(removed_derivatives) do |_, derivative|
+              derivative.delete if derivative
+            end
+          end
+
+          removed_derivatives
+        rescue Shrine::AttachmentChanged, ActiveRecord::RecordNotFound
+          # original was already deleted or changed, the derivatives wer'e trying to delete.
+          # It should be fine to do nothing, the process that deleted or changed
+          # the model should already have deleted all these derivatives.
+          # But we'll return false as a signel.
+          return false
+        end
       end
     end
     register_plugin(:kithe_persisted_derivatives, KithePersistedDerivatives)

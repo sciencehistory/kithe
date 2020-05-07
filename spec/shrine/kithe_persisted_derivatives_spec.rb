@@ -273,6 +273,98 @@ describe Shrine::Plugins::KithePersistedDerivatives, queue_adapter: :test do
         expect(asset.file_derivatives.keys).to match([:one, :two])
       end
     end
+  end
+
+  describe "#remove_persisted_derivatives" do
+    before do
+      asset.file_attacher.add_persisted_derivatives(
+        sample1: fakeio("sample 1"),
+        sample2: fakeio("sample 2")
+      )
+    end
+
+    it "can remove" do
+      removed = asset.file_attacher.remove_persisted_derivatives(:sample1)
+
+      expect(asset.changed?).to eq(false)
+      expect(asset.file_derivatives.keys).to eq([:sample2])
+      asset.reload
+      expect(asset.file_derivatives.keys).to eq([:sample2])
+
+      expect(removed).to be_kind_of(Array)
+      expect(removed.length).to eq(1)
+      expect(removed.first).to be_kind_of(Shrine::UploadedFile)
+      expect(removed.first.exists?).to be(false)
+    end
+
+    describe "if someone else removed first" do
+      before do
+        another_copy = asset.class.find(asset.id)
+        another_copy.file_attacher.remove_derivative(:sample1)
+        another_copy.save!
+        another_copy.reload
+        expect(another_copy.file_derivatives.keys).to eq([:sample2])
+
+        expect(asset.file_derivatives.keys).to match([:sample1, :sample2])
+      end
+
+      it "doesn't complain" do
+        asset.file_attacher.remove_persisted_derivatives(:sample1)
+        expect(asset.changed?).to eq(false)
+        expect(asset.file_derivatives.keys).to eq([:sample2])
+      end
+    end
+
+    describe "someone else added another derivative" do
+      before do
+        another_copy = asset.class.find(asset.id)
+        another_copy.file_attacher.add_persisted_derivatives({:sample3 => fakeio("sample 3")})
+        another_copy.reload
+        expect(another_copy.file_derivatives.keys).to match([:sample1, :sample2, :sample3])
+
+        expect(asset.file_derivatives.keys).to match([:sample1, :sample2])
+      end
+
+      it "deletes without deleting newly added" do
+        asset.file_attacher.remove_persisted_derivatives(:sample1)
+
+        expect(asset.changed?).to eq(false)
+        expect(asset.file_derivatives.keys).to eq([:sample2, :sample3])
+      end
+    end
+
+    describe "model deleted from under us" do
+      before do
+        another_copy = asset.class.find(asset.id)
+        another_copy.destroy!
+      end
+
+      it "silently no-ops" do
+        result = asset.file_attacher.remove_persisted_derivatives(:sample1)
+        expect(result).to eq(false)
+      end
+    end
+
+    describe "model with unsaved changes" do
+      before do
+        asset.title = "changed title"
+      end
+
+      it "will refuse" do
+        expect {
+          asset.file_attacher.remove_persisted_derivatives(:sample1)
+        }.to raise_error(TypeError)
+      end
+
+      it "can be forced" do
+        asset.file_attacher.remove_persisted_derivatives(:sample1, allow_other_changes: true)
+
+        expect(asset.changed?).to be(false)
+        asset.reload
+        expect(asset.title).to eq("changed title")
+        expect(asset.file_derivatives.keys).to eq([:sample2])
+      end
+    end
 
   end
 end
