@@ -47,6 +47,8 @@ class Kithe::Asset < Kithe::Model
   after_promotion :schedule_derivatives
 
   # A convenience to call file_attacher.create_persisted_derivatives (from :kithe_derivatives)
+  # to create derivatives with conncurrent access safety, with the :kithe_derivatives
+  # processor argument, to create derivatives defined using kithe_derivative_definitions.
   #
   # Create derivatives for every definition added to uploader/attacher with `define_derivative`.
   # Ordinarily will create a definition for every definition that has not been marked

@@ -1,6 +1,6 @@
 # Creates derivatives from definitions stored on an Asset class
 class Kithe::Asset::DerivativeCreator
-  attr_reader :definitions, :asset, :only, :except, :lazy, :mark_created
+  attr_reader :definitions, :shrine_attacher, :only, :except, :lazy, :mark_created
 
   # A helper class that provides the implementation for Kithe::Asset#create_derivatives,
   # normally only expected to be called from there.
@@ -13,34 +13,34 @@ class Kithe::Asset::DerivativeCreator
   # (deleted) if it is a File or Tempfile object.
   #
   # @param definitions an array of DerivativeDefinition
-  # @param asset an Asset instance
+  # @param shrine_attacher a shrine attacher instance holding attachment state from an individual
+  #   model, from eg `asset.file_attacher`
   # @param only array of definition keys, only execute these (doesn't matter if they are `default_create` or not)
   # @param except array of definition keys, exclude these from definitions of derivs to be created
   # @param lazy (default false), Normally we will create derivatives for all applicable definitions,
   #   overwriting any that already exist for a given key. If the definition has changed, a new
   #   derivative created with new definition will overwrite existing. However, if you pass lazy false,
   #   it'll skip derivative creation if the derivative already exists, which can save time
-  #   if you are only intending to create missing derivatives.  With lazy:false, the asset
-  #   derivatives association will be consulted, so should be eager-loaded if you are going
-  #   to be calling on multiple assets.
-  # @param mark_created [Boolean] if true will set shrine metadata indicating we've done
-  #   derivative creation phase, so Asset#derivatives_created? will return true. Defaults to nil,
-  #   meaning true if and only if `only` is nil -- mark created if creating default derivatives.
-  def initialize(definitions, asset, only:nil, except:nil, lazy: false)
+  #   if you are only intending to create missing derivatives.
+  def initialize(definitions, shrine_attacher, only:nil, except:nil, lazy: false)
     @definitions = definitions
-    @asset = asset
+    @shrine_attacher = shrine_attacher
     @only = only && Array(only)
     @except = except && Array(except)
     @lazy = !!lazy
+
+    unless shrine_attacher.kind_of?(Shrine::Attacher)
+      raise ArgumentError.new("expect second arg Shrine::Attacher not #{shrine_attacher.class}")
+    end
   end
 
   def call
-    return unless asset.file.present? # if no file, can't create derivatives
+    return unless shrine_attacher.file.present? # if no file, can't create derivatives
 
     definitions_to_create = applicable_definitions
 
     if lazy
-      existing_derivative_keys = asset.file_derivatives.keys
+      existing_derivative_keys = shrine_attacher.derivatives.keys
       definitions_to_create.reject! do |defn|
         existing_derivative_keys.include?(defn.key)
       end
@@ -53,9 +53,9 @@ class Kithe::Asset::DerivativeCreator
     # Note, MAY make a superfluous copy and/or download of original file, ongoing
     # discussion https://github.com/shrinerb/shrine/pull/329#issuecomment-443615868
     # https://github.com/shrinerb/shrine/pull/332
-    Shrine.with_file(asset.file) do |original_file|
+    Shrine.with_file(shrine_attacher.file) do |original_file|
       definitions_to_create.each do |defn|
-        deriv_bytestream = defn.call(original_file: original_file, record: asset)
+        deriv_bytestream = defn.call(original_file: original_file, attacher: shrine_attacher)
 
         if deriv_bytestream
           derivatives[defn.key] =  deriv_bytestream
@@ -85,7 +85,7 @@ class Kithe::Asset::DerivativeCreator
     candidates = definitions.find_all do |defn|
       (only.nil? ? defn.default_create : only.include?(defn.key)) &&
       (except.nil? || ! except.include?(defn.key)) &&
-      defn.applies_to?(asset)
+      defn.applies_to_content_type?(shrine_attacher.file.content_type)
     end
 
     # Now we gotta filter out any duplicate keys based on our priority rules, but keep

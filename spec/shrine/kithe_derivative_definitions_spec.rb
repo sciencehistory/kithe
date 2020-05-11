@@ -55,15 +55,17 @@ describe "Shrine::Plugins::KitheDerivativeDefinitions", queue_adapter: :test do
     expect(jpg_deriv.storage_key).to eq(:kithe_derivatives)
   end
 
-  describe "record argument to block" do
+  describe "attacher argument to block" do
     let(:monitoring_proc) do
-      proc do |original_file, record:|
+      proc do |original_file, attacher:|
         expect(original_file.kind_of?(File) || original_file.kind_of?(Tempfile)).to be(true)
         expect(original_file.path).to be_present
         expect(original_file.read).to eq(asset.file.read)
 
-        expect(record).to eq(asset)
-
+        expect(attacher).to be_present
+        expect(attacher).to be_kind_of(Shrine::Attacher)
+        expect(attacher.record).to eq(asset)
+        expect(attacher.file).to be_kind_of(Shrine::UploadedFile)
         nil
       end
     end
@@ -88,7 +90,8 @@ describe "Shrine::Plugins::KitheDerivativeDefinitions", queue_adapter: :test do
           expect(original_file.path).to be_present
           expect(original_file.read).to eq(asset.file.read)
 
-          expect(kwargs[:record]).to eq(asset)
+          expect(kwargs[:attacher]).to be_present
+          expect(kwargs[:attacher]).to eq(asset.file_attacher)
 
           nil
         end
