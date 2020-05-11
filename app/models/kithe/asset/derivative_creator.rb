@@ -26,27 +26,29 @@ class Kithe::Asset::DerivativeCreator
   # @param mark_created [Boolean] if true will set shrine metadata indicating we've done
   #   derivative creation phase, so Asset#derivatives_created? will return true. Defaults to nil,
   #   meaning true if and only if `only` is nil -- mark created if creating default derivatives.
-  def initialize(definitions, asset, only:nil, except:nil, lazy: false, mark_created: :not_set)
+  def initialize(definitions, asset, only:nil, except:nil, lazy: false)
     @definitions = definitions
     @asset = asset
     @only = only && Array(only)
     @except = except && Array(except)
     @lazy = !!lazy
-    @mark_created = mark_created.nil? ? (only.nil? && except.nil?) : !! mark_created
   end
 
   def call
     return unless asset.file.present? # if no file, can't create derivatives
 
     definitions_to_create = applicable_definitions
+
     if lazy
-      existing_derivative_keys = asset.derivatives.collect(&:key).collect(&:to_s)
+      existing_derivative_keys = asset.file_derivatives.keys
       definitions_to_create.reject! do |defn|
-        existing_derivative_keys.include?(defn.key.to_s)
+        existing_derivative_keys.include?(defn.key)
       end
     end
 
-    return unless definitions_to_create.present?
+    return {} unless definitions_to_create.present?
+
+    derivatives = {}
 
     # Note, MAY make a superfluous copy and/or download of original file, ongoing
     # discussion https://github.com/shrinerb/shrine/pull/329#issuecomment-443615868
@@ -56,14 +58,14 @@ class Kithe::Asset::DerivativeCreator
         deriv_bytestream = defn.call(original_file: original_file, record: asset)
 
         if deriv_bytestream
-          asset.update_derivative(defn.key, deriv_bytestream, storage_key: defn.storage_key)
-          cleanup_returned_io(deriv_bytestream)
+          derivatives[defn.key] =  deriv_bytestream
         end
 
         original_file.rewind
       end
-      mark_derivatives_created! if mark_created
     end
+
+    derivatives
   end
 
   private
@@ -106,40 +108,5 @@ class Kithe::Asset::DerivativeCreator
 
     # Now we uniq keeping last defn
     candidates.reverse.uniq {|d| d.key }.reverse
-  end
-
-  def cleanup_returned_io(io)
-    if io.respond_to?(:close!)
-      # it's a Tempfile, clean it up now
-      io.close!
-    elsif io.is_a?(File)
-      # It's a File, close it and delete it.
-      io.close
-      File.unlink(io.path)
-    end
-  end
-
-  # Sets kithe asset metadata "derivatives_created" to `true`, so
-  # code can know that we're finished creating all `default_create`
-  # derivatives.
-  #
-  # Uses a db-level atomic jsonb update and db-locking to make sure it can do this
-  # without overwriting any other metadata changes, safely.
-  def mark_derivatives_created!
-    asset.transaction do
-      unless asset.acquire_lock_on_sha
-        # asset bytestream has changed
-        return nil
-      end
-
-      sql = <<~SQL
-        UPDATE "#{Kithe::Asset.table_name}"
-        SET file_data = jsonb_set(file_data, '{metadata, derivatives_created}', 'true')
-        WHERE id = '#{asset.id}'
-      SQL
-
-      #ActiveRecord::Base.connection.exec_update("update table set f1=#{ActiveRecord::Base.sanitize(f1)}")
-      Kithe::Asset.connection.execute(sql)
-    end
   end
 end

@@ -2,10 +2,9 @@
 # class, it's what's created when you call Kithe::Asset#define_derivative
 class Kithe::Asset::DerivativeDefinition
   attr_reader :key, :content_type, :default_create, :proc, :storage_key
-  def initialize(key:, storage_key:, proc:, content_type: nil, default_create: true)
+  def initialize(key:, proc:, content_type: nil, default_create: true)
     @key = key
     @content_type = content_type
-    @storage_key = storage_key
     @default_create = default_create
     @proc = proc
   end
@@ -34,6 +33,6 @@ class Kithe::Asset::DerivativeDefinition
   private
 
   def proc_accepts_record_keyword?
-    proc.parameters.include?([:key, :record]) || proc.parameters.include?([:keyreq, :record])
+    proc.parameters.include?([:key, :record]) || proc.parameters.include?([:keyreq, :record]) || proc.parameters.find {|a| a.first == :keyrest}
   end
 end

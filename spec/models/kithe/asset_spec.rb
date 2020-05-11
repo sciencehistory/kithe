@@ -158,12 +158,17 @@ RSpec.describe Kithe::Asset, type: :model do
     end
   end
 
+  # DEPRECATED FUNCTIONALITY
   describe "#derivative_for" do
     let!(:derivative) do
-      asset.derivatives.create!(key: "foo", file: StringIO.new("whatever"))
+      ActiveSupport::Deprecation.silence do
+        asset.derivatives.create!(key: "foo", file: StringIO.new("whatever"))
+      end
     end
     it "returns thing" do
-      expect(asset.derivative_for(:foo)).to eq(derivative)
+      ActiveSupport::Deprecation.silence do
+        expect(asset.derivative_for(:foo)).to eq(derivative)
+      end
     end
   end
 
@@ -178,19 +183,17 @@ RSpec.describe Kithe::Asset, type: :model do
         a.update_derivative(:existing, StringIO.new("content"))
       end
     end
-    let!(:existing_derivative) { asset_with_derivatives.derivatives.first }
-    let!(:existing_stored_file) { existing_derivative.file }
+
+    let!(:existing_stored_file) { asset_with_derivatives.file_derivatives.values.first }
 
     it "deletes derivatives on delete" do
       asset_with_derivatives.destroy
-      expect{ existing_derivative.reload }.to raise_error(ActiveRecord::RecordNotFound)
       expect(existing_stored_file.exists?).to be(false)
     end
 
     it "deletes derivatives on new asset assigned" do
       asset_with_derivatives.file = StringIO.new("some new thing")
       asset_with_derivatives.save!
-      expect{ existing_derivative.reload }.to raise_error(ActiveRecord::RecordNotFound)
       expect(existing_stored_file.exists?).to be(false)
     end
 
@@ -198,12 +201,15 @@ RSpec.describe Kithe::Asset, type: :model do
       # mostly needed for testing scenarios, not otherwise expected.
       filepath = Kithe::Engine.root.join("spec/test_support/images/1x1_pixel.jpg")
       asset = Kithe::Asset.new(file: File.open(filepath), title: "test").tap do |a|
-        a.file_attacher.set_promotion_directives(skip_callbacks: true)
+        a.file_attacher.set_promotion_directives(promote: false, skip_callbacks: true)
       end
-      asset.derivatives << Kithe::Derivative.new(file: File.open(filepath), key: "test")
       asset.save!
       asset.reload
-      expect(asset.derivatives.count).to eq 1
+
+      expect(asset.stored?).to eq(false)
+      asset.update_derivative("test", File.open(filepath), delete: false)
+
+      expect(asset.file_derivatives.count).to eq 1
     end
   end
 end

@@ -96,6 +96,23 @@ describe Shrine::Plugins::KithePersistedDerivatives, queue_adapter: :test do
           asset.file_attacher.add_persisted_derivatives({sample: sample_deriv_file!}, allow_other_changes: true)
         }.to raise_error(TypeError)
       end
+
+      describe "with an existing derivative" do
+        before do
+          asset.save!
+          asset.file_attacher.add_derivative("key", StringIO.new("existing"))
+          asset.save!
+        end
+
+        it "replaces" do
+          existing_storage = asset.file_derivatives[:key]
+          expect(existing_storage.exists?).to be(true)
+
+          asset.file_attacher.add_persisted_derivatives({"key" => StringIO.new("new")})
+          expect(asset.file_derivatives[:key].read).to eq("new")
+          expect(existing_storage.exists?).to be(false)
+        end
+      end
     end
 
     describe "Original deleted before derivatives can be created" do

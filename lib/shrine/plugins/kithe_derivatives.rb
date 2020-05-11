@@ -27,6 +27,7 @@ class Shrine
         end
 
         uploader.plugin :kithe_persisted_derivatives
+        uploader.plugin :kithe_derivative_definitions
       end
 
       module InstanceMethods

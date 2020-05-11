@@ -23,7 +23,6 @@ class Shrine
     # https://shrinerb.com/docs/processing
     class KithePersistedDerivatives
       module AttacherMethods
-
         # Like the shrine `add_derivatives` method, but also *persists* the
         # derivatives (saves to db), in a realiably concurrency-safe way.
         #
@@ -45,17 +44,29 @@ class Shrine
         # add_persisted_derivatives on a model with other unsaved changes. The
         # method will by default refuse to do so, throwing a TypeError. If you'd
         # like to force it, pass `allow_other_changes: true` as an argument.
+        #
+        # Also takes care of deleting any replaced derivative files, that are no longer
+        # referenced by the model. Shrine by default does not do this:
+        # https://github.com/shrinerb/shrine/issues/468
+        #
+        # All deletions are inline. In general this could be a fairly expensive operation,
+        # it can be wise to do it in a bg job.
         def add_persisted_derivatives(local_files, **options)
           other_changes_allowed = !!options.delete(:allow_other_changes)
           if record && !other_changes_allowed && record.changed?
             raise TypeError.new("Can't safely add_persisted_derivatives on model with unsaved changes. Pass `allow_other_changes: true` to force.")
           end
 
+          existing_derivative_files = nil
+
           # upload to storage
           new_derivatives = upload_derivatives(local_files, **options)
 
           begin
             atomic_persist do |reloaded_attacher|
+              # record so we can delete any replaced ones...
+              existing_derivative_files = map_derivative(reloaded_attacher.derivatives).collect { |path, file| file }
+
               # make sure we don't override derivatives created in other jobs, by
               # first using the current up-to-date derivatives from db,
               # then merging our changes in on top.
@@ -76,6 +87,11 @@ class Shrine
             delete_derivatives(new_derivatives)
             raise e
           end
+
+          # Take care of deleting from storage any derivatives that were replaced.
+          current_derivative_files = map_derivative(derivatives).collect { |path, file| file }
+          replaced_files = existing_derivative_files - current_derivative_files
+          delete_derivatives(replaced_files)
 
           new_derivatives
         end
@@ -118,7 +134,7 @@ class Shrine
           removed_derivatives = nil
           atomic_persist do |reloaded_attacher|
             set_derivatives(reloaded_attacher.derivatives)
-            removed_derivatives = remove_derivatives(*paths)
+            removed_derivatives = remove_derivatives(*paths, delete: false)
           end
 
           if removed_derivatives
