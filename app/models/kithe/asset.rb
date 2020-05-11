@@ -35,8 +35,6 @@ class Kithe::Asset < Kithe::Model
   # kithe_promotion_hooks shrine plugin.
   class_attribute :promotion_directives, instance_accessor: false, default: {}
 
-  class_attribute :derivative_definitions, instance_writer: false, default: []
-
   # Callbacks are called by our kiteh_promotion_callbacks shrine plugin, around
   # shrine promotion. A before callback can cancel promotion with the usual
   # `throw :abort`. An after callback may want to trigger things you want
