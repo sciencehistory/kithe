@@ -12,7 +12,6 @@ namespace :kithe do
       opts.on("--lazy","Lazy create") { options[:lazy] = true }
       opts.on("--asset-id FRIENDLIER_IDS", "comma-seperated list of asset (friendlier) ids") { |ids| options[:asset_ids] = ids.split(",") }
       opts.on("--work-id FRIENDLIER_IDS", "comma-seperated list of work (friendlier) ids") { |ids| options[:work_ids] = ids.split(",") }
-      opts.on("--mark-derivatives-created", "set derivatives_created? flag on assets") { |ids| options[:mark_derivatives_created] = true }
     end.tap do |parser|
       parser.parse!(parser.order(ARGV) {})
     end
@@ -30,8 +29,7 @@ namespace :kithe do
       progress_bar.title = asset.friendlier_id
       asset.create_derivatives(
         only: options[:derivative_keys],
-        lazy: !!options[:lazy],
-        mark_created: options[:mark_derivatives_created]
+        lazy: !!options[:lazy]
       )
       progress_bar.increment
     end
