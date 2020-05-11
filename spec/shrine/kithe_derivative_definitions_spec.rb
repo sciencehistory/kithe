@@ -70,7 +70,7 @@ describe "Shrine::Plugins::KitheDerivativeDefinitions", queue_adapter: :test do
 
     before do
       # hacky confusing way to set this up for testing, sorry.
-      CustomUploader::Attacher._kithe_derivative_definitions = []
+      CustomUploader::Attacher.kithe_derivative_definitions = []
       CustomUploader::Attacher.define_derivative(:some_data, &monitoring_proc)
     end
 
@@ -109,7 +109,7 @@ describe "Shrine::Plugins::KitheDerivativeDefinitions", queue_adapter: :test do
 
     before do
       # hacky confusing way to set this up for testing, sorry.
-      CustomUploader::Attacher._kithe_derivative_definitions = []
+      CustomUploader::Attacher.kithe_derivative_definitions = []
       CustomUploader::Attacher.define_derivative(:some_data, default_create: false, &monitoring_proc)
     end
 
@@ -126,7 +126,7 @@ describe "Shrine::Plugins::KitheDerivativeDefinitions", queue_adapter: :test do
 
     before do
       # hacky confusing way to set this up for testing, sorry.
-      CustomUploader::Attacher._kithe_derivative_definitions = []
+      CustomUploader::Attacher.kithe_derivative_definitions = []
       CustomUploader::Attacher.define_derivative(:one, default_create: false, &monitoring_proc1)
       CustomUploader::Attacher.define_derivative(:two, &monitoring_proc2)
       CustomUploader::Attacher.define_derivative(:three, &monitoring_proc2)
@@ -167,7 +167,7 @@ describe "Shrine::Plugins::KitheDerivativeDefinitions", queue_adapter: :test do
   describe "content_type filters" do
     before do
       # hacky confusing way to set this up for testing, sorry.
-      CustomUploader::Attacher._kithe_derivative_definitions = []
+      CustomUploader::Attacher.kithe_derivative_definitions = []
       CustomUploader::Attacher.define_derivative(:never_called, content_type: "nothing/nothing") { |o| StringIO.new("never") }
       CustomUploader::Attacher.define_derivative(:gated_positive, content_type: "image/jpeg") { |o| StringIO.new("gated positive") }
       CustomUploader::Attacher.define_derivative(:gated_positive_main_type, content_type: "image") { |o| StringIO.new("gated positive") }
@@ -191,7 +191,7 @@ describe "Shrine::Plugins::KitheDerivativeDefinitions", queue_adapter: :test do
     describe "as array" do
       before do
         # hacky confusing way to set this up for testing, sorry.
-        CustomUploader::Attacher._kithe_derivative_definitions = []
+        CustomUploader::Attacher.kithe_derivative_definitions = []
         CustomUploader::Attacher.define_derivative(:never_called, content_type: ["nothing/nothing", "also/nothing"]) { |o| StringIO.new("never") }
         CustomUploader::Attacher.define_derivative(:gated_positive, content_type: ["image/jpeg", "something/else"]) { |o| StringIO.new("gated positive") }
       end
@@ -209,7 +209,7 @@ describe "Shrine::Plugins::KitheDerivativeDefinitions", queue_adapter: :test do
 
       before do
         # hacky confusing way to set this up for testing, sorry.
-        CustomUploader::Attacher._kithe_derivative_definitions = []
+        CustomUploader::Attacher.kithe_derivative_definitions = []
         CustomUploader::Attacher.define_derivative(:key, &unfiltered)
         CustomUploader::Attacher.define_derivative(:key, content_type: "image/jpeg", &image_jpeg)
         CustomUploader::Attacher.define_derivative(:key, content_type: "image", &image)
@@ -233,8 +233,8 @@ describe "Shrine::Plugins::KitheDerivativeDefinitions", queue_adapter: :test do
   describe "lazy creation" do
     before do
       # Create existing derivatives for existing definitions, which we assume exist
-      expect(CustomUploader::Attacher._kithe_derivative_definitions).to be_present
-      CustomUploader::Attacher._kithe_derivative_definitions.collect(&:key).each do |key|
+      expect(CustomUploader::Attacher.kithe_derivative_definitions).to be_present
+      CustomUploader::Attacher.kithe_derivative_definitions.collect(&:key).each do |key|
         asset.file_attacher.add_persisted_derivatives({key => StringIO.new("#{key} original")})
       end
     end

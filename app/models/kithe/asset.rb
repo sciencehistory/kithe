@@ -160,7 +160,7 @@ class Kithe::Asset < Kithe::Model
 
   # called by after_promotion hook
   def schedule_derivatives
-    return unless self.file_attacher._kithe_derivative_definitions.present? # no need to schedule if we don't have any
+    return unless self.file_attacher.kithe_derivative_definitions.present? # no need to schedule if we don't have any
 
     Kithe::TimingPromotionDirective.new(key: :create_derivatives, directives: file_attacher.promotion_directives) do |directive|
       if directive.inline?

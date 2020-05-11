@@ -6,12 +6,12 @@ class Shrine
         # to store our derivative definitions that are inheritable and overrideable.
         # We store it on the Attacher class, because that's where shrine
         # puts derivative processor definitions, so seems appropriate.
-        uploader::Attacher.class_attribute :_kithe_derivative_definitions, instance_writer: false, default: []
+        uploader::Attacher.class_attribute :kithe_derivative_definitions, instance_writer: false, default: []
 
         # Register our derivative processor, that will create our registered derivatives,
         # with our custom options.
         uploader::Attacher.derivatives(:kithe_derivatives) do |original, **options|
-          Kithe::Asset::DerivativeCreator.new(self.class._kithe_derivative_definitions, record,
+          Kithe::Asset::DerivativeCreator.new(self.class.kithe_derivative_definitions, record,
             only: options[:only],
             except: options[:except],
             lazy: options[:lazy]
@@ -65,7 +65,7 @@ class Shrine
         # the most specific one will be used.  That is, for a JPG, `image/jpeg` beats `image` beats no restriction.
         def define_derivative(key, content_type: nil, default_create: true, &block)
           # Make sure we dup the array to handle sub-classes on class_attribute
-          self._kithe_derivative_definitions = self._kithe_derivative_definitions.dup.push(
+          self.kithe_derivative_definitions = self.kithe_derivative_definitions.dup.push(
             Kithe::Asset::DerivativeDefinition.new(
               key: key,
               content_type: content_type,
@@ -77,7 +77,7 @@ class Shrine
 
         # Returns all derivative keys registered with a definition, as array of strings
         def defined_derivative_keys
-          self._kithe_derivative_definitions.collect(&:key).uniq.collect(&:to_s)
+          self.kithe_derivative_definitions.collect(&:key).uniq.collect(&:to_s)
         end
 
         # If you have a subclass that has inherited derivative definitions, you can
@@ -88,7 +88,7 @@ class Shrine
         # a different class hieararchy where you don't have to do this. But it's here.
         def remove_derivative_definition!(*keys)
           keys = keys.collect(&:to_sym)
-          self._kithe_derivative_definitions = self._kithe_derivative_definitions.reject do |defn|
+          self.kithe_derivative_definitions = self.kithe_derivative_definitions.reject do |defn|
             keys.include?(defn.key.to_sym)
           end.freeze
         end
