@@ -112,6 +112,14 @@ describe "customized shrine derivatives", queue_adapter: :inline do
           expect(asset.file_derivatives[:test].read).to eq("test")
           expect(asset.file_derivatives[:test].storage_key).to eq(:kithe_derivatives)
         end
+
+        it "can add a derivative with meadata" do
+          result = asset.update_derivative("test", StringIO.new("test"), metadata: { "manual" => "value"} )
+
+          expect(result).to be_kind_of(Shrine::UploadedFile)
+          expect(asset.file_derivatives[:test].metadata["manual"]).to eq("value")
+          expect(asset.file_derivatives[:test].metadata["size"]).to be_present
+        end
       end
     end
   end
