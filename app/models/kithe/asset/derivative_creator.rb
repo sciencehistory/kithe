@@ -1,6 +1,6 @@
 # Creates derivatives from definitions stored on an Asset class
 class Kithe::Asset::DerivativeCreator
-  attr_reader :definitions, :shrine_attacher, :only, :except, :lazy, :mark_created
+  attr_reader :definitions, :shrine_attacher, :only, :except, :lazy, :source_io
 
   # A helper class that provides the implementation for Kithe::Asset#create_derivatives,
   # normally only expected to be called from there.
@@ -22,8 +22,9 @@ class Kithe::Asset::DerivativeCreator
   #   derivative created with new definition will overwrite existing. However, if you pass lazy false,
   #   it'll skip derivative creation if the derivative already exists, which can save time
   #   if you are only intending to create missing derivatives.
-  def initialize(definitions, shrine_attacher, only:nil, except:nil, lazy: false)
+  def initialize(definitions, source_io:, shrine_attacher:, only:nil, except:nil, lazy: false)
     @definitions = definitions
+    @source_io = source_io
     @shrine_attacher = shrine_attacher
     @only = only && Array(only)
     @except = except && Array(except)
@@ -50,20 +51,17 @@ class Kithe::Asset::DerivativeCreator
 
     derivatives = {}
 
-    # Note, MAY make a superfluous copy and/or download of original file, ongoing
-    # discussion https://github.com/shrinerb/shrine/pull/329#issuecomment-443615868
-    # https://github.com/shrinerb/shrine/pull/332
-    Shrine.with_file(shrine_attacher.file) do |original_file|
-      definitions_to_create.each do |defn|
-        deriv_bytestream = defn.call(original_file: original_file, attacher: shrine_attacher)
+    definitions_to_create.each do |defn|
+      deriv_bytestream = defn.call(original_file: source_io, attacher: shrine_attacher)
 
-        if deriv_bytestream
-          derivatives[defn.key] =  deriv_bytestream
-        end
-
-        original_file.rewind
+      if deriv_bytestream
+        derivatives[defn.key] =  deriv_bytestream
       end
+
+      # may not need this but it doesn't hurt...
+      source_io.rewind
     end
+
 
     derivatives
   end

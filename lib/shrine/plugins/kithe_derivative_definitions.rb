@@ -11,7 +11,9 @@ class Shrine
         # Register our derivative processor, that will create our registered derivatives,
         # with our custom options.
         uploader::Attacher.derivatives(:kithe_derivatives) do |original, **options|
-          Kithe::Asset::DerivativeCreator.new(self.class.kithe_derivative_definitions, self,
+          Kithe::Asset::DerivativeCreator.new(self.class.kithe_derivative_definitions,
+            source_io: original,
+            shrine_attacher: self,
             only: options[:only],
             except: options[:except],
             lazy: options[:lazy]
