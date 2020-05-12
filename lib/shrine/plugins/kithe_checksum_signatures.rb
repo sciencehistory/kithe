@@ -3,11 +3,11 @@ class Shrine
     # Using the shrine signature and add_metadata plugins, ensure that the shrine standard
     # digest/checksum signatures are recorded in metadata.
     #
+    # This plugin is NOT included in Kithe::AssetUploader by default, include it in your
+    # local uploader if desired.
+    #
     # We want to store md5 and sha1 checksums (legacy compat), as well as
     # sha512 (more recent digital preservation recommendation: https://ocfl.io/draft/spec/#digests)
-    #
-    # The sha512 is required by other kithe logic which uses it as a fingerprint to know when
-    # an asset has changed.
     #
     # We only calculate them only on promotion action (not cache action), to avoid needlessly
     # expensive double-computation, and because for direct uploads/backgrounding, we haven't
@@ -23,8 +23,8 @@ class Shrine
 
       def self.configure(uploader, opts = {})
         uploader.class_eval do
-          add_metadata do |io, context|
-            if context[:action] != :cache
+          add_metadata do |io, derivative:nil, **context|
+            if context[:action] != :cache && derivative.nil?
               {
                 md5: calculate_signature(io, :md5),
                 sha1: calculate_signature(io, :sha1),

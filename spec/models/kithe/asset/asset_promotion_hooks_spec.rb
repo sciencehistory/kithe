@@ -30,7 +30,6 @@ describe "Kithe::Asset promotion hooks", queue_adapter: :inline do
     it "has access to automatic metadata extraction" do
       unsaved_asset.save!
       expect($metadata_in_before_promotion).to be_present
-      expect($metadata_in_before_promotion['sha512']).to be_present
     end
   end
 
@@ -213,7 +212,6 @@ describe "Kithe::Asset promotion hooks", queue_adapter: :inline do
           asset.reload
 
           expect(asset.stored?).to be(true)
-          expect(asset.sha512).to be_present
         end
       end
 
