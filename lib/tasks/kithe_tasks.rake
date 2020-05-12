@@ -8,10 +8,10 @@ namespace :kithe do
     options = {}
     OptionParser.new do |opts|
       opts.banner = "Usage: ./bin/rake kithe:create_derivatives -- [options]"
-      opts.on("--derivatives TYPES", "comma-seperated list of type keys") { |ids| options[:derivative_keys] = ids.split(",")}
-      opts.on("--lazy","Lazy create") { options[:lazy] = true }
-      opts.on("--asset-id FRIENDLIER_IDS", "comma-seperated list of asset (friendlier) ids") { |ids| options[:asset_ids] = ids.split(",") }
-      opts.on("--work-id FRIENDLIER_IDS", "comma-seperated list of work (friendlier) ids") { |ids| options[:work_ids] = ids.split(",") }
+      opts.on("--derivatives=TYPES", "comma-seperated list of type keys") { |ids| options[:derivative_keys] = ids.split(",")}
+      opts.on("--lazy", "Lazy create") { options[:lazy] = true }
+      opts.on("--asset-id=FRIENDLIER_IDS", "comma-seperated list of asset (friendlier) ids") { |ids| options[:asset_ids] = ids.split(",") }
+      opts.on("--work-id=FRIENDLIER_IDS", "comma-seperated list of work (friendlier) ids") { |ids| options[:work_ids] = ids.split(",") }
     end.tap do |parser|
       parser.parse!(parser.order(ARGV) {})
     end
@@ -42,7 +42,6 @@ namespace :kithe do
 
       Kithe::Asset.find_each do |asset|
         progress_bar.title = asset.friendlier_id
-byebug
         asset.create_derivatives(lazy: true)
         progress_bar.increment
       end
