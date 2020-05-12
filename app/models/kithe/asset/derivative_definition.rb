@@ -3,7 +3,7 @@
 class Kithe::Asset::DerivativeDefinition
   attr_reader :key, :content_type, :default_create, :proc, :storage_key
   def initialize(key:, proc:, content_type: nil, default_create: true)
-    @key = key
+    @key = key.to_sym
     @content_type = content_type
     @default_create = default_create
     @proc = proc

@@ -43,6 +43,11 @@ describe "Shrine::Plugins::KitheDerivativeDefinitions", queue_adapter: :test do
     )
   end
 
+  it "normalizes string key to symbol" do
+    CustomUploader::Attacher.define_derivative("started_string") { |io| }
+    expect(CustomUploader::Attacher.kithe_derivative_definitions.collect(&:key)).to include(:started_string)
+  end
+
   it "builds derivatives" do
     asset.file_attacher.create_derivatives(:kithe_derivatives)
 
@@ -237,6 +242,7 @@ describe "Shrine::Plugins::KitheDerivativeDefinitions", queue_adapter: :test do
     before do
       # Create existing derivatives for existing definitions, which we assume exist
       expect(CustomUploader::Attacher.kithe_derivative_definitions).to be_present
+
       CustomUploader::Attacher.kithe_derivative_definitions.collect(&:key).each do |key|
         asset.file_attacher.add_persisted_derivatives({key => StringIO.new("#{key} original")})
       end
