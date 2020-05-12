@@ -158,20 +158,6 @@ RSpec.describe Kithe::Asset, type: :model do
     end
   end
 
-  # DEPRECATED FUNCTIONALITY
-  describe "#derivative_for" do
-    let!(:derivative) do
-      ActiveSupport::Deprecation.silence do
-        asset.derivatives.create!(key: "foo", file: StringIO.new("whatever"))
-      end
-    end
-    it "returns thing" do
-      ActiveSupport::Deprecation.silence do
-        expect(asset.derivative_for(:foo)).to eq(derivative)
-      end
-    end
-  end
-
   describe "removes derivatives", queue_adapter: :inline do
     let(:asset_with_derivatives) do
       Kithe::Asset.create(title: "test",

@@ -80,7 +80,7 @@ describe "Shrine::Plugins::KitheDerivativeDefinitions", queue_adapter: :test do
       expect(monitoring_proc).to receive(:call).and_call_original
 
       asset.file_attacher.create_derivatives(:kithe_derivatives)
-      expect(asset.derivatives.length).to eq(0)
+      expect(asset.file_derivatives.length).to eq(0)
     end
 
     describe "as **kwargs" do
@@ -101,7 +101,7 @@ describe "Shrine::Plugins::KitheDerivativeDefinitions", queue_adapter: :test do
         expect(monitoring_proc).to receive(:call).and_call_original
 
         asset.file_attacher.create_derivatives(:kithe_derivatives)
-        expect(asset.derivatives.length).to eq(0)
+        expect(asset.file_derivatives.length).to eq(0)
       end
     end
   end

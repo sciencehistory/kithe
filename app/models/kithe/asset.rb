@@ -1,8 +1,6 @@
 class Kithe::Asset < Kithe::Model
   include Kithe::Asset::SetShrineUploader
 
-  has_many :derivatives, foreign_key: "asset_id", inverse_of: "asset", dependent: :destroy # dependent destroy to get shrine destroy logic for assets
-
   # These associations exist for hetereogenous eager-loading, but hide em.
   # They are defined as self-pointing below.
   # ignored_columns doesn't do everything we'd like, but it's something: https://github.com/rails/rails/issues/34344
@@ -106,14 +104,6 @@ class Kithe::Asset < Kithe::Model
   # just a convenience for kithe remove_persisted_derivatives
   def remove_derivative(key)
     file_attacher.remove_persisted_derivatives(key)
-  end
-
-  # Just finds the Derivative object matching supplied key. if you're going to be calling
-  # this on a list of Asset objects, make sure to preload :derivatives association.
-  def derivative_for(key)
-    ## DEPRECATE GOING AWAY
-    ActiveSupport::Deprecation.warn('Old Kithe 1.x derivatives going away')
-    derivatives.find {|d| d.key == key.to_s }
   end
 
   # Runs the shrine promotion step, that we normally have in backgrounding, manually
