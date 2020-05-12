@@ -21,7 +21,6 @@ namespace :kithe do
       scope = scope.joins(:parent).where("parents_kithe_models.friendlier_id":  options[:work_ids])
     end
     scope = scope.where(friendlier_id: options[:asset_ids]) if options[:asset_ids]
-    scope = scope.includes(:derivatives) if options[:lazy]
 
     progress_bar = ProgressBar.create(total: scope.count, format: Kithe::STANDARD_PROGRESS_BAR_FORMAT)
 
@@ -41,8 +40,9 @@ namespace :kithe do
     task :lazy_defaults => :environment do
       progress_bar = ProgressBar.create(total: Kithe::Asset.count, format: Kithe::STANDARD_PROGRESS_BAR_FORMAT)
 
-      Kithe::Asset.includes(:derivatives).find_each do |asset|
+      Kithe::Asset.find_each do |asset|
         progress_bar.title = asset.friendlier_id
+byebug
         asset.create_derivatives(lazy: true)
         progress_bar.increment
       end
