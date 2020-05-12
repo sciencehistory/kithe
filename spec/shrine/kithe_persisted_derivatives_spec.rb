@@ -251,6 +251,14 @@ describe Shrine::Plugins::KithePersistedDerivatives, queue_adapter: :test do
       expect(asset.file_derivatives[:two].storage_key).to eq(:kithe_derivatives)
     end
 
+    describe "for an asset with nil file_data" do
+      let(:asset) { AssetSubclass.create!(title: "blank") }
+
+      it "no-ops" do
+        expect(asset.file_attacher.create_persisted_derivatives).to be(false)
+      end
+    end
+
     it "can call custom processor" do
       asset.file_attacher.create_persisted_derivatives(:options)
 

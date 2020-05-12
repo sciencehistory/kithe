@@ -109,6 +109,8 @@ class Shrine
         #
         # Also has an `allow_other_changes` argument, see #add_persisted_derivatives.
         def create_persisted_derivatives(*args, storage: nil, allow_other_changes: false, **options)
+          return false unless file
+
           local_files = process_derivatives(*args, **options)
           add_persisted_derivatives(local_files, storage: storage, allow_other_changes: allow_other_changes)
         end
