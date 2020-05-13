@@ -25,11 +25,16 @@ namespace :kithe do
     progress_bar = ProgressBar.create(total: scope.count, format: Kithe::STANDARD_PROGRESS_BAR_FORMAT)
 
     scope.find_each do |asset|
-      progress_bar.title = asset.friendlier_id
-      asset.create_derivatives(
-        only: options[:derivative_keys],
-        lazy: !!options[:lazy]
-      )
+      begin
+        progress_bar.title = asset.friendlier_id
+        asset.create_derivatives(
+          only: options[:derivative_keys],
+          lazy: !!options[:lazy]
+        )
+      rescue Shrine::FileNotFound => e
+        progress_bar.log("original missing for #{asset.friendlier_id}")
+        # it's cool, skip it
+      end
       progress_bar.increment
     end
   end
@@ -41,8 +46,13 @@ namespace :kithe do
       progress_bar = ProgressBar.create(total: Kithe::Asset.count, format: Kithe::STANDARD_PROGRESS_BAR_FORMAT)
 
       Kithe::Asset.find_each do |asset|
-        progress_bar.title = asset.friendlier_id
-        asset.create_derivatives(lazy: true)
+        begin
+          progress_bar.title = asset.friendlier_id
+          asset.create_derivatives(lazy: true)
+        rescue Shrine::FileNotFound => e
+          progress_bar.log("original missing for #{asset.friendlier_id}")
+          # it's cool, skip it
+        end
         progress_bar.increment
       end
     end
