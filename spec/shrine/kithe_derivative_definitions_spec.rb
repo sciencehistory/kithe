@@ -145,7 +145,8 @@ describe "Shrine::Plugins::KitheDerivativeDefinitions", queue_adapter: :test do
       expect(monitoring_proc2).to receive(:call).and_call_original
       expect(monitoring_proc3).not_to receive(:call)
 
-      asset.file_attacher.create_derivatives(:kithe_derivatives, only: [:one, :two])
+      # except string or symbol
+      asset.file_attacher.create_derivatives(:kithe_derivatives, only: [:one, "two"])
 
       expect(asset.file_derivatives.keys).to match([:one, :two])
     end
@@ -157,6 +158,18 @@ describe "Shrine::Plugins::KitheDerivativeDefinitions", queue_adapter: :test do
 
       asset.file_attacher.create_derivatives(:kithe_derivatives, except: [:three])
 
+      # :one was default_create:false, and we said  except: :three
+      expect(asset.file_derivatives.keys).to eq([:two])
+    end
+
+    it "can call with except as string" do
+      expect(monitoring_proc1).not_to receive(:call)
+      expect(monitoring_proc2).to receive(:call).and_call_original
+      expect(monitoring_proc3).not_to receive(:call)
+
+      asset.file_attacher.create_derivatives(:kithe_derivatives, except: ["three"])
+
+      # :one was default_create:false, and we said  except: :three
       expect(asset.file_derivatives.keys).to eq([:two])
     end
 
@@ -165,7 +178,8 @@ describe "Shrine::Plugins::KitheDerivativeDefinitions", queue_adapter: :test do
       expect(monitoring_proc2).not_to receive(:call)
       expect(monitoring_proc3).not_to receive(:call)
 
-      asset.file_attacher.create_derivatives(:kithe_derivatives, only: [:one, :two], except: :two)
+      # string version of except why not
+      asset.file_attacher.create_derivatives(:kithe_derivatives, only: [:one, :two], except: :three)
 
       expect(asset.file_derivatives.keys).to eq([:one])
     end

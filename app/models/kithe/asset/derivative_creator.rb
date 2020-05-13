@@ -26,8 +26,8 @@ class Kithe::Asset::DerivativeCreator
     @definitions = definitions
     @source_io = source_io
     @shrine_attacher = shrine_attacher
-    @only = only && Array(only)
-    @except = except && Array(except)
+    @only = only && Array(only).collect(&:to_sym)
+    @except = except && Array(except).collect(&:to_sym)
     @lazy = !!lazy
 
     unless shrine_attacher.kind_of?(Shrine::Attacher)
