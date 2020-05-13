@@ -46,9 +46,12 @@ class Kithe::Asset < Kithe::Model
   # to create derivatives with conncurrent access safety, with the :kithe_derivatives
   # processor argument, to create derivatives defined using kithe_derivative_definitions.
   #
-  # Create derivatives for every definition added to uploader/attacher with `define_derivative`.
-  # Ordinarily will create a definition for every definition that has not been marked
-  # `default_create: false`.
+  # This is designed for use with kithe_derivatives processor, and has options only relevant
+  # to it, although could be expanded to take a processor argument in the future if needed.
+  #
+  # Create derivatives for every definition added to uploader/attacher with kithe_derivatives
+  # `define_derivative`. Ordinarily will create a definition for every definition
+  # that has not been marked `default_create: false`.
   #
   # But you can also pass `only` and/or `except` to customize the list of definitions to be created,
   # possibly including some that are `default_create: false`.
@@ -60,8 +63,31 @@ class Kithe::Asset < Kithe::Model
   # but pass `lazy: false` to skip creating if a derivative with a given key already exists.
   # This will use the asset `derivatives` association, so if you are doing this in bulk for several
   # assets, you should eager-load the derivatives association for efficiency.
+  #
+  # ## Avoiding eager-download
+  #
+  # Additionally, this has a feature to 'trick' shrine into not eager downloading
+  # the original before our kithe_derivatives processor has a chance to decide if it
+  # needs to create any derivatives (based on only/except/lazy args), making no-op
+  # create_derivatives so much faster and more efficient, which matters when doing
+  # bulk operations say with our rake task.
+  #
+  # kithe_derivatives processor does a Shrine.with_file to make sure
+  # it's a local file, when needed.
+  #
+  # See https://github.com/shrinerb/shrine/issues/470
   def create_derivatives(only: nil, except: nil, lazy: false)
-    file_attacher.create_persisted_derivatives(:kithe_derivatives, only: only, except: except, lazy: lazy)
+    source = file
+
+    if source.kind_of?(Shrine::UploadedFile)
+      # Trick shrine derivatives into not knowing it's an UploadedFile so it
+      # won't eagerly download please.
+      source.open do |source_as_io|
+        file_attacher.create_persisted_derivatives(:kithe_derivatives, source_as_io, only: only, except: except, lazy: lazy)
+      end
+    else
+      file_attacher.create_persisted_derivatives(:kithe_derivatives, source, only: only, except: except, lazy: lazy)
+    end
   end
 
   # Just a convennience for file_attacher.add_persisted_derivatives (from :kithe_derivatives),

@@ -95,6 +95,10 @@ describe "Shrine::Plugins::KitheDerivativeDefinitions", queue_adapter: :test do
           expect(original_file.path).to be_present
           expect(original_file.read).to eq(asset.file.read)
 
+          # It really has to be a local file with a path, not just an IO.
+          # Kithe wants to guarantee this, whether or not shrine does.
+          expect(original_file).to respond_to(:path)
+
           expect(kwargs[:attacher]).to be_present
           expect(kwargs[:attacher]).to eq(asset.file_attacher)
 

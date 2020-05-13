@@ -51,17 +51,22 @@ class Kithe::Asset::DerivativeCreator
 
     derivatives = {}
 
-    definitions_to_create.each do |defn|
-      deriv_bytestream = defn.call(original_file: source_io, attacher: shrine_attacher)
+    # Make sure we have this as a local file, because many processors
+    # require it, for instance for shelling out to command line.
+    # This might trigger a download, but note we are only doing it if we have
+    # `definitions_to_create`, otherwise we already returned.
+    shrine_attacher.shrine_class.with_file(source_io) do |source_io_as_file|
+      definitions_to_create.each do |defn|
+        deriv_bytestream = defn.call(original_file: source_io_as_file, attacher: shrine_attacher)
 
-      if deriv_bytestream
-        derivatives[defn.key] =  deriv_bytestream
+        if deriv_bytestream
+          derivatives[defn.key] =  deriv_bytestream
+        end
+
+        # may not need this but it doesn't hurt...
+        source_io.rewind
       end
-
-      # may not need this but it doesn't hurt...
-      source_io.rewind
     end
-
 
     derivatives
   end

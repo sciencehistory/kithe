@@ -104,6 +104,17 @@ describe "customized shrine derivatives", queue_adapter: :inline do
         expect(derivatives.none? {|d| d.exists? }).to be(true)
       end
 
+      it "lazy create does not even read original" do
+        pre_existing = asset.file_derivatives[:fixed]
+
+        expect(asset.file).not_to receive(:read)
+        expect(asset.file).not_to receive(:download)
+
+        asset.create_derivatives(lazy: true)
+
+        expect(asset.file_derivatives[:fixed]).to eq(pre_existing)
+      end
+
       describe "#update_derivative" do
         it "can add a derivative" do
           result = asset.update_derivative(:fixed, StringIO.new("test updated"))
@@ -113,7 +124,7 @@ describe "customized shrine derivatives", queue_adapter: :inline do
           expect(asset.file_derivatives[:fixed].storage_key).to eq(:kithe_derivatives)
         end
 
-        it "can add a derivative with metadata" do
+        it "can add a derivative with meadata" do
           result = asset.update_derivative("test", StringIO.new("test"), metadata: { "manual" => "value"} )
 
           expect(result).to be_kind_of(Shrine::UploadedFile)
