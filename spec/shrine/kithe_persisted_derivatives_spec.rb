@@ -214,7 +214,7 @@ describe Shrine::Plugins::KithePersistedDerivatives, queue_adapter: :test do
         self::Attacher.derivatives do |original, **options|
           {
             one: call_fakeio.("one"),
-            two: call_fakeio.("two")
+            original_reflected: call_fakeio.(original.read)
           }
         end
 
@@ -243,12 +243,28 @@ describe Shrine::Plugins::KithePersistedDerivatives, queue_adapter: :test do
       asset.file_attacher.create_persisted_derivatives
 
       expect(asset.changed?).to be(false)
-      expect(asset.file_derivatives.keys).to match([:one, :two])
+      expect(asset.file_derivatives.keys).to match([:one, :original_reflected])
       asset.reload
       expect(asset.file_derivatives[:one].read).to eq("one")
       expect(asset.file_derivatives[:one].storage_key).to eq(:kithe_derivatives)
-      expect(asset.file_derivatives[:two].read).to eq("two")
-      expect(asset.file_derivatives[:two].storage_key).to eq(:kithe_derivatives)
+      expect(asset.file_derivatives[:original_reflected].read).to eq(File.binread(sample_orig_path))
+      expect(asset.file_derivatives[:original_reflected].storage_key).to eq(:kithe_derivatives)
+    end
+
+    describe "with custom source" do
+      let(:string_io_source) { StringIO.new("pretend data") }
+
+      it "works with custom source as StringIO" do
+        asset.file_attacher.create_persisted_derivatives(:options, string_io_source)
+        expect(asset.file_derivatives).to be_present
+      end
+
+      it "works with custom source StringIO as only arg" do
+        asset.file_attacher.create_persisted_derivatives(string_io_source)
+
+        string_io_source.rewind
+        expect(asset.file_derivatives[:original_reflected].read).to eq(string_io_source.read)
+      end
     end
 
     describe "for an asset with nil file_data" do
@@ -308,7 +324,7 @@ describe Shrine::Plugins::KithePersistedDerivatives, queue_adapter: :test do
         expect(asset.changed?).to be(false)
         asset.reload
         expect(asset.title).to eq("changed title")
-        expect(asset.file_derivatives.keys).to match([:one, :two])
+        expect(asset.file_derivatives.keys).to match([:one, :original_reflected])
       end
     end
   end
