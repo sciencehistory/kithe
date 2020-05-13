@@ -259,6 +259,19 @@ describe Shrine::Plugins::KithePersistedDerivatives, queue_adapter: :test do
       end
     end
 
+    describe "for an asset with missing original" do
+      let(:asset) { AssetSubclass.create!(title: "blank", file_data: { storage: "cache", id: "not_found"}) }
+
+      it "raises" do
+        expect(asset.file.exists?).to be(false)
+
+        # Not necessarily what kithe 1.x did, but this seems better...
+        expect {
+          asset.file_attacher.create_persisted_derivatives
+        }.to raise_error(Shrine::FileNotFound)
+      end
+    end
+
     it "can call custom processor" do
       asset.file_attacher.create_persisted_derivatives(:options)
 
