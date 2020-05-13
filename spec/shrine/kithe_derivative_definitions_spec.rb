@@ -175,13 +175,13 @@ describe "Shrine::Plugins::KitheDerivativeDefinitions", queue_adapter: :test do
 
     it "can call with only and except" do
       expect(monitoring_proc1).to receive(:call).and_call_original
-      expect(monitoring_proc2).not_to receive(:call)
+      expect(monitoring_proc2).to receive(:call).and_call_original
       expect(monitoring_proc3).not_to receive(:call)
 
       # string version of except why not
       asset.file_attacher.create_derivatives(:kithe_derivatives, only: [:one, :two], except: :three)
 
-      expect(asset.file_derivatives.keys).to eq([:one])
+      expect(asset.file_derivatives.keys).to eq([:one, :two])
     end
   end
 
