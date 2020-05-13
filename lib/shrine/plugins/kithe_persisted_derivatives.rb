@@ -104,8 +104,9 @@ class Shrine
         #
         #     asset.file_attacher.create_persisted_derivatives
         #     asset.file_attacher.create_persisted_derivatives(storage: :custom_key)
-        #     asset.file_attacher.create_persisted_derivatives(:custom_processor)
-        #     asset.file_attacher.create_persisted_derivatives(:custom_processor, some_arg: "value")
+        #     asset.file_attacher.create_persisted_derivatives(:kithe_derivatives)
+        #     asset.file_attacher.create_persisted_derivatives(:kithe_derivatives, some_arg: "value")
+        #     asset.file_attacher.create_persisted_derivatives(:kithe_derivatives, alternate_source_file)
         #
         # Also has an `allow_other_changes` argument, see #add_persisted_derivatives.
         def create_persisted_derivatives(*args, storage: nil, allow_other_changes: false, **options)
