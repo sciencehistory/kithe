@@ -42,21 +42,22 @@ module Kithe
     # https://github.com/shrinerb/shrine/blob/master/doc/plugins/rack_response.md
     plugin :rack_response
 
-
-
-
-
+    plugin :infer_extension, inferrer: :mini_mime
 
     # kithe-standard logic for sniffing mime type.
     plugin :kithe_determine_mime_type
 
     # Ensures md5, sha1, and sha512 are stored as metadata, calculated on promotion.
-    # sha512 is used by other shrine logic as a fingerprint of identity.
     plugin :kithe_checksum_signatures
 
-    # Allows you to assign hashes like:
+    # Allows you to assign hashes with key "remote_url" to trigger fetch of
+    # arbitrary url to assign to Asset. Eg:
+    #
     #    { "id" => "http://url", "storage" => "remote_url", headers: { "Authorization" => "Bearer whatever"}}
-    # (headers optional), for fetching remote urls on promotion. Useful with browse-everything.
+    #
+    # headers key optional, client headers will be supplied when fetching remote urls. Urls will
+    # be fetched on promotion. Useful with browse-everything.
+    #
     # WARNING: There's no whitelist, will accept any url. Is this a problem?
     plugin :kithe_accept_remote_url
 
@@ -74,5 +75,8 @@ module Kithe
 
     # Makes our before/after promotion callbacks get called.
     plugin :kithe_promotion_callbacks
+
+    # some configuration and convenience methods for shrine derivatives.
+    plugin :kithe_derivatives
   end
 end

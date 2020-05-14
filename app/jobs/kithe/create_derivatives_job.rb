@@ -1,7 +1,7 @@
 module Kithe
   class CreateDerivativesJob < Job
-    def perform(asset, mark_created: nil)
-        asset.create_derivatives(mark_created: mark_created)
+    def perform(asset)
+        asset.create_derivatives
     end
     # This error typically occurs when several large assets, whose derivatives
     # take a long time to generate, are deleted immediately after ingest.

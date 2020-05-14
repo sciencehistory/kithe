@@ -3,9 +3,6 @@ require 'rails_helper'
 describe "Kithe::Asset promotion hooks", queue_adapter: :inline do
   temporary_class("TestAsset") do
     Class.new(Kithe::Asset) do
-      define_derivative :test do
-        # no-op, but we need a definition so will be scheduled
-      end
     end
   end
 
@@ -259,6 +256,20 @@ describe "Kithe::Asset promotion hooks", queue_adapter: :inline do
   end
 
   describe "promotion_directive :promote", queue_adapter: :test do
+    temporary_class("TestUploader") do
+      Class.new(Kithe::AssetUploader) do
+        self::Attacher.define_derivative :test do
+          # no-op, but we need a definition so will be scheduled
+        end
+      end
+    end
+
+    temporary_class("TestAsset") do
+      Class.new(Kithe::Asset) do
+        set_shrine_uploader(TestUploader)
+      end
+    end
+
     it "can cancel promotion" do
       expect_any_instance_of(Kithe::AssetUploader::Attacher).not_to receive(:promote)
 

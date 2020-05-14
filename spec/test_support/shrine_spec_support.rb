@@ -59,8 +59,9 @@ require "stringio"
 class FakeIO
   attr_reader :original_filename, :content_type
 
-  def initialize(content, filename: nil, content_type: nil)
+  def initialize(content, filename: nil, content_type: nil, encoding: "BINARY")
     @io = StringIO.new(content)
+    @io.set_encoding(encoding, encoding) # weird ruby workaround
     @original_filename = filename
     @content_type = content_type
   end

@@ -42,7 +42,6 @@ Gem::Specification.new do |s|
 
   s.add_development_dependency "pg"
   s.add_development_dependency "yard-activesupport-concern"
-  s.add_development_dependency "shrine-memory"
   s.add_development_dependency "webmock", "~> 3.0"
   s.add_development_dependency 'sane_patch', "< 2"
 end

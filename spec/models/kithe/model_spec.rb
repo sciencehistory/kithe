@@ -32,18 +32,6 @@ module Kithe
       end
     end
 
-    describe "eager-loading derivatives" do
-      let!(:work) { FactoryBot.create(:kithe_work) }
-      let!(:collection) { FactoryBot.create(:kithe_collection) }
-      let!(:asset) { FactoryBot.create(:kithe_asset) }
-
-      it "work from hetereogeous collections" do
-        results = Kithe::Model.all.includes(:derivatives)
-        asset = results.to_a.find { |a| a.kind_of? Kithe::Asset }
-        expect(asset.derivatives.loaded?).to be(true)
-      end
-    end
-
     describe "contains association" do
       let(:collection1) { FactoryBot.create(:kithe_collection)}
       let(:collection2) { FactoryBot.create(:kithe_collection)}
@@ -72,25 +60,5 @@ module Kithe
         expect(work2.contained_by.count).to eq(0)
       end
     end
-
-    describe "with_representative_derivatives scope" do
-      let(:work) {
-        FactoryBot.create(:kithe_work, title: "test for preload",
-          members: [
-            FactoryBot.create(:kithe_work, representative: FactoryBot.create(:kithe_asset, :faked_derivatives)),
-            FactoryBot.create(:kithe_asset, :faked_derivatives),
-            FactoryBot.create(:kithe_asset, :faked_derivatives)
-          ])
-      }
-      it "pre-loads all representatives and derivatives" do
-        members = work.members.with_representative_derivatives.to_a
-
-        members.each do |member|
-          expect(member.association(:leaf_representative)).to be_loaded
-          expect(member.leaf_representative.association(:derivatives)).to be_loaded
-        end
-      end
-    end
-
   end
 end
