@@ -68,26 +68,43 @@ class Kithe::Asset < Kithe::Model
   #
   # Additionally, this has a feature to 'trick' shrine into not eager downloading
   # the original before our kithe_derivatives processor has a chance to decide if it
-  # needs to create any derivatives (based on only/except/lazy args), making no-op
+  # needs to create any derivatives (based on `lazy` arg), making no-op
   # create_derivatives so much faster and more efficient, which matters when doing
   # bulk operations say with our rake task.
   #
-  # kithe_derivatives processor does a Shrine.with_file to make sure
+  # kithe_derivatives processor must then do a Shrine.with_file to make sure
   # it's a local file, when needed.
   #
   # See https://github.com/shrinerb/shrine/issues/470
+  #
   def create_derivatives(only: nil, except: nil, lazy: false)
     source = file
+    return false unless source
 
-    if source.kind_of?(Shrine::UploadedFile)
-      # Trick shrine derivatives into not knowing it's an UploadedFile so it
-      # won't eagerly download please.
-      source.open do |source_as_io|
-        file_attacher.create_persisted_derivatives(:kithe_derivatives, source_as_io, only: only, except: except, lazy: lazy)
-      end
-    else
-      file_attacher.create_persisted_derivatives(:kithe_derivatives, source, only: only, except: except, lazy: lazy)
-    end
+    #local_files = file_attacher.process_derivatives(:kithe_derivatives, only: only, except: except, lazy: lazy)
+    local_files = _process_kithe_derivatives_without_download(source, only: only, except: except, lazy: lazy)
+
+    file_attacher.add_persisted_derivatives(local_files)
+  end
+
+  # Working around Shrine's insistence on pre-downloading original before calling derivative processor.
+  # We want to avoid that, so when our `lazy` argument is in use, original does not get eagerly downloaded,
+  # but only gets downloaded if needed to make derivatives.
+  #
+  # This is a somewhat hacky way to do that, loking at the internals of shrine `process_derivatives`,
+  # and pulling them out to skip the parts we don't want. We also lose shrine instrumentation
+  # around this action.
+  #
+  # See: https://github.com/shrinerb/shrine/issues/470
+  #
+  # If that were resolved, the 'ordinary' shrine thing would be to replace calls
+  # to this local private method with:
+  #
+  #     file_attacher.process_derivatives(:kithe_derivatives, only: only, except: except, lazy: lazy)
+  #
+  private def _process_kithe_derivatives_without_download(source, **options)
+    processor = file_attacher.class.derivatives_processor(:kithe_derivatives)
+    local_files = file_attacher.instance_exec(source, **options, &processor)
   end
 
   # Just a convennience for file_attacher.add_persisted_derivatives (from :kithe_derivatives),
