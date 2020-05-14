@@ -47,8 +47,8 @@ module Kithe
     # kithe-standard logic for sniffing mime type.
     plugin :kithe_determine_mime_type
 
-    # Ensures md5, sha1, and sha512 are stored as metadata, calculated on promotion.
-    plugin :kithe_checksum_signatures
+    # Just leave it here for otheres please
+    plugin :add_metadata
 
     # Allows you to assign hashes with key "remote_url" to trigger fetch of
     # arbitrary url to assign to Asset. Eg:

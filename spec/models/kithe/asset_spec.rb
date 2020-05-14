@@ -51,11 +51,6 @@ RSpec.describe Kithe::Asset, type: :model do
 
       # This is the file location/storage path, currently under UUID pk.
       expect(asset.file.id).to match %r{\Aasset/#{asset.id}/.*\.jpg}
-
-      # checksums
-      expect(asset.sha1).to eq(Digest::SHA1.hexdigest(File.open(source_path).read))
-      expect(asset.md5).to eq(Digest::MD5.hexdigest(File.open(source_path).read))
-      expect(asset.sha512).to eq(Digest::SHA512.hexdigest(File.open(source_path).read))
     end
 
     describe "pdf file" do
@@ -90,11 +85,6 @@ RSpec.describe Kithe::Asset, type: :model do
 
       # This is the file location/storage path, currently under UUID pk.
       expect(asset.file.id).to match %r{\Aasset/#{asset.id}/.*\.jpg}
-
-      # checksums
-      expect(asset.sha1).to eq(Digest::SHA1.hexdigest(File.open(sample_file_path).read))
-      expect(asset.md5).to eq(Digest::MD5.hexdigest(File.open(sample_file_path).read))
-      expect(asset.sha512).to eq(Digest::SHA512.hexdigest(File.open(sample_file_path).read))
     end
   end
 
@@ -144,7 +134,7 @@ RSpec.describe Kithe::Asset, type: :model do
       expect(asset.stored?).to be(true)
       expect(asset.file_attacher.stored?).to be(true)
       expect(asset.file.exists?).to be(true)
-      expect(asset.file.metadata.keys).to include("filename", "size", "mime_type", "width", "height", "md5", "sha1", "sha512")
+      expect(asset.file.metadata.keys).to include("filename", "size", "mime_type", "width", "height")
     end
 
     it "does not do anything for already promoted file", queue_adapter: :inline do
