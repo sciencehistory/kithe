@@ -57,5 +57,72 @@ namespace :kithe do
       end
     end
   end
+
+
+
+  namespace :migrate do
+    # Migrate kithe 1 derivatives to kithe 2 derivatives.
+    #
+    # Recommend your app is disabled or READ-ONLY when running this.
+    #
+    # You can run this with your app on a kithe 2 alpha release, in which
+    # case the Kithe::Derivative model and association from Asset still exists,
+    # so we can use it to migrate.
+    #
+    # If you are running on a Kithe 2.0 release past alpha, this rake task
+    # hackily creates a Kithe::Derivative class and association to it from
+    # Asset, so it can be used for fetching data for migration.
+    #
+    # After runnig this, before swictching out of read-only mode, the app
+    # should be upgraded to a full Kithe 2.0 release, using new shrine 3.0
+    # style derivatives, that we have migrated over.
+    #
+    # At a later point, it's up to you to remove the now un-used
+    # :kithe_derivatives table in a local migration
+    #
+    #         drop_table :kithe_derivatives
+    #
+    desc "Migrate derivatives from kithe 1 to kithe 2"
+    task :derivatives_to_2 => :environment do
+      # If we're on Kithe 2 past alpha, the :derivatives association is
+      # already missing, we're going to hackily add it back in for
+      # the purpose of this rake task.
+      #
+      # This is hacky, but good enough.
+      unless defined?(Kithe::Derivative)
+        class Kithe::Derivative < ApplicationRecord
+        end
+      end
+
+      unless Kithe::Asset.reflect_on_association(:derivatives)
+        Kithe::Asset.has_many :derivatives, foreign_key: "asset_id"
+      end
+
+      progress_bar = ProgressBar.create(total: Kithe::Asset.count, format: Kithe::STANDARD_PROGRESS_BAR_FORMAT)
+
+      Kithe::Asset.includes(:derivatives).find_each do |asset|
+        progress_bar.increment
+
+        next unless asset.file_data.present?
+
+        # Make a hash with { key_as_string => shrine_json_for_derivative }
+        # ...key for each existing old-style derivative
+        new_deriv_json = asset.derivatives.collect do |old_style_deriv|
+          [old_style_deriv.key.to_s, old_style_deriv.file_data]
+        end.to_h
+
+        # If there were no old-style derivatives nothing to do
+        next unless new_deriv_json.present?
+
+        # Take old-style derivatives and save them in the original file JSON
+        # structure, where shrine 3 derivatives feature expeects them.
+        asset.file_data["derivatives"] ||= {}
+        asset.file_data["derivatives"].merge!(new_deriv_json)
+
+        asset.save!
+      end
+      progress_bar.finish
+    end
+  end
 end
 
