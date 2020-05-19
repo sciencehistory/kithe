@@ -1,20 +1,24 @@
 # Kithe Derivatives
 
-Kithe has a custom implementation of derivatives, built on shrine, but not using the existing shrine plugins related to derivatives (such as shrine "versions"). At the time of this writing, existing shrine plugins were not suitable for us. By being able to assume ActiveRecord (rather than shrine's agnosticism), our particular Kithe::Asset model, and an uploader that takes SHA fingerprints, we are able to provide a derivatives framework to conveniently meet expected use cases.
+Kithe adds some additional features on top of Shrine 3.0+'s out of the box derivative feature. Shrine's derivative feature is very flexible and powerful, but also can be hard to get right. It would be a good idea to review shrine derivatives documentation:
 
-The Kithe Derivatives model is an ActiveRecord model -- each derivative is stored as a row in a  `kithe_derivatives` table, via the Kithe::Derivatives model.  A Kithe::Asset `has_many` Kithe::Derivatives, which each `belong_to` a Kithe::Asset, using ordinary ActiveRecord associations.
+* https://shrinerb.com/docs/plugins/derivatives
+* https://shrinerb.com/docs/processing
 
-    Kithe::Asset <-->> Kithe::Derivatives
+Kithe adds automatic derivative creation (only of `kithe_derivatives` processor) after promotion; and additional methods for defining and managing derivatives, including reliable concurrency-safe
+derivatives modification.
 
-Each Kithe::Derivative has a shrine attachment in the `file` attribute, and a string `key` identifying the type of derivative, such as `thumb_small`.
+You don't have to use kithe's value-added derivative features, but we recommend it.
 
-## Definining derivatives
+The `Kithe::AssetUploader` is also configured to store all derivatives in shrine storage `kithe_derivatives`,  rather than the same storage as original files. It's up to your app to define where `kithe_derivatives` points to; it could be the same location as `store` with a different prefix if you like.
 
-No derivatives are automatically defined/created by Kithe. You can define derivative definitions on your local Kithe::Asset subclass(es).
+## Creating Derivatives
+
+Shrine provides a way to define derivative processors;  kithe gives you an additional way to define individual derivatives, making it easier to later manage them ((re-)create certain derivative types) without re-writing code. No derivatives are defined by default by kithe.
 
 ```ruby
-class Asset < Kithe::Asset
-  define_derivative(:thumb_small) do |original_file|
+class MyAssetUploader < Kithe::AssetUploader
+  Attacher.define_derivative(:thumb_small) do |original_file|
     anything_that_returns_io_like_object(original_file)
   end
 end
@@ -23,6 +27,23 @@ end
 The `original_file` block parameter is a ruby `File` object, which is already open for reading. Since it's a File object, you can ask it for it's `#path` if you need a local file path for whatever transformation tool you are using.
 
 The object returned does not need to be a `File` object, it can be any [IO or IO-like](https://github.com/shrinerb/shrine#io-abstraction) object. If you return a ruby `File` or `Tempfile` object, kithe will take care of cleaning the file up from the local file system. You are responsible for cleaning up any intermediate files, ruby stdlib [Tempfile](https://docs.ruby-lang.org/en/2.5.0/Tempfile.html) and [Dir.mktmpdir](https://docs.ruby-lang.org/en/2.5.0/Dir.html#method-c-mktmpdir) may be useful.
+
+The kithe derivative definition functionality is provided by shrine plugins [kithe_derivative_definitions](../lib/shrine/plugins/kithe_derivative_definitions.rb).
+
+Once defined, you could create them using standard shrine methods, with the `kithe_derivatives` processor.
+
+```ruby
+# NOT RECOMMENDED
+asset.file_attacher.create_derivatives(:kithe_derivatives)
+```
+
+But we recommend you use kithe's concurrency-safe derivative modification methods instead, below.
+
+### The kithe_derivatives processor: Custom lifecycle
+
+All derivatives defined this way will be created by a shrine derivatives processor called `kithe_derivatives`.
+
+This shrine derivatives processor is ordinarily automatically executed by kithe _after_ file promotion, in a separate background job. See Kithe Custom Asset Lifecycle.
 
 ### Kithe-provided derivative-creation tools
 
@@ -66,7 +87,7 @@ define_derivative('webm', content_type: "audio") do |original_file|
 end
 ```
 
-### Definining derivatives based on original content-type
+### Definining derivatives for specific original content-type
 
 If you'd like to have a definition that only is invoked for certain content-types, you can supply a `content_type` arg with a content-type like `"image/jpeg"`, or just the primary type like `"image"`.
 
@@ -96,19 +117,6 @@ end
 ```
 
 
-### Specifying a derivative-specific shrine storage
-
-Derivatives are by default stored to the Shrine storage set for `kithe_derivatives`. If you'd
-like to have certain derivatives stored elsewhere, you can supply a `storage_key` arg specifying a [shrine storage you have defined](./file_handling.md#definingStorage).
-
-```ruby
-class Asset < Kithe::Asset
-  define_derivative(:download_huge, storage_key: :some_shrine_storage) do |original_file|
-    anything_that_returns_io_like_object(original_file)
-  end
-end
-```
-
 ### Definining non-default derivatives
 
 The derivative defined above will be automatically created after Asset promotion. If you'd like to create a derivative definition that will not be automatically created, but can be invoked manually with `create_derivatives` (see below), you can define it with `default_create: false`.
@@ -121,17 +129,15 @@ class Asset < Kithe::Asset
 end
 ```
 
-## Derivatives in background
-
-The default derivatives are created automatically in the shrine promotion step.
-
-If you have an asset, and want to know if the default derivatives have been created yet, you can look at `asset.deriatives_created?`.  As the background process makes a mark in the asset shrine metadata when it's complete.
-
-For more info on disabling default derivative generation or forcing it to be inline, see the [File Handling Guide](./file_handling#callbacks).
-
 ## Manually triggering derivative definitions to be created
 
 You can always call `Kithe::Asset#create_derivatives` on any asset to trigger creation from derivative definitions. This is the same method ordinarily used automatically. It will always be executed inline without triggering a BG job, if you want concurrency you can wrap it yourself.
+
+It will by default only execute the `kithe_derivatives` processor; derivative definitions defined using kithe's `define_derivative` function above.
+
+If derivatives already exist, they will ordinarily be re-created and overwritten (in a concurrency-safe way).
+
+You can give the `kithe_derivatives` processor additional arguments to limit what derivative definitions get created. `lazy:true` will only create derivatives that don't already exist, useful for filling in derivatives for a newly added definition. `only` and `except` can also be used to specify a subset of derivative definitions.
 
 ```ruby
 # (Re-)create all derivatives from default definitions, perhaps becuase you've
@@ -145,75 +151,71 @@ some_asset.create_derivatives(lazy:true)
 some_asset.create_derivatives(only: [:thumb_small, :thumb_medium])
 ```
 
+Derivative definitions not applicable to the content-type of an asset original will simply be skipped. Derivative definitions defined as `create_default: false`, will only be used if included in an `only` argument.
+
 ## Rake tasks
 
-Kithe gives you some rake tasks for creating derivatives. The tasks will not use ActiveJob, but create all derivatives inline, with a nice progress bar.
+Kithe gives you some rake tasks for creating derivatives in bulk. The tasks will not use ActiveJob, but create all derivatives inline, with a nice progress bar.
 
-`./bin/rake kithe:create_derivatives:lazy_defaults` will go through all assets, and create derivatives for all derivative definitions you have configured, only for those derivative keys that don't yet exist. This is useful if you've added a new derivative definition, or otherwise want to ensure all derivatives are created. It will also set the flag for `asset.derivatives_created?` on every asset, after ensuring all derivatives are created.
+`./bin/rake kithe:create_derivatives:lazy_defaults` will go through all assets, and create derivatives for all derivative definitions you have configured, only for those derivative keys that don't yet exist. This is useful if you've added a new derivative definition, or otherwise want to ensure all derivatives are created.
 
 `./bin/rake kithe:create_derivatives` has more flexibility specify derivative definitions to create and other parameters, including forcefully re-creating (if your definitions have changed). More example docs could be useful, but for now try running `./bin/rake kithe:create_derivatives -- -h`
 
-## Concurrency contract
+## Manually modifying derivatives
 
-Especially with derivatives being created in the background, one could imagine cases where a two derivatives are attached with the same key; a derivative is attached to an Asset which has changed to a new original such that the derivative is no longer valid; "orphaned derivatives" exist for an asset that has been deleted.
+You may want to add and replace derivatives without a definition, or to delete existing derivatives. Shrine gives you tools to do this, but it can be a bit tricky to do it in a concurrency-safe way (if multiple processes are editing derivatives at once), and to ensure there are no leftover temporary files on disk even in error conditions. (See https://discourse.shrinerb.com/t/derivatives-and-persistence/230 and https://github.com/shrinerb/shrine/issues/468)
 
-Kithe derivatives logic makes sure that only one derivative for a given key on a particular asset exists; that an attached derivative found in the db always matches the original it's related to in the db; and that derivatives are properly deleted (both the ActiveRecord model and the bytestream in whatever storage) so can never become orphaned. The logic leans on existing shrine logic, uses database features like transactions and locks, and makes use of the calculated SHA512 checksum in the db to make sure derivatives match originals.
+This functionality is provided by the [kithe_peristed_derivatives](../lib/shrine/plugins/kithe_persisted_derivatives.rb) Shrine plugin. In addition to the `create_derivatives` method mentioned, other concurrency-safe value-added methods are provided by kithe.  For instance, it is safe to have two different background jobs using `create_derivatives` or `update_derivatives` at the same time with different keys -- all keys will get succesfully added.
 
-If this isn't happening, it's a bug.
+You can use all of these methods with derivatives created by standard shrine derivatives processors, not just the `kithe_derivatives` processor.
 
-This guarantee applies for automatic derivative creation, manual use of `#create_derivatives`, as well as `update_derivative` (below).
-
-The Kithe::CreateDerivativesJob should be idempotent, and safe to re-run on errors.
-
-## Manually adding derivative file without a definition
-
-If you'd like to set a derivative to an arbitrary bytestream without using the derivative definitions feature, you can use `update_derivative`.
-
-```ruby
-asset.update_derivative(:derivative_key, io_object)
-```
-
-You can also specify a shrine storage key to store under, and/or any custom metadata you'd like attached to the derivative.
-
-```ruby
-asset.update_derivative(:derivative_key, io_object,
-  storage_key: :some_shrine_storage,
-  metadata: {
-    "some_metadata_key" => "some_value"
-  }
-)
-```
-
-Using the `update_derivative` method, you are protected by the concurrency guarantees above. If a derivative with the specified key already existed, it will be properly replaced (and bytestream in storage will be properly cleaned up).
-
-## Accessing derivatives
-
-If you have an asset, you can simply look at it's `derivatives` association of Kithe::Derivatives.
-
-As a convenenience, you can also use `derivative_for` to find a Kithe::Derivative matching a certain key: `asset.derivative_for(:thumb_small)`.
-
-That will cause a load of the ActiveRecord `derivatives` association if it isn't already loaded. ActiveRecord eager-loading is encouraged to avoid "n+1 queries", see [Representative Guide](./work_representative.md#eagerLoading)
-
-Derivatives have some basic metadata calculated and available.
-
-```ruby
-derivative = asset.derivative_for(:thumb_small)
-derivative.content_type
-derivative.size # in bytes
-derivative.height, derivative.width # for images only
-```
-
-Additional metadata can be assigned when using `update_derivative`. There isn't current API to assign/define additional metadata using derivative definitions.
-
-A Kithe::Derivative object has a shrine attachment in `derivative.file`, and delegates `derivative.url` to `derivative.file.url`.
-
-See guidance for delivering files to browser in [File Handling Guide](./file_handling.md#readingFiles), it all applies to derivatives as well.
-
-## Deleting derivative
-
-You can just delete the Kithe::Derivative instance through ordinary ActiveRecord, there are no concurrency concerns. As a convenience, you can also do:
+`Asset#remove_derivative` will delete derivatives, making sure the actual files are cleaned up from storage, and save the `Asset` model reflecting the change.
 
 ```ruby
 asset.remove_derivative(:thumb_small)
+asset.remove_derivative(:thumb_small, :thumb_large)
 ```
 
+You can add (or replace) derivatives, as a specified file, with `Asset.update_derivative` or `update_derivatives`.
+
+```ruby
+asset.update_derivative(:thumb_small, File.open("something"))
+asset.update_derivatives({ thumb_large: any_io_object)
+```
+
+Files passed in are assumed to be temporary and deleted, you can pass `delete:false` to disable this.
+
+You can in fact pass in any options recognized by [shrine add_derivatives](https://shrinerb.com/docs/plugins/derivatives#adding-derivatives), including custom storage location and storage upload options; as well as specified metadata to be attached to derivative.
+
+
+## Accessing derivatives
+
+You access derivatives in the normal shrine way, they are just shrine derivatives once created, on the `file` attachment.
+
+```ruby
+asset.file_derivatives # a hash of derivative keys and Shrine::UploadedFile objects
+asset.file_derivatives.has_key?(:thumb_small) # do we have one?
+asset.file_derivatives[:thumb_small].exists? # is it in place on storage as expected?
+asset.file(:thumb_small) # Shrine::Uploaded file for :thumb_small derivative
+asset.file_url(:thumb_small) # one way to get derivative url
+# can pass usual shrine options, in this case for S3 storage...
+asset.file_url(:thumb_small, public: false, expires_in: time)
+```
+
+Derivatives also have some basic metadata calculated and available.
+
+```ruby
+asset.file_derivatives[:thumb_small].content_type
+asset.file_derivatives[:thumb_small].size # in bytes
+
+# for images only:
+asset.file_derivatives[:thumb_small].width
+asset.file_derivatives[:thumb_small].height
+
+asset.file_derivatives[:thumb_small].metadata # hash with string keys
+```
+
+You can add more metadata extractors for derivatives using standard shrine techniques.
+
+
+See guidance for delivering files to browser in [File Handling Guide](./file_handling.md#readingFiles), it all applies to derivatives as well.
