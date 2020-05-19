@@ -38,17 +38,16 @@ module Kithe
     # ignore errors (often due to storing a non-image file), consistent with shrine 2.x behavior.
     plugin :store_dimensions, on_error: :ignore
 
-    # Useful in case consumers want it, and doesn't harm anything to be available.
-    # https://github.com/shrinerb/shrine/blob/master/doc/plugins/rack_response.md
-    plugin :rack_response
-
     plugin :infer_extension, inferrer: :mini_mime
-
-    # kithe-standard logic for sniffing mime type.
-    plugin :kithe_determine_mime_type
 
     # Just leave it here for otheres please
     plugin :add_metadata
+
+
+
+
+    # kithe-standard logic for sniffing mime type.
+    plugin :kithe_determine_mime_type
 
     # Determines storage path/location/id, so files will be stored as:
     #      /asset/#{asset_pk}/#{random_uuid}.#{original_suffix}
