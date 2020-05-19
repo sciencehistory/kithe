@@ -140,8 +140,12 @@ class Kithe::Asset < Kithe::Model
   # @return [Shrine::UploadedFile] the Derivative created, or false if it was not created because no longer
   #   applicable (underlying Asset#file has changed in db)
   def update_derivative(key, io, **options)
-    result = file_attacher.add_persisted_derivatives({ key => io }, **options)
+    result = update_derivatives({ key => io }, **options)
     result && result.values.first
+  end
+
+  def update_derivatives(deriv_hash, **options)
+    file_attacher.add_persisted_derivatives(deriv_hash, **options)
   end
 
   # just a convenience for kithe remove_persisted_derivatives
