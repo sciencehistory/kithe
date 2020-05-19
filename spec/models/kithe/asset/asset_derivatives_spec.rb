@@ -71,7 +71,7 @@ describe "customized shrine derivatives", queue_adapter: :inline do
       asset = CustomAsset.create!(title: "test", file: File.open(original_file_path))
       asset.reload
 
-      asset.remove_derivative(:fixed)
+      asset.remove_derivatives(:fixed)
       expect(asset.file_derivatives.keys).to be_empty
       asset.reload
       expect(asset.file_derivatives.keys).to be_empty

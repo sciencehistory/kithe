@@ -145,8 +145,8 @@ class Kithe::Asset < Kithe::Model
   end
 
   # just a convenience for kithe remove_persisted_derivatives
-  def remove_derivative(key)
-    file_attacher.remove_persisted_derivatives(key)
+  def remove_derivatives(*keys)
+    file_attacher.remove_persisted_derivatives(*keys)
   end
 
   # Runs the shrine promotion step, that we normally have in backgrounding, manually
