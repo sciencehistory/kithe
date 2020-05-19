@@ -50,17 +50,6 @@ module Kithe
     # Just leave it here for otheres please
     plugin :add_metadata
 
-    # Allows you to assign hashes with key "remote_url" to trigger fetch of
-    # arbitrary url to assign to Asset. Eg:
-    #
-    #    { "id" => "http://url", "storage" => "remote_url", headers: { "Authorization" => "Bearer whatever"}}
-    #
-    # headers key optional, client headers will be supplied when fetching remote urls. Urls will
-    # be fetched on promotion. Useful with browse-everything.
-    #
-    # WARNING: There's no whitelist, will accept any url. Is this a problem?
-    plugin :kithe_accept_remote_url
-
     # Determines storage path/location/id, so files will be stored as:
     #      /asset/#{asset_pk}/#{random_uuid}.#{original_suffix}
     plugin :kithe_storage_location
