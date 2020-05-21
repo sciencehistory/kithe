@@ -24,6 +24,7 @@ We set up file handling to do expensive work (metadata extraction, derivatives, 
 
 We also ensure all configuration works well with "direct uploads" -- javascript in browser uploading directly to storage location. For instance, metadata extraction and derivative generation are configured to happen at the `promotion` stage (ordinarily in an ActiveJob), since the complete file will not be available earlier than that when using direct upload techniques.
 
+See also our separate [Derivatives Guide](./derivatives.md)
 
 
 <a name="definingStorage"></a>
@@ -106,13 +107,15 @@ Along with custom kithe functionality documented below.
 <a name="attachmentLifecycle"></a>
 ## Attachment Lifecycle
 
-Shrine uses a tow-stage storage flow. All shrine attachments have a "cache" storage location which is used for files that have not yet been permanently saved, and a "store" storage location which files are moved to once the model they are attached to (in this case a Kithe::Asset) has had the attachment succesfully saved and committed to the database. Shrine uses the term "promotion" for the process of moving a file from "cache" to "store".
+Shrine uses a two-stage storage flow. All shrine attachments have a "cache" storage location which is used for files that have not yet been permanently saved, and a "store" storage location which files are moved to once the model they are attached to (in this case a Kithe::Asset) has had the attachment succesfully saved and committed to the database. (This allows a file to be somewhere in order for it or it's associated model to be validated or otherwise checked before it's permanently saved).  Shrine uses the term <i>promotion</i> for the process of moving a file from `cache` to `store`.
 
-If you are using "direct uploads", Javascript in the browser sends the upload to the `cache` location. Then you save it's location in the `Asset` model.
+If you are using "direct uploads", Javascript in the browser sends the upload to the `cache` location before the user has even submitted a form. Upon submitting a form, the cache location is set in the `Asset` model. After saving the asset model with a new cache location, <i>promotion</i> is triggered.
 
-Then during "promotion", the file is copied to the permanent `store` location. In kithe, the promotion phase happens by default in a background ActiveJob, and also by default includes metadata extraction and [derivative generation](./derivatives.md).
+During "promotion", the file is copied to the permanent `store` location. In kithe, the promotion phase happens by default in a background ActiveJob, and also by default includes metadata extraction and [derivative generation](./derivatives.md).
 
 kithe adds ActiveRecord-style callbacks around promotion to the Asset class: `before_promotion`, `after_promotion`, `around_promotion`. If promotion is happening in a bg job, all these callbacks will be triggered within that job.
+
+Let's outline the attachment ingest/add lifecycle again with more details:
 
 1. File or file location details are set on an asset
       ```
@@ -125,12 +128,12 @@ kithe adds ActiveRecord-style callbacks around promotion to the Asset class: `be
 2. After model is succesfully committed to DB (now pointing at file on "cache"), the Kithe::AssetPromoteJob is kicked off to handle promotion. You can ask `asset.stored?` to see if it's in permanent `store` location yet.
 
 3. `before_promotion` callbacks are called, and the have the opportunity cancel promotion.
-  * Kithe by default has a `before_promotion` hook to run any defined metadata extraction.
+    * Kithe by default has a `before_promotion` hook to run any defined metadata extraction.
 
 4. File is "promoted" to the permanent `store` location.
 
 5. If promotion was succesfully committed to the db, `after_promotion` callbacks are called.
-  * Kithe by default has an `after_promotion` hook to launch a *separate* job to [create any derivatives](./derivatives.md) defined with the `kithe_derivatives` processor.
+    * Kithe by default has an `after_promotion` hook to launch a *separate* job to [create any derivatives](./derivatives.md) defined with the `kithe_derivatives` processor.
 
 ### Attaching files
 
@@ -168,9 +171,9 @@ Direct uploads can be a little bit tricky to implement; kithe doesn't currently 
 
 When you are assigning a hash with existing `cache` location data, from a direct upload, very little is done on assignment, making it cheap and quick. After you succesfully save the model with the new assignment, "promotion" will be triggered in a background ActiveJob, from an `after_commit` hook, to stream the file from the remote location, extract metadata, and store.
 
-If you've fetched a Kithe::Asset, you can see if it's been promoted yet by checking `#stored?`.
+If you have a reference to a Kithe::Asset instance, you can see if it's been promoted yet by checking its `#stored?` method.
 
-In any case, when you assign and save _new_ file information on an asset, any previous stored bytes and derivatives should be automatically cleaned up for you, in a reliable and concurrency-safe fashion.
+In any case, when you assign and save _new_ file information on an asset, any previous stored bytes and derivatives are automatically cleaned up for you, in a reliable and concurrency-safe fashion.
 
 <a name="readingFiles"></a>
 ### Reading files and file info
@@ -181,11 +184,11 @@ This is all done via entirely standard Shrine techniques.
 
 You can also access some metadata about the file; many methods are delegated from `Kithe::Asset`, so you can just ask for `asset.size` (filesize in bytes), as well as `#original_filename`, `#content_type`,  `#height`, and `#width`. Most of these metadata fields are only available after "promotion" has occured, you can ask `some_asset.stored?` to see if promotion is complete.
 
-### Delivering bytestreams to browser
+### Asset URLs and Delivering bytestreams to browser
 
 You could write a controller action to return the file bytes, similar to what Hyrax does via it's [DownloadController](https://github.com/samvera/hyrax/blob/d4dcf4c6cb2a98f375d0a8aded97f428ce10ead0/app/controllers/hyrax/downloads_controller.rb).
 
-The [shrine rack_response plugin](https://github.com/shrinerb/shrine/blob/v2.15.0/doc/plugins/rack_response.md), can be used, making it fairly straightforward to write a delivery action -- even supporting HTTP "Range" headers.  It should stream the bytes directly from your remote storage (eg S3); however, there can be some [difficulties in making sure Rails is streaming and not buffering](https://github.com/rails/rails/issues/18714#issuecomment-96204444).  And even in the best case, you are still keeping a Rails request worker busy for at least as long as it takes to stream the bytes from the remote storage. So we don't recommend this technique.
+The [shrine rack_response plugin](https://github.com/shrinerb/shrine/blob/v2.15.0/doc/plugins/rack_response.md) could be used for this, making it fairly straightforward to write a delivery action -- even supporting HTTP "Range" headers.  It should stream the bytes directly from your remote storage (eg S3); however, there can be some [difficulties in making sure Rails is streaming and not buffering](https://github.com/rails/rails/issues/18714#issuecomment-96204444).  And even in the best case, you are still keeping a Rails request worker busy for at least as long as it takes to stream the bytes from the remote storage. _So we don't recommend this technique._
 
 Alternately, you can get a URL directly to the asset at whatever storage location, with `an_asset.file.url` -- a method on the Shrine::UploadedFile, which is forwarded to the relevant Shrine::Storage class.
 
