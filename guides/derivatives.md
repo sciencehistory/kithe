@@ -1,11 +1,13 @@
 # Kithe Derivatives
 
-Kithe adds some additional features on top of Shrine 3.0+'s out of the box derivative feature. Shrine's derivative feature is very flexible and powerful, but also can be hard to get right. It would be a good idea to review shrine derivatives documentation:
+Kithe adds some additional features on top of Shrine 3.0+'s out of the box derivative feature. Shrine's derivative feature is very flexible and powerful, but can be a lot of pieces to get working properly for you. Kithe tries to set things up to work out of the box with a good setup for a digital collections/repository app, while still allowing you the full range of shrine powers.
+
+It would be a good idea to review shrine derivatives documentation:
 
 * https://shrinerb.com/docs/plugins/derivatives
 * https://shrinerb.com/docs/processing
 
-Kithe adds automatic derivative creation (only of `kithe_derivatives` processor) after promotion; and additional methods for defining and managing derivatives, including reliable concurrency-safe
+Kithe adds automatic derivative creation after promotion (only of derivatives defined using kithe mechanisms for `kithe_derivatives` processor, more below); and additional methods for defining and managing derivatives, including reliable concurrency-safe
 derivatives modification.
 
 You don't have to use kithe's value-added derivative features, but we recommend it.
@@ -14,7 +16,7 @@ The `Kithe::AssetUploader` is also configured to store all derivatives in shrine
 
 ## Creating Derivatives
 
-Shrine provides a way to define derivative processors;  kithe gives you an additional way to define individual derivatives, making it easier to later manage them ((re-)create certain derivative types) without re-writing code. No derivatives are defined by default by kithe.
+Shrine provides [a way to define derivative processors](https://shrinerb.com/docs/plugins/derivatives#creating-derivatives);  kithe gives you an additional way to define individual derivatives, making it easier to later manage them — (re-)create certain derivative types — re-using your definitions.
 
 ```ruby
 class MyAssetUploader < Kithe::AssetUploader
@@ -28,27 +30,32 @@ The `original_file` block parameter is a ruby `File` object, which is already op
 
 The object returned does not need to be a `File` object, it can be any [IO or IO-like](https://github.com/shrinerb/shrine#io-abstraction) object. If you return a ruby `File` or `Tempfile` object, kithe will take care of cleaning the file up from the local file system. You are responsible for cleaning up any intermediate files, ruby stdlib [Tempfile](https://docs.ruby-lang.org/en/2.5.0/Tempfile.html) and [Dir.mktmpdir](https://docs.ruby-lang.org/en/2.5.0/Dir.html#method-c-mktmpdir) may be useful.
 
-The kithe derivative definition functionality is provided by shrine plugins [kithe_derivative_definitions](../lib/shrine/plugins/kithe_derivative_definitions.rb).
+The kithe derivative definition functionality comes from a kithe plugin to shrine, [kithe_derivative_definitions](../lib/shrine/plugins/kithe_derivative_definitions.rb).
 
-Once defined, you could create them using standard shrine methods, with the `kithe_derivatives` processor.
+Once defined, you _could_ create them using standard shrine methods, as the `kithe_derivatives` processor is regsitered as a standard shrine derivatives processor to execute these definitions:
 
 ```ruby
 # NOT RECOMMENDED
 asset.file_attacher.create_derivatives(:kithe_derivatives)
 ```
 
-But we recommend you use kithe's concurrency-safe derivative modification methods instead, below.
+But we don't recommend this. Normally, kithe's asset lifecycle will automatically create derivatives after promotion. (See [Attachment Lifecycle](./file_handing.md#attachmentLifecycle) and [Customizing the ingest lifecycle](./file_handing.md#customizingLifecycle) in the [File Handling Guide](./file_handing.md))
 
-### The kithe_derivatives processor: Custom lifecycle
+If you do need to manually trigger derivative creation, you can use kithe's concurrency-safe derivative modification methods, such as:
 
-All derivatives defined this way will be created by a shrine derivatives processor called `kithe_derivatives`.
 
-This shrine derivatives processor is ordinarily automatically executed by kithe _after_ file promotion, in a separate background job. See [Attachment Lifecycle](./file_handing.md#attachmentLifecycle) and [Customizing the ingest lifecycle](./file_handing.md#customizingLifecycle) in the [File Handling Guide](./file_handing.md)
+```ruby
+asset.create_derivatives
+```
+
+More below.
 
 ### Kithe-provided derivative-creation tools
 
 While you can write whatever logic you want as a derivative definition, kithe currently packages two (more in the future) services:
+
     * Kithe::VipsCliImageToJpeg, which can create a resized JPG from an image input, using a shell out to the `vips` and `vipsthumbnail` command-line tools.
+
     * Kithe::FfmpegTransformer, which creates audio files from any audio file original, using a shell out to the `ffmpeg` command-line tool.
 
 ```ruby
@@ -131,9 +138,7 @@ end
 
 ## Manually triggering derivative definitions to be created
 
-You can always call `Kithe::Asset#create_derivatives` on any asset to trigger creation from derivative definitions. This is the same method ordinarily used automatically. It will always be executed inline without triggering a BG job, if you want concurrency you can wrap it yourself.
-
-It will by default only execute the `kithe_derivatives` processor; derivative definitions defined using kithe's `define_derivative` function above.
+You can always call `Kithe::Asset#create_derivatives` on any asset to trigger the `kithe_derivatives` processor in a concurrency-safe way, creating all derivatives you defined with kithe `define_derivative` as above. This is the same method ordinarily used by kithe for automatic lifecycle derivarive creation. When you call it manually, it will always be executed inline without triggering a BG job, if you want concurrency you can wrap it yourself.
 
 If derivatives already exist, they will ordinarily be re-created and overwritten (in a concurrency-safe way).
 
@@ -190,7 +195,7 @@ You can in fact pass in any options recognized by [shrine add_derivatives](https
 
 ## Accessing derivatives
 
-You access derivatives in the normal shrine way, they are just shrine derivatives once created, on the `file` attachment.
+You access derivatives in the [normal shrine way](https://shrinerb.com/docs/plugins/derivatives#retrieving-derivatives), they are just shrine derivatives once created, on the `file` attachment.
 
 ```ruby
 asset.file_derivatives # a hash of derivative keys and Shrine::UploadedFile objects
