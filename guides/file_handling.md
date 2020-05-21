@@ -103,6 +103,7 @@ The [Kithe::AssetUploader](../app/uploaders/kithe/asset_uploader.rb) is a shrine
 
 Along with custom kithe functionality documented below.
 
+<a name="attachmentLifecycle"></a>
 ## Attachment Lifecycle
 
 Shrine uses a tow-stage storage flow. All shrine attachments have a "cache" storage location which is used for files that have not yet been permanently saved, and a "store" storage location which files are moved to once the model they are attached to (in this case a Kithe::Asset) has had the attachment succesfully saved and committed to the database. Shrine uses the term "promotion" for the process of moving a file from "cache" to "store".
@@ -224,6 +225,7 @@ class LocalAsset < Kithe::Asset
 At the point the before callback is triggered, metadata has already been extracted, and you have access to it. If you abort the promotion, the extracted metadata will not be saved, and promotion won't happen. It's up to you and your app to log or store or notify that this happened in whatever way makes sense, kithe data structures won't make it clear why promotion didn't happen.
 
 
+<a name="customizingLifecycle"></a>
 ### Customizing the ingest lifecycle
 
 After you save a Kithe::Asset where you've _changed_ the `file` attachment, after the db commit has succeeded, shrine will ordinarily trigger promotion. Kithe sets up some custom logic to by default put promotion in a background job, and automatically trigger derivatives creation after promotion, in a separate background job.

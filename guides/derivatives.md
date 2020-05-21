@@ -43,7 +43,7 @@ But we recommend you use kithe's concurrency-safe derivative modification method
 
 All derivatives defined this way will be created by a shrine derivatives processor called `kithe_derivatives`.
 
-This shrine derivatives processor is ordinarily automatically executed by kithe _after_ file promotion, in a separate background job. See Kithe Custom Asset Lifecycle.
+This shrine derivatives processor is ordinarily automatically executed by kithe _after_ file promotion, in a separate background job. See [Attachment Lifecycle](./file_handing.md#attachmentLifecycle) and [Customizing the ingest lifecycle](./file_handing.md#customizingLifecycle) in the [File Handling Guide](./file_handing.md)
 
 ### Kithe-provided derivative-creation tools
 
