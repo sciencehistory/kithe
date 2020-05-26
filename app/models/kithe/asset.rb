@@ -1,5 +1,5 @@
 class Kithe::Asset < Kithe::Model
-  has_many :derivatives, foreign_key: "asset_id", inverse_of: "asset", dependent: :destroy # dependent destroy to get shrine destroy logic for assets
+  include Kithe::Asset::SetShrineUploader
 
   # These associations exist for hetereogenous eager-loading, but hide em.
   # They are defined as self-pointing below.
@@ -19,22 +19,19 @@ class Kithe::Asset < Kithe::Model
 
   # TODO we may need a way for local app to provide custom uploader class.
   # or just override at ./kithe/asset_uploader.rb locally?
-  include Kithe::AssetUploader::Attachment.new(:file)
+  include Kithe::AssetUploader::Attachment(:file)
 
   # for convenience, let's delegate some things to shrine parts
   delegate :content_type, :original_filename, :size, :height, :width, :page_count,
     :md5, :sha1, :sha512,
     to: :file, allow_nil: true
   delegate :stored?, to: :file_attacher
-  delegate :set_promotion_directives, to: :file_attacher
+  delegate :set_promotion_directives, :promotion_directives, to: :file_attacher
 
-  after_save :remove_invalid_derivatives
 
-  # will be sent to file_attacher.promotion_directives=, provided by our
+  # will be sent to file_attacher.set_promotion_directives, provided by our
   # kithe_promotion_hooks shrine plugin.
-  class_attribute :promotion_directives, instance_writer: false, default: {}
-
-  class_attribute :derivative_definitions, instance_writer: false, default: []
+  class_attribute :promotion_directives, instance_accessor: false, default: {}
 
   # Callbacks are called by our kiteh_promotion_callbacks shrine plugin, around
   # shrine promotion. A before callback can cancel promotion with the usual
@@ -42,84 +39,19 @@ class Kithe::Asset < Kithe::Model
   # to happen only after asset is promoted, like derivatives.
   define_model_callbacks :promotion
 
+  before_promotion :refresh_metadata_before_promotion
   after_promotion :schedule_derivatives
 
-  # Establish a derivative definition that will be used to create a derivative
-  # when #create_derivatives is called, for instance automatically after promotion.
+  # A convenience to call file_attacher.create_persisted_derivatives (from :kithe_derivatives)
+  # to create derivatives with conncurrent access safety, with the :kithe_derivatives
+  # processor argument, to create derivatives defined using kithe_derivative_definitions.
   #
-  # The most basic definition consists of a derivative key, and a ruby block that
-  # takes the original file, transforms it, and returns a ruby File or other
-  # (shrine-compatible) IO-like object. It will usually be done inside a custom Asset
-  # class definition.
+  # This is designed for use with kithe_derivatives processor, and has options only relevant
+  # to it, although could be expanded to take a processor argument in the future if needed.
   #
-  #     class Asset < Kithe::Asset
-  #       define_derivative :thumbnail do |original_file|
-  #       end
-  #     end
-  #
-  # The original_file passed in will be a ruby File object that is already open for reading. If
-  # you need a local file path for your transformation, just use `original_file.path`.
-  #
-  # The return value can be any IO-like object. If it is a ruby File or Tempfile,
-  # that temporary file will be deleted for you after the derivative has been created. If you
-  # have to make any intermediate files, you are responsible for cleaning them up. Ruby stdlib
-  # Tempfile and Dir.mktmpdir may be useful.
-  #
-  # If in order to do your transformation you need additional information about the original,
-  # just add a `record:` keyword argument to your block, and the Asset object will be passed in:
-  #
-  #     define_derivative :thumbnail do |original_file, record:|
-  #        record.width, record.height, record.content_type # etc
-  #     end
-  #
-  # Derivatives are normally uploaded to the Shrine storage labeled :kithe_derivatives,
-  # but a definition can specify an alternate Shrine storage id. (specified shrine storage key
-  # is applied on derivative creation; if you change it with existing derivatives, they should
-  # remain, and be accessible, where they were created; there is no built-in solution at present
-  # for moving them).
-  #
-  #     define_derivative :thumbnail, storage_key: :my_thumb_storage do |original| # ...
-  #
-  # You can also set `default_create: false` if you want a particular definition not to be
-  # included in a no-arg `asset.create_derivatives` that is normally triggered on asset creation.
-  #
-  # And you can set content_type to either a specific type like `image/jpeg` (or array of such) or a general type
-  # like `image`, if you want to define a derivative generation routine for only certain types.
-  # If multiple blocks for the same key are defined, with different content_type restrictions,
-  # the most specific one will be used.  That is, for a JPG, `image/jpeg` beats `image` beats no restriction.
-  def self.define_derivative(key, storage_key: :kithe_derivatives, content_type: nil, default_create: true, &block)
-    # Make sure we dup the array to handle sub-classes on class_attribute
-    self.derivative_definitions = self.derivative_definitions.dup.push(
-      DerivativeDefinition.new(
-        key: key,
-        storage_key: storage_key,
-        content_type: content_type,
-        default_create: default_create,
-        proc: block
-      )
-    )
-  end
-
-  # Returns all derivative keys with a definition, as array of strings
-  def self.defined_derivative_keys
-    self.derivative_definitions.collect(&:key).uniq.collect(&:to_s)
-  end
-
-  # If you have a subclass that has inherited derivative definitions, you can
-  # remove them -- only by key, will remove any definitions with that key regardless
-  # of content_type restrictions.
-  #
-  # This could be considered rather bad OO design, you might want to consider
-  # a different class hieararchy where you don't have to do this. But it's here.
-  def self.remove_derivative_definition!(*keys)
-    keys = keys.collect(&:to_sym)
-    self.derivative_definitions = self.derivative_definitions.reject do |defn|
-      keys.include?(defn.key.to_sym)
-    end
-  end
-
-  # Create derivatives for every definition added with `define_derivative. Ordinarily
-  # will create a definition for every definition that has not been marked `default_create: false`.
+  # Create derivatives for every definition added to uploader/attacher with kithe_derivatives
+  # `define_derivative`. Ordinarily will create a definition for every definition
+  # that has not been marked `default_create: false`.
   #
   # But you can also pass `only` and/or `except` to customize the list of definitions to be created,
   # possibly including some that are `default_create: false`.
@@ -131,23 +63,73 @@ class Kithe::Asset < Kithe::Model
   # but pass `lazy: false` to skip creating if a derivative with a given key already exists.
   # This will use the asset `derivatives` association, so if you are doing this in bulk for several
   # assets, you should eager-load the derivatives association for efficiency.
-  def create_derivatives(only: nil, except: nil, lazy: false, mark_created: nil)
-    DerivativeCreator.new(derivative_definitions, self, only: only, except: except, lazy: lazy, mark_created: mark_created).call
+  #
+  # ## Avoiding eager-download
+  #
+  # Additionally, this has a feature to 'trick' shrine into not eager downloading
+  # the original before our kithe_derivatives processor has a chance to decide if it
+  # needs to create any derivatives (based on `lazy` arg), making no-op
+  # create_derivatives so much faster and more efficient, which matters when doing
+  # bulk operations say with our rake task.
+  #
+  # kithe_derivatives processor must then do a Shrine.with_file to make sure
+  # it's a local file, when needed.
+  #
+  # See https://github.com/shrinerb/shrine/issues/470
+  #
+  def create_derivatives(only: nil, except: nil, lazy: false)
+    source = file
+    return false unless source
+
+    #local_files = file_attacher.process_derivatives(:kithe_derivatives, only: only, except: except, lazy: lazy)
+    local_files = _process_kithe_derivatives_without_download(source, only: only, except: except, lazy: lazy)
+
+    file_attacher.add_persisted_derivatives(local_files)
   end
 
-  # Adds an associated derivative with key and io bytestream specified.
+  # Working around Shrine's insistence on pre-downloading original before calling derivative processor.
+  # We want to avoid that, so when our `lazy` argument is in use, original does not get eagerly downloaded,
+  # but only gets downloaded if needed to make derivatives.
+  #
+  # This is a somewhat hacky way to do that, loking at the internals of shrine `process_derivatives`,
+  # and pulling them out to skip the parts we don't want. We also lose shrine instrumentation
+  # around this action.
+  #
+  # See: https://github.com/shrinerb/shrine/issues/470
+  #
+  # If that were resolved, the 'ordinary' shrine thing would be to replace calls
+  # to this local private method with:
+  #
+  #     file_attacher.process_derivatives(:kithe_derivatives, only: only, except: except, lazy: lazy)
+  #
+  private def _process_kithe_derivatives_without_download(source, **options)
+    processor = file_attacher.class.derivatives_processor(:kithe_derivatives)
+    local_files = file_attacher.instance_exec(source, **options, &processor)
+  end
+
+  # Just a convennience for file_attacher.add_persisted_derivatives (from :kithe_derivatives),
+  # feel free to use that if you want to add more than one etc.  By default stores to
+  # :kithe_derivatives, just as `add_persisted_derivatives` does.
+  #
+  # Note that just like shrine's own usual `add_derivative(s)`, it assumes any files
+  # you pass it are meant to be temporary and will delete them, unless you pass
+  # `delete: false`.
+  #
+  # Adds an associated derivative with key and io bytestream specified,
+  # doing so in a way that is safe from race conditions under multi-process
+  # concurrency.
+  #
   # Normally you don't use this with derivatives defined with `define_derivative`,
   # this is used by higher-level API. But if you'd like to add a derivative not defined
   # with `define_derivative`, or for any other reason would like to manually add
-  # a derivative, this is public API meant for that.
+  # a derivative.
   #
-  # Ensures safe from race conditions under multi-thread/process concurrency, to
-  # make sure any existing derivative with same key is atomically replaced,
-  # and if the asset#file is changed to a different bytestream (compared to what's in memory
-  # for this asset), we don't end up saving a derivative based on old one.
+  # Can specify any options normally allowed for kithe `add_persisted_derivatives`,
+  # which are also generally any allowed for shrine `add_derivative`.
   #
-  # Can specify any metadata values to be force set on the Derivative#file, and
-  # a specific Shrine storage key (defaults to :kithe_derivatives shrine storage)
+  #     asset.update_derivative("big_thumb", File.open(something))
+  #     asset.update_derivative("something", File.open(something), delete: false)
+  #     asset.update_derivative("something", File.open(something), storage_key: :registered_storage, metadata: { "foo": "bar" })
   #
   # @param key derivative-type identifying key
   # @param io An IO-like object (according to Shrine), bytestream for the derivative
@@ -155,43 +137,33 @@ class Kithe::Asset < Kithe::Model
   # @param metadata an optional hash of key/values to set as default metadata for the Derivative#file
   #   shrine object.
   #
-  # @return [Derivative] the Derivative created, or nil if it was not created because no longer
+  # @return [Shrine::UploadedFile] the Derivative created, or false if it was not created because no longer
   #   applicable (underlying Asset#file has changed in db)
-  def update_derivative(key, io, storage_key: :kithe_derivatives, metadata: {})
-    DerivativeUpdater.new(self, key, io, storage_key: storage_key, metadata: metadata).update.tap do |result|
-      self.derivatives.reset if result
-    end
+  def update_derivative(key, io, **options)
+    result = update_derivatives({ key => io }, **options)
+    result && result.values.first
   end
 
-  def remove_derivative(key)
-    if association(:derivatives).loaded?
-      derivatives.find_all { |d| d.key == key.to_s }.each do |deriv|
-        derivatives.delete(deriv)
-      end
-    else
-      Kithe::Derivative.where(key: key.to_s, asset: self).each do |deriv|
-        deriv.destroy!
-      end
-    end
+  def update_derivatives(deriv_hash, **options)
+    file_attacher.add_persisted_derivatives(deriv_hash, **options)
   end
 
-  # Just finds the Derivative object matching supplied key. if you're going to be calling
-  # this on a list of Asset objects, make sure to preload :derivatives association.
-  def derivative_for(key)
-    derivatives.find {|d| d.key == key.to_s }
+  # just a convenience for kithe remove_persisted_derivatives
+  def remove_derivatives(*keys)
+    file_attacher.remove_persisted_derivatives(*keys)
   end
 
   # Runs the shrine promotion step, that we normally have in backgrounding, manually
   # and in foreground. You might use this if a promotion failed and you need to re-run it,
-  # perhaps in bulk. It's also useful in tests.
+  # perhaps in bulk. It's also useful in tests. Also persists, using shrine `atomic_promote`.
   #
   # This will no-op unless the attached file is stored in cache -- that is, it
   # will no-op if the file has already been promoted. In this way it matches ordinary
   # shrine promotion. (Do we need an option to force promotion anyway?)
   #
-  # Note that calling `file_attacher.promote` on it's own won't do quite the right thing,
-  # and won't respect that the file is already cached.
-  def promote(action: :store, context: {})
+  # Note that calling `file_attacher.promote` or `atomic_promote` on it's own won't do
+  # quite the same things.
+  def promote(action: :store, **context)
     return unless file_attacher.cached?
 
     context = {
@@ -199,42 +171,7 @@ class Kithe::Asset < Kithe::Model
       record: self
     }.merge(context)
 
-    file_attacher.promote(file_attacher.get, **context)
-  end
-
-  # The derivative creator sets metadata when it's created all derivatives
-  # defined as `default_create`. So we can tell you if it's done or not.
-  def derivatives_created?
-    if file
-      !!file.metadata["derivatives_created"]
-    end
-  end
-
-  # Take out a DB lock on the asset with unchanged sha512 saved in metadata. If a lock
-  # can't be acquired -- which would be expected to be because the asset has already changed
-  # and has a new sha for some reason -- returns nil.
-  #
-  # Useful for making a change to an asset making sure it applies to a certain original file.
-  #
-  # Needs to be done in a transaction, and you should keep the transaction SMALL AS POSSIBLE.
-  # We can't check to make sure you're in a transaction reliably because of Rails transactional
-  # tests, you gotta do it!
-  #
-  # This method is mostly intended for internal Kithe use, cause it's a bit tricky.
-  def acquire_lock_on_sha
-    raise ArgumentError.new("Can't acquire lock without sha512 in metadata") if self.sha512.blank?
-
-    Kithe::Asset.where(id: self.id).where("file_data -> 'metadata' ->> 'sha512' = ?", self.sha512).lock.first
-  end
-
-  # Intentionally only true if there WAS a sha512 before AND it's changed.
-  # Allowing false on nil previous sha512 allows certain conditions, mostly only
-  # in testing, where you want to assign a derivative to not-yet-promoted file.
-  def saved_change_to_file_sha?
-    saved_change_to_file_data? &&
-      saved_change_to_file_data.first.try(:dig, "metadata", "sha512") != nil &&
-      saved_change_to_file_data.first.try(:dig, "metadata", "sha512") !=
-        saved_change_to_file_data.second.try(:dig, "metadata", "sha512")
+    file_attacher.atomic_promote(**context)
   end
 
   # An Asset is it's own representative
@@ -249,8 +186,10 @@ class Kithe::Asset < Kithe::Model
 
   def initialize(*args)
     super
-    if promotion_directives.present?
-      file_attacher.set_promotion_directives(promotion_directives)
+
+    # copy class-level global promotion directives as initial instance value
+    if self.class.promotion_directives.present?
+      self.set_promotion_directives(self.class.promotion_directives)
     end
   end
 
@@ -258,7 +197,7 @@ class Kithe::Asset < Kithe::Model
 
   # called by after_promotion hook
   def schedule_derivatives
-    return unless self.derivative_definitions.present? # no need to schedule if we don't have any
+    return unless self.file_attacher.kithe_derivative_definitions.present? # no need to schedule if we don't have any
 
     Kithe::TimingPromotionDirective.new(key: :create_derivatives, directives: file_attacher.promotion_directives) do |directive|
       if directive.inline?
@@ -269,11 +208,8 @@ class Kithe::Asset < Kithe::Model
     end
   end
 
-  # Meant to be called in after_save hook, looks at activerecord dirty tracking in order
-  # to removes all derivatives if the asset sha512 has changed
-  def remove_invalid_derivatives
-    if saved_change_to_file_sha?
-      derivatives.destroy_all
-    end
+  # Called by before_promotion hook
+  def refresh_metadata_before_promotion
+    file.refresh_metadata!(promoting: true)
   end
 end

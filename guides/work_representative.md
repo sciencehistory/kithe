@@ -50,24 +50,16 @@ There is no automatic _setting_ of a representative though. For instance, adding
 <a name="eagerLoading"></a>
 ## Eager-loading of representatives and derivatives
 
-If you are fetching a list of Kithe::Model objects to show, you will probably want the `leaf_representative` for all of them. You _may_ also want the full list of derivatives for all of them.
+If you are fetching a list of Kithe::Model objects to show, you will probably want the `leaf_representative` for all of them.
 
-You may be fetching a hetereogenous list that includes Assets, Works, and maybe Collections too. The Assets don't have representatives other than themselves, but need their derivatives eager-loaded. Everything else needs a representative loaded, and that representatives derivatives loaded.
+You may be fetching a hetereogenous list that includes Assets, Works, and maybe Collections too. The Assets don't have representatives other than themselves, but we've set things up
+so this simply works:
 
-No problem, like so:
-
-```ruby
-results = Kithe::Model.all.includes(:derivatives, leaf_representative: :derivatives)
-```
-
-All "leaf" representatives and derivatives will be eager-loaded by ActiveRecord, and for anything in your results list you can ask for `thing.representative` or `thing.representative.derivatives` without triggering additional db fetches (you are avoiding the "n+1 problem").
-
-So you might then get the actual "derivative" object to display for any hit, with eg `some_model.leaf_representative.derivative_for(:thumbnail)`, without accidentally triggering n+1 queries.
-
-Because this particular `includes` is a _bit_ tricky and so commonly needed, it's built into kithe.
-Use `with_representative_derivatives` wherever you can use a Rails scope to pre-load all leaf_representatives and all their derivatives.
 
 ```ruby
-  some_work.members.with_representative_derivatives
-  Kithe::Work.with_representative_derivatives.where(something: something)
+results = Kithe::Model.all.includes(:leaf_representative)
+results.each do |model|
+  model.leaf_representative # if asset will return `self`
+end
 ```
+

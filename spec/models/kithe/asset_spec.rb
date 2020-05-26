@@ -51,11 +51,6 @@ RSpec.describe Kithe::Asset, type: :model do
 
       # This is the file location/storage path, currently under UUID pk.
       expect(asset.file.id).to match %r{\Aasset/#{asset.id}/.*\.jpg}
-
-      # checksums
-      expect(asset.sha1).to eq(Digest::SHA1.hexdigest(File.open(source_path).read))
-      expect(asset.md5).to eq(Digest::MD5.hexdigest(File.open(source_path).read))
-      expect(asset.sha512).to eq(Digest::SHA512.hexdigest(File.open(source_path).read))
     end
 
     describe "pdf file" do
@@ -90,45 +85,9 @@ RSpec.describe Kithe::Asset, type: :model do
 
       # This is the file location/storage path, currently under UUID pk.
       expect(asset.file.id).to match %r{\Aasset/#{asset.id}/.*\.jpg}
-
-      # checksums
-      expect(asset.sha1).to eq(Digest::SHA1.hexdigest(File.open(sample_file_path).read))
-      expect(asset.md5).to eq(Digest::MD5.hexdigest(File.open(sample_file_path).read))
-      expect(asset.sha512).to eq(Digest::SHA512.hexdigest(File.open(sample_file_path).read))
     end
   end
 
-  describe "remote urls", queue_adapter: :inline do
-    it "can assign and promote" do
-      stub_request(:any, "www.example.com/bar.html?foo=bar").
-        to_return(body: "Example Response" )
-
-      asset.file = {"id" => "http://www.example.com/bar.html?foo=bar", "storage" => "remote_url"}
-      asset.save!
-      asset.reload
-
-      expect(asset.file.storage_key).to eq(asset.file_attacher.store.storage_key.to_s)
-      expect(asset.stored?).to be true
-      expect(asset.file.read).to include("Example Response")
-      expect(asset.file.id).to end_with(".html") # no query params
-    end
-
-    it "will fetch headers" do
-      stubbed = stub_request(:any, "www.example.com/bar.html?foo=bar").
-                  to_return(body: "Example Response" )
-
-      asset.file = {"id" => "http://www.example.com/bar.html?foo=bar",
-                    "storage" => "remote_url",
-                    "headers" => {"Authorization" => "Bearer TestToken"}}
-      asset.save!
-
-      expect(
-        a_request(:get, "www.example.com/bar.html?foo=bar").with(
-          headers: {'Authorization'=>'Bearer TestToken', 'User-Agent' => /.+/}
-        )
-      ).to have_been_made.times(1)
-    end
-  end
 
   describe "#promote", queue_adapter: :test do
     let(:asset) { FactoryBot.create(:kithe_asset, :with_file) }
@@ -143,7 +102,7 @@ RSpec.describe Kithe::Asset, type: :model do
       expect(asset.stored?).to be(true)
       expect(asset.file_attacher.stored?).to be(true)
       expect(asset.file.exists?).to be(true)
-      expect(asset.file.metadata.keys).to include("filename", "size", "mime_type", "width", "height", "md5", "sha1", "sha512")
+      expect(asset.file.metadata.keys).to include("filename", "size", "mime_type", "width", "height")
     end
 
     it "does not do anything for already promoted file", queue_adapter: :inline do
@@ -157,39 +116,28 @@ RSpec.describe Kithe::Asset, type: :model do
     end
   end
 
-  describe "#derivative_for" do
-    let!(:derivative) do
-      asset.derivatives.create!(key: "foo", file: StringIO.new("whatever"))
-    end
-    it "returns thing" do
-      expect(asset.derivative_for(:foo)).to eq(derivative)
-    end
-  end
-
   describe "removes derivatives", queue_adapter: :inline do
     let(:asset_with_derivatives) do
       Kithe::Asset.create(title: "test",
         file: File.open(Kithe::Engine.root.join("spec/test_support/images/1x1_pixel.jpg"))
       ).tap do |a|
         a.file_attacher.set_promotion_directives(skip_callbacks: true)
-        a.promote
+        #a.promote
         a.reload
         a.update_derivative(:existing, StringIO.new("content"))
       end
     end
-    let!(:existing_derivative) { asset_with_derivatives.derivatives.first }
-    let!(:existing_stored_file) { existing_derivative.file }
+
+    let!(:existing_stored_file) { asset_with_derivatives.file_derivatives.values.first }
 
     it "deletes derivatives on delete" do
       asset_with_derivatives.destroy
-      expect{ existing_derivative.reload }.to raise_error(ActiveRecord::RecordNotFound)
       expect(existing_stored_file.exists?).to be(false)
     end
 
     it "deletes derivatives on new asset assigned" do
       asset_with_derivatives.file = StringIO.new("some new thing")
       asset_with_derivatives.save!
-      expect{ existing_derivative.reload }.to raise_error(ActiveRecord::RecordNotFound)
       expect(existing_stored_file.exists?).to be(false)
     end
 
@@ -197,12 +145,15 @@ RSpec.describe Kithe::Asset, type: :model do
       # mostly needed for testing scenarios, not otherwise expected.
       filepath = Kithe::Engine.root.join("spec/test_support/images/1x1_pixel.jpg")
       asset = Kithe::Asset.new(file: File.open(filepath), title: "test").tap do |a|
-        a.file_attacher.set_promotion_directives(skip_callbacks: true)
+        a.file_attacher.set_promotion_directives(promote: false, skip_callbacks: true)
       end
-      asset.derivatives << Kithe::Derivative.new(file: File.open(filepath), key: "test")
       asset.save!
       asset.reload
-      expect(asset.derivatives.count).to eq 1
+
+      expect(asset.stored?).to eq(false)
+      asset.update_derivative("test", File.open(filepath), delete: false)
+
+      expect(asset.file_derivatives.count).to eq 1
     end
   end
 end

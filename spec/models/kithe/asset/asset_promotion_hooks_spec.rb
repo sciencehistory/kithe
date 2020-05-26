@@ -3,9 +3,6 @@ require 'rails_helper'
 describe "Kithe::Asset promotion hooks", queue_adapter: :inline do
   temporary_class("TestAsset") do
     Class.new(Kithe::Asset) do
-      define_derivative :test do
-        # no-op, but we need a definition so will be scheduled
-      end
     end
   end
 
@@ -14,6 +11,27 @@ describe "Kithe::Asset promotion hooks", queue_adapter: :inline do
       file: File.open(Kithe::Engine.root.join("spec/test_support/images/1x1_pixel.jpg"))
     )
   }
+
+  describe "before_promotion" do
+    temporary_class("TestAsset") do
+      Class.new(Kithe::Asset) do
+        before_promotion do
+          $metadata_in_before_promotion = self.file.metadata
+        end
+      end
+    end
+    before do
+      $metadata_in_before_promotion = nil
+    end
+
+    # we have a built-in before_promotion for metadata extraction,
+    # make sure it happens before any additional before_promotions,
+    # so they can eg use it to cancel
+    it "has access to automatic metadata extraction" do
+      unsaved_asset.save!
+      expect($metadata_in_before_promotion).to be_present
+    end
+  end
 
   describe "before_promotion cancellation" do
     temporary_class("TestAsset") do
@@ -28,23 +46,138 @@ describe "Kithe::Asset promotion hooks", queue_adapter: :inline do
       end
     end
 
-    it "works" do
-      expect_any_instance_of(Kithe::AssetUploader::Attacher).not_to receive(:store!)
+    describe "with inline promotion", queue_adapter: :test do
+      before do
+        unsaved_asset.file_attacher.set_promotion_directives(promote: :inline)
+      end
 
-      unsaved_asset.save!
-      unsaved_asset.reload
-      expect(unsaved_asset.stored?).to be(false)
-    end
+      it "cancels" do
+        expect_any_instance_of(Kithe::AssetUploader::Attacher).not_to receive(:promote)
 
-    describe "with promotion_directives[:skip_callbacks]" do
-      it "doesn't cancel" do
-        expect_any_instance_of(Kithe::AssetUploader::Attacher).to receive(:store!).and_call_original
-
-        unsaved_asset.file_attacher.set_promotion_directives(skip_callbacks: true)
         unsaved_asset.save!
         unsaved_asset.reload
+        expect(unsaved_asset.reload.stored?).to be(false)
+      end
 
-        expect(unsaved_asset.stored?).to be(true)
+      describe "with promotion_directives[:skip_callbacks]" do
+        it "doesn't cancel" do
+          expect_any_instance_of(Kithe::AssetUploader::Attacher).to receive(:promote).and_call_original
+
+          unsaved_asset.file_attacher.set_promotion_directives(skip_callbacks: true)
+          unsaved_asset.save!
+          unsaved_asset.reload
+
+          expect(unsaved_asset.stored?).to be(true)
+        end
+      end
+    end
+
+    describe "with backgrounding promotion", queue_adapter: :inline do
+      it "cancels" do
+        expect_any_instance_of(Kithe::AssetUploader::Attacher).not_to receive(:promote)
+
+        unsaved_asset.save!
+        unsaved_asset.reload
+        expect(unsaved_asset.stored?).to be(false)
+      end
+
+      describe "with promotion_directives[:skip_callbacks]" do
+        it "doesn't cancel" do
+          expect_any_instance_of(Kithe::AssetUploader::Attacher).to receive(:promote).and_call_original
+
+          unsaved_asset.file_attacher.set_promotion_directives(skip_callbacks: true)
+          unsaved_asset.save!
+          unsaved_asset.reload
+
+          expect(unsaved_asset.stored?).to be(true)
+        end
+      end
+    end
+
+
+    describe "assigning directly to store" do
+      temporary_class("TestAsset") do
+        Class.new(Kithe::Asset) do
+          before_promotion do
+            raise "Should not call before_promotion"
+          end
+
+          after_promotion do
+            raise "Should not call after_promotion"
+          end
+        end
+      end
+
+      let(:asset) {
+        TestAsset.create(title: "test")
+      }
+
+      let(:filepath) { Kithe::Engine.root.join("spec/test_support/images/1x1_pixel.jpg") }
+
+      describe "with inline promoting" do
+        before do
+          asset.file_attacher.set_promotion_directives(promote: :inline)
+        end
+
+        it "should not call callbacks" do
+          expect_any_instance_of(Kithe::AssetUploader::Attacher).not_to receive(:promote)
+
+          asset.file_attacher.attach(File.open(filepath))
+          asset.save!
+
+          expect(asset.changed?).to be(false)
+          asset.reload
+          expect(asset.file).to be_present
+          expect(asset.stored?).to be(true)
+        end
+      end
+
+      describe "with background promoting", queue_adapter: :inline do
+        before do
+          asset.file_attacher.set_promotion_directives(promote: :background)
+        end
+
+        it "should not call callbacks" do
+          expect_any_instance_of(Kithe::AssetUploader::Attacher).not_to receive(:promote)
+
+          asset.file_attacher.attach(File.open(filepath))
+          asset.save!
+
+          expect(asset.changed?).to be(false)
+          asset.reload
+          expect(asset.file).to be_present
+          expect(asset.stored?).to be(true)
+        end
+      end
+    end
+
+
+    describe "calling Asset#promote directly", queue_adapter: :inline do
+      before do
+        unsaved_asset.file_attacher.set_promotion_directives(promote: false)
+        unsaved_asset.save!
+        # precondition
+        expect(unsaved_asset.reload.file_attacher.cached?).to be(true)
+      end
+
+      it "cancels" do
+        expect_any_instance_of(Kithe::AssetUploader::Attacher).not_to receive(:promote)
+
+        unsaved_asset.promote
+        unsaved_asset.reload
+        expect(unsaved_asset.stored?).to be(false)
+      end
+
+      describe "with promotion_directives[:skip_callbacks]" do
+        it "doesn't cancel" do
+          expect_any_instance_of(Kithe::AssetUploader::Attacher).to receive(:promote).and_call_original
+
+          unsaved_asset.file_attacher.set_promotion_directives(skip_callbacks: true)
+          unsaved_asset.promote
+          unsaved_asset.reload
+
+          expect(unsaved_asset.stored?).to be(true)
+        end
       end
     end
   end
@@ -56,7 +189,7 @@ describe "Kithe::Asset promotion hooks", queue_adapter: :inline do
       receiver = after_promotion_receiver
       Class.new(Kithe::Asset) do
         after_promotion do
-          receiver.call
+          receiver.call(self)
         end
       end
     end
@@ -64,6 +197,28 @@ describe "Kithe::Asset promotion hooks", queue_adapter: :inline do
     it "is called" do
       expect(after_promotion_receiver).to receive(:call)
       unsaved_asset.save!
+    end
+
+    describe "with inline promotion" do
+      before do
+        unsaved_asset.file_attacher.set_promotion_directives(promote: :inline)
+      end
+
+      # this is actually what's checking for following example...
+      let(:after_promotion_receiver) do
+        proc do |asset|
+          expect(asset.changed?).to be(false)
+
+          asset.reload
+
+          expect(asset.stored?).to be(true)
+        end
+      end
+
+      it "asset has metadata and is finalized" do
+        expect(after_promotion_receiver).to receive(:call).and_call_original
+        unsaved_asset.save!
+      end
     end
 
     describe "with promotion_directives[:skip_callbacks]" do
@@ -99,6 +254,20 @@ describe "Kithe::Asset promotion hooks", queue_adapter: :inline do
   end
 
   describe "promotion_directive :promote", queue_adapter: :test do
+    temporary_class("TestUploader") do
+      Class.new(Kithe::AssetUploader) do
+        self::Attacher.define_derivative :test do
+          # no-op, but we need a definition so will be scheduled
+        end
+      end
+    end
+
+    temporary_class("TestAsset") do
+      Class.new(Kithe::Asset) do
+        set_shrine_uploader(TestUploader)
+      end
+    end
+
     it "can cancel promotion" do
       expect_any_instance_of(Kithe::AssetUploader::Attacher).not_to receive(:promote)
 
@@ -178,7 +347,7 @@ describe "Kithe::Asset promotion hooks", queue_adapter: :inline do
     let!(:existing_file) {  saved_asset.file }
 
     it "can cancel deletion" do
-      expect(Kithe::AssetUploader::Attacher).not_to receive(:delete)
+      expect_any_instance_of(Kithe::AssetUploader::Attacher).not_to receive(:destroy)
 
 
       saved_asset.set_promotion_directives(delete: false)
@@ -223,6 +392,25 @@ describe "Kithe::Asset promotion hooks", queue_adapter: :inline do
       asset = Kithe::Asset.new
       asset.set_promotion_directives(promote: :inline)
       expect(asset.file_attacher.promotion_directives).to eq("promote" => "inline")
+      expect(asset.promotion_directives).to eq("promote" => "inline")
     end
+
+    it "setting from instance writer is aggregative" do
+      Kithe::Asset.promotion_directives = { promote: :inline }
+      asset = Kithe::Asset.new
+      asset.set_promotion_directives(create_derivatives: false)
+      expect(asset.file_attacher.promotion_directives).to eq("promote" => "inline", "create_derivatives" => "false")
+    end
+
+    it "setting from instance writer survives reload" do
+      asset = Kithe::Asset.create(title: "test")
+      asset.set_promotion_directives(create_derivatives: false)
+      expect(asset.file_attacher.promotion_directives).to eq("create_derivatives" => "false")
+
+      asset.reload
+
+      expect(asset.file_attacher.promotion_directives).to eq("create_derivatives" => "false")
+    end
+
   end
 end

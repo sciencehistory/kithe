@@ -1,6 +1,6 @@
 # Creates derivatives from definitions stored on an Asset class
 class Kithe::Asset::DerivativeCreator
-  attr_reader :definitions, :asset, :only, :except, :lazy, :mark_created
+  attr_reader :definitions, :shrine_attacher, :only, :except, :lazy, :source_io
 
   # A helper class that provides the implementation for Kithe::Asset#create_derivatives,
   # normally only expected to be called from there.
@@ -13,57 +13,62 @@ class Kithe::Asset::DerivativeCreator
   # (deleted) if it is a File or Tempfile object.
   #
   # @param definitions an array of DerivativeDefinition
-  # @param asset an Asset instance
+  # @param shrine_attacher a shrine attacher instance holding attachment state from an individual
+  #   model, from eg `asset.file_attacher`
   # @param only array of definition keys, only execute these (doesn't matter if they are `default_create` or not)
   # @param except array of definition keys, exclude these from definitions of derivs to be created
   # @param lazy (default false), Normally we will create derivatives for all applicable definitions,
   #   overwriting any that already exist for a given key. If the definition has changed, a new
   #   derivative created with new definition will overwrite existing. However, if you pass lazy false,
   #   it'll skip derivative creation if the derivative already exists, which can save time
-  #   if you are only intending to create missing derivatives.  With lazy:false, the asset
-  #   derivatives association will be consulted, so should be eager-loaded if you are going
-  #   to be calling on multiple assets.
-  # @param mark_created [Boolean] if true will set shrine metadata indicating we've done
-  #   derivative creation phase, so Asset#derivatives_created? will return true. Defaults to nil,
-  #   meaning true if and only if `only` is nil -- mark created if creating default derivatives.
-  def initialize(definitions, asset, only:nil, except:nil, lazy: false, mark_created: :not_set)
+  #   if you are only intending to create missing derivatives.
+  def initialize(definitions, source_io:, shrine_attacher:, only:nil, except:nil, lazy: false)
     @definitions = definitions
-    @asset = asset
-    @only = only && Array(only)
-    @except = except && Array(except)
+    @source_io = source_io
+    @shrine_attacher = shrine_attacher
+    @only = only && Array(only).collect(&:to_sym)
+    @except = except && Array(except).collect(&:to_sym)
     @lazy = !!lazy
-    @mark_created = mark_created.nil? ? (only.nil? && except.nil?) : !! mark_created
+
+    unless shrine_attacher.kind_of?(Shrine::Attacher)
+      raise ArgumentError.new("expect second arg Shrine::Attacher not #{shrine_attacher.class}")
+    end
   end
 
   def call
-    return unless asset.file.present? # if no file, can't create derivatives
+    return unless shrine_attacher.file.present? # if no file, can't create derivatives
 
     definitions_to_create = applicable_definitions
+
     if lazy
-      existing_derivative_keys = asset.derivatives.collect(&:key).collect(&:to_s)
+      existing_derivative_keys = shrine_attacher.derivatives.keys
       definitions_to_create.reject! do |defn|
-        existing_derivative_keys.include?(defn.key.to_s)
+        existing_derivative_keys.include?(defn.key)
       end
     end
 
-    return unless definitions_to_create.present?
+    return {} unless definitions_to_create.present?
 
-    # Note, MAY make a superfluous copy and/or download of original file, ongoing
-    # discussion https://github.com/shrinerb/shrine/pull/329#issuecomment-443615868
-    # https://github.com/shrinerb/shrine/pull/332
-    Shrine.with_file(asset.file) do |original_file|
+    derivatives = {}
+
+    # Make sure we have this as a local file, because many processors
+    # require it, for instance for shelling out to command line.
+    # This might trigger a download, but note we are only doing it if we have
+    # `definitions_to_create`, otherwise we already returned.
+    shrine_attacher.shrine_class.with_file(source_io) do |source_io_as_file|
       definitions_to_create.each do |defn|
-        deriv_bytestream = defn.call(original_file: original_file, record: asset)
+        deriv_bytestream = defn.call(original_file: source_io_as_file, attacher: shrine_attacher)
 
         if deriv_bytestream
-          asset.update_derivative(defn.key, deriv_bytestream, storage_key: defn.storage_key)
-          cleanup_returned_io(deriv_bytestream)
+          derivatives[defn.key] =  deriv_bytestream
         end
 
-        original_file.rewind
+        # may not need this but it doesn't hurt...
+        source_io.rewind
       end
-      mark_derivatives_created! if mark_created
     end
+
+    derivatives
   end
 
   private
@@ -83,7 +88,7 @@ class Kithe::Asset::DerivativeCreator
     candidates = definitions.find_all do |defn|
       (only.nil? ? defn.default_create : only.include?(defn.key)) &&
       (except.nil? || ! except.include?(defn.key)) &&
-      defn.applies_to?(asset)
+      defn.applies_to_content_type?(shrine_attacher.file.content_type)
     end
 
     # Now we gotta filter out any duplicate keys based on our priority rules, but keep
@@ -106,40 +111,5 @@ class Kithe::Asset::DerivativeCreator
 
     # Now we uniq keeping last defn
     candidates.reverse.uniq {|d| d.key }.reverse
-  end
-
-  def cleanup_returned_io(io)
-    if io.respond_to?(:close!)
-      # it's a Tempfile, clean it up now
-      io.close!
-    elsif io.is_a?(File)
-      # It's a File, close it and delete it.
-      io.close
-      File.unlink(io.path)
-    end
-  end
-
-  # Sets kithe asset metadata "derivatives_created" to `true`, so
-  # code can know that we're finished creating all `default_create`
-  # derivatives.
-  #
-  # Uses a db-level atomic jsonb update and db-locking to make sure it can do this
-  # without overwriting any other metadata changes, safely.
-  def mark_derivatives_created!
-    asset.transaction do
-      unless asset.acquire_lock_on_sha
-        # asset bytestream has changed
-        return nil
-      end
-
-      sql = <<~SQL
-        UPDATE "#{Kithe::Asset.table_name}"
-        SET file_data = jsonb_set(file_data, '{metadata, derivatives_created}', 'true')
-        WHERE id = '#{asset.id}'
-      SQL
-
-      #ActiveRecord::Base.connection.exec_update("update table set f1=#{ActiveRecord::Base.sanitize(f1)}")
-      Kithe::Asset.connection.execute(sql)
-    end
   end
 end

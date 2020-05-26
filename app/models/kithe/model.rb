@@ -10,15 +10,6 @@ class Kithe::Model < ActiveRecord::Base
   include AttrJson::Record::Dirty
   include Kithe::Indexable
 
-  # A handy scope for eager-loading all representatives and all of their derivatives.
-  #
-  # Works on hetereogenous collections of Works and Assets -- the Assets need
-  # :derivatives directly referenced (since they don't really have a leaf_representative assoc),
-  # the works need :leaf_representative => :derivatives.
-  #
-  # Loading all three of these on result sets of hundreds of values is still relatively quick.
-  scope :with_representative_derivatives, -> { includes(:derivatives, leaf_representative: :derivatives) }
-
   # While Rails STI means the actual specific class is in `type`, sometimes
   # it can be convenient to fetch on a top category of Kithe::Model without using
   # Rails STI.
@@ -99,18 +90,6 @@ class Kithe::Model < ActiveRecord::Base
 
     in_memory
   end
-
-  # hacky :(
-  def derivatives(*args)
-    raise TypeError.new("Only valid on Kithe::Asset") unless self.kind_of?(Kithe::Asset)
-    super
-  end
-  # hacky :(
-  def derivatives=(*args)
-    raise TypeError.new("Only valid on Kithe::Asset") unless self.kind_of?(Kithe::Asset)
-    super
-  end
-
 
   # insist that leaf_representative is an Asset, otherwise return nil.
   # nil means there is no _asset_ leaf, and lets caller rely on leaf being

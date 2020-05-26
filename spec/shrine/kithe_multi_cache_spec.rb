@@ -22,7 +22,7 @@ describe Shrine::Plugins::KitheMultiCache do
   it "can promote from additional cache" do
     extra_storage.upload(fakeio("test_content"), "test_id")
     attacher.assign({"id" => "test_id", "storage" => "additional_one"}.to_json)
-    attacher.promote(attacher.get)
+    attacher.promote
 
     uploaded_file = attacher.get
     expect(uploaded_file).not_to be_nil
