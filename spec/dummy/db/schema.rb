@@ -16,6 +16,47 @@ ActiveRecord::Schema.define(version: 2019_04_04_144551) do
   enable_extension "pgcrypto"
   enable_extension "plpgsql"
 
+
+  create_function :kithe_models_friendlier_id_gen, sql_definition: <<-SQL
+      CREATE OR REPLACE FUNCTION public.kithe_models_friendlier_id_gen(min_value bigint, max_value bigint)
+       RETURNS text
+       LANGUAGE plpgsql
+      AS $function$
+        DECLARE
+          new_id_int bigint;
+          new_id_str character varying := '';
+          done bool;
+          tries integer;
+          alphabet char[] := ARRAY['0','1','2','3','4','5','6','7','8','9',
+            'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n',
+            'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'];
+          alphabet_length integer := array_length(alphabet, 1);
+
+        BEGIN
+          done := false;
+          tries := 0;
+          WHILE (NOT done) LOOP
+            tries := tries + 1;
+            IF (tries > 3) THEN
+              RAISE 'Could not find non-conflicting friendlier_id in 3 tries';
+            END IF;
+
+            new_id_int := trunc(random() * (max_value - min_value) + min_value);
+
+            -- convert bigint to a Base-36 alphanumeric string
+            -- see https://web.archive.org/web/20130420084605/http://www.jamiebegin.com/base36-conversion-in-postgresql/
+            -- https://gist.github.com/btbytes/7159902
+            WHILE new_id_int != 0 LOOP
+              new_id_str := alphabet[(new_id_int % alphabet_length)+1] || new_id_str;
+              new_id_int := new_id_int / alphabet_length;
+            END LOOP;
+
+            done := NOT exists(SELECT 1 FROM kithe_models WHERE friendlier_id=new_id_str);
+          END LOOP;
+          RETURN new_id_str;
+        END;
+        $function$
+  SQL
   create_table "kithe_derivatives", force: :cascade do |t|
     t.string "key", null: false
     t.jsonb "file_data"
@@ -58,45 +99,4 @@ ActiveRecord::Schema.define(version: 2019_04_04_144551) do
   add_foreign_key "kithe_models", "kithe_models", column: "leaf_representative_id"
   add_foreign_key "kithe_models", "kithe_models", column: "parent_id"
   add_foreign_key "kithe_models", "kithe_models", column: "representative_id"
-
-  create_function :kithe_models_friendlier_id_gen, sql_definition: <<-SQL
-      CREATE OR REPLACE FUNCTION public.kithe_models_friendlier_id_gen(min_value bigint, max_value bigint)
-       RETURNS text
-       LANGUAGE plpgsql
-      AS $function$
-        DECLARE
-          new_id_int bigint;
-          new_id_str character varying := '';
-          done bool;
-          tries integer;
-          alphabet char[] := ARRAY['0','1','2','3','4','5','6','7','8','9',
-            'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n',
-            'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'];
-          alphabet_length integer := array_length(alphabet, 1);
-
-        BEGIN
-          done := false;
-          tries := 0;
-          WHILE (NOT done) LOOP
-            tries := tries + 1;
-            IF (tries > 3) THEN
-              RAISE 'Could not find non-conflicting friendlier_id in 3 tries';
-            END IF;
-
-            new_id_int := trunc(random() * (max_value - min_value) + min_value);
-
-            -- convert bigint to a Base-36 alphanumeric string
-            -- see https://web.archive.org/web/20130420084605/http://www.jamiebegin.com/base36-conversion-in-postgresql/
-            -- https://gist.github.com/btbytes/7159902
-            WHILE new_id_int != 0 LOOP
-              new_id_str := alphabet[(new_id_int % alphabet_length)+1] || new_id_str;
-              new_id_int := new_id_int / alphabet_length;
-            END LOOP;
-
-            done := NOT exists(SELECT 1 FROM kithe_models WHERE friendlier_id=new_id_str);
-          END LOOP;
-          RETURN new_id_str;
-        END;
-        $function$
-  SQL
 end
