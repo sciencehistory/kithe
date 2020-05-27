@@ -317,8 +317,6 @@ class AssetUploader < Kithe::AssetUploader
       calculate_fancy_content(source_io)
     end
   end
-  # Make a `something_fancy` method available on the `asset.file` object.
-  metadata_method :someting_fancy
 end
 ```
 
