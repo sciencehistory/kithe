@@ -324,8 +324,6 @@ end
 
 The built-in [shrine validation architecture](https://github.com/shrinerb/shrine/blob/master/doc/validation.md#readme) is targetted at interactive forms, and doesn't make a lot of sense in our scenario where  where metadata extraction and promotion happen in the background.
 
-Plus, you don't have an easy way to add your own validations to the `Kithe::AssetUploader`.
-
 We haven't totally worked out what makes sense in kithe. But it will probably involve registering a before_promotion callback to cancel promotion based on asset metadata, and record that (with error messages?) somewhere in your app, for presentation later.
 
 ## Note on deleting and callbacks
