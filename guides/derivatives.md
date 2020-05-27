@@ -39,7 +39,7 @@ Once defined, you _could_ create them using standard shrine methods, as the `kit
 asset.file_attacher.create_derivatives(:kithe_derivatives)
 ```
 
-But we don't recommend this. Normally, kithe's asset lifecycle will automatically create derivatives after promotion. (See [Attachment Lifecycle](./file_handing.md#attachmentLifecycle) and [Customizing the ingest lifecycle](./file_handing.md#customizingLifecycle) in the [File Handling Guide](./file_handing.md))
+But we don't recommend this. Normally, kithe's asset lifecycle will automatically create derivatives after promotion. (See [Attachment Lifecycle](./file_handling.md#attachmentLifecycle) and [Customizing the ingest lifecycle](./file_handling.md#customizingLifecycle) in the [File Handling Guide](./file_handling.md))
 
 If you do need to manually trigger derivative creation, you can use kithe's concurrency-safe derivative modification methods, such as:
 
