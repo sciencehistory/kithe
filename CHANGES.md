@@ -2,6 +2,10 @@
 
 **We aren't aware of anyone other than Science History Institute using kithe 1.x in production, so haven't invested time in making the change notes _quite_ as complete or migration process as painless as if we were. But if you are in this situation please get in touch via GH Issues for guidance.**
 
+* use fx gem to so schema.rb can contain pg functions, no need for structure.sql anymore, and consuming apps won't be forced to use structure.sql. They ARE forced to use fx gem's overrides of Rails schema dumping, including some local patches. https://github.com/teoljungberg/fx https://github.com/teoljungberg/fx/pull/53
+
+## File attachment handling and derivatives
+
 The main changes in kithe 2.0 are around file attachment handling: upgrading to [shrine](https://shrinerb.com/) 3.x, and changing derivatives from custom implementation to be based on shrine 3.x's.
 
 You can also now create a local shrine Uploader class for your local Kithe::Asset subclasses -- and have different ones for different local Asset classes in a local inheritance hieararchy. This lets you access the full power of shrine customization and configuration.
@@ -29,3 +33,4 @@ See https://github.com/sciencehistory/kithe/issues/81
 * The `Asset#create_derivatives` , `Asset#update_derivative`(s) and `Asset#remove_derivatives` methods have been slightly altered in name and signature, but they are all still there, and still can be used to mutate derivatives in concurrency-safe manner.
 
 * See also [Migrating Derivatives to Kithe 2.0](migrating_derivatives_to_2.md) guide.
+
