@@ -68,28 +68,30 @@ module Kithe
   # The settings need to live here not in Kithe::Indexable, to avoid terrible
   # Rails dev-mode class-reloading weirdnesses. This module is not reloaded.
   class << self
-    attr_accessor :indexable_settings
+    attr_writer :indexable_settings
   end
-  self.indexable_settings = IndexableSettings.new(
-    solr_url: "http://localhost:8983/solr/default",
-    model_name_solr_field: "model_name_ssi",
-    solr_id_value_attribute: "id",
-    writer_class_name: "Traject::SolrJsonWriter",
-    writer_settings: {
-      # as default we tell the solrjsonwriter to use no threads,
-      # no batching. softCommit on every update. Least surprising
-      # default configuration.
-      "solr_writer.thread_pool" => 0,
-      "solr_writer.batch_size" => 1,
-      "solr_writer.solr_update_args" => { softCommit: true },
-      "solr_writer.http_timeout" => 3,
-      "logger" => Rails.logger,
+  def self.indexable_settings
+    @indexable_settings ||= IndexableSettings.new(
+      solr_url: "http://localhost:8983/solr/default",
+      model_name_solr_field: "model_name_ssi",
+      solr_id_value_attribute: "id",
+      writer_class_name: "Traject::SolrJsonWriter",
+      writer_settings: {
+        # as default we tell the solrjsonwriter to use no threads,
+        # no batching. softCommit on every update. Least surprising
+        # default configuration.
+        "solr_writer.thread_pool" => 0,
+        "solr_writer.batch_size" => 1,
+        "solr_writer.solr_update_args" => { softCommit: true },
+        "solr_writer.http_timeout" => 3,
+        "logger" => Rails.logger,
 
-      # MAYBE? no skippable exceptions please
-      # "solr_writer.skippable_exceptions" => []
-    },
-    disable_callbacks: false
-  )
+        # MAYBE? no skippable exceptions please
+        # "solr_writer.skippable_exceptions" => []
+      },
+      disable_callbacks: false
+    )
+  end
 
   class << self
     # Currently used by Kithe::AssetUploader, a bit of a hacky
