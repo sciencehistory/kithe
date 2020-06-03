@@ -1,3 +1,17 @@
+## Next
+
+*
+
+*
+
+*
+
+# 2.0.1
+
+## FIXED
+
+* Fix default traject logger Rails.logger [#98](https://github.com/sciencehistory/kithe/pull/98)
+
 # 2.0.0
 
 **We aren't aware of anyone other than Science History Institute using kithe 1.x in production, so haven't invested time in making the change notes _quite_ as complete or migration process as painless as if we were. But if you are in this situation please get in touch via GH Issues for guidance.**
