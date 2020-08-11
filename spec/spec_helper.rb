@@ -123,14 +123,14 @@ RSpec.configure do |config|
 =end
 end
 
-# Workaround ruby 2.7.0 StringIO enccoding weirdness, which hopefully
-# will be fixed in shrine 3.x before we get there. if you can remove this patch
-# and tests still pass, you're good.
+# Workaround ruby 2.7.0 StringIO enccoding weirdness, awaiting a fix in shrine.
+# if you can remove this patch and tests still pass in ruby 2.7.x with latest
+# shrine dependencies, you're good.
 #
 # https://github.com/shrinerb/shrine/pull/443
 #
 require 'sane_patch'
-SanePatch.patch("shrine", "< 3.2.2") do
+SanePatch.patch("shrine", "< 3.2.3") do
   require 'shrine/storage/memory'
 
   class Shrine::Storage::Memory
