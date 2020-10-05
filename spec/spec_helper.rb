@@ -123,23 +123,3 @@ RSpec.configure do |config|
 =end
 end
 
-# Workaround ruby 2.7.0 StringIO enccoding weirdness, awaiting a fix in shrine.
-# if you can remove this patch and tests still pass in ruby 2.7.x with latest
-# shrine dependencies, you're good.
-#
-# https://github.com/shrinerb/shrine/pull/443
-#
-require 'sane_patch'
-SanePatch.patch("shrine", "< 3.2.3") do
-  require 'shrine/storage/memory'
-
-  class Shrine::Storage::Memory
-    def open(id, **)
-      io = StringIO.new(store.fetch(id))
-      io.set_encoding(io.string.encoding) # Ruby 2.7.0 – https://bugs.ruby-lang.org/issues/16497
-      io
-    rescue KeyError
-      raise Shrine::FileNotFound, "file #{id.inspect} not found on storage"
-    end
-  end
-end
