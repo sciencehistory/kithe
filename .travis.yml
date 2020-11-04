@@ -20,7 +20,10 @@ addons:
 gemfile:
   - gemfiles/rails_52.gemfile
   - gemfiles/rails_60.gemfile
+  - gemfiles/rails_61.gemfile
 jobs:
   exclude:
     - rvm: 2.7.0
       gemfile: gemfiles/rails_52.gemfile
+    - rvm: 2.5.3
+      gemfile: gemfiles/rails_61.gemfile
