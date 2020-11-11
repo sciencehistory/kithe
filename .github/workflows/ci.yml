@@ -48,6 +48,10 @@ jobs:
         bundle config set gemfile "${GITHUB_WORKSPACE}/gemfiles/${{ matrix.gemfile }}.gemfile"
         bundle install --jobs 4 --retry 3
 
+    - name: Install apt-get dependencies
+      run: |
+        sudo apt-get -y install libvips-tools ffmpeg
+
     - name: Prepare app
       env:
         RAILS_ENV: test
