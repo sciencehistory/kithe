@@ -1,7 +1,8 @@
 # Kithe
 An experiment in shareable tools/components for building a digital collections app in Rails.
 
-[![Build Status](https://travis-ci.com/sciencehistory/kithe.svg?branch=master)](https://travis-ci.com/sciencehistory/kithe)
+[![Build Status](https://travis-ci.com/sciencehistory/kithe.svg?branch=master)](https://github.com/sciencehistory/kithe/actions?query=workflow%3ACI+branch%3Amaster)
+
 [![Gem Version](https://badge.fury.io/rb/kithe.svg)](https://badge.fury.io/rb/kithe)
 
 ## What is kithe?
