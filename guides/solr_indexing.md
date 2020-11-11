@@ -251,7 +251,7 @@ Alternately or additionally, we could use some of the concurrency built into tra
 
 ## Use with non Kithe::Model ActiveRecord classes?
 
-While Kithe::Indexable was developed for use with `Kithe::Model` (your collections, works, and assets), it's implementation should be independent of it. (Although we aren't currently testing that).
+While Kithe::Indexable was developed for use with `Kithe::Model` (your collections, works, and assets), it's implementation is independent of it, should work mixed into  any ActiveRecord model, and is currently tested to do so.
 
 Just add `include Kithe::Indexable` to any ActiveRecord::Base class, and you should get all the indexing functionality documented above for any arbitrary ActiveRecord model.
 
