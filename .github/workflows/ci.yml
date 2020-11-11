@@ -48,6 +48,13 @@ jobs:
         bundle config set gemfile "${GITHUB_WORKSPACE}/gemfiles/${{ matrix.gemfile }}.gemfile"
         bundle install --jobs 4 --retry 3
 
+    - name: Prepare app
+      env:
+        RAILS_ENV: test
+      run: |
+         rails db:create
+         rails db:migrate
+
     - name: Run tests
       run: |
         bundle exec rspec
