@@ -1,0 +1,64 @@
+name: CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ '**' ]
+
+env:
+  POSTGRES_USER: postgres
+  POSTGRES_PASSWORD: postgres
+  POSTGRES_HOST: localhost
+
+jobs:
+  tests:
+    services:
+      db:
+        image: postgres:9.6
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports: ['5432:5432']
+
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - gemfile: rails_52
+            ruby: 2.5
+
+          - gemfile: rails_60
+            ruby: 2.7
+
+    name: test ${{ matrix.gemfile }}, ruby ${{ matrix.ruby }}
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up Ruby
+      uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: ${{ matrix.ruby }}
+        bundler-cache: false
+
+    - name: Bundle install
+      run: |
+        bundle config set gemfile "${GITHUB_WORKSPACE}/gemfiles/${{ matrix.gemfile }}.gemfile"
+        bundle install --jobs 4 --retry 3
+
+    - name: Install apt-get dependencies
+      run: |
+        sudo apt-get -y install libvips-tools ffmpeg
+
+    - name: Prepare app
+      env:
+        RAILS_ENV: test
+      run: |
+         rails db:create
+         rails db:schema:load
+
+    - name: Run tests
+      run: |
+        bundle exec rspec
