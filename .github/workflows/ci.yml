@@ -53,9 +53,11 @@ jobs:
         sudo apt-get -y install libvips-tools ffmpeg
 
     - name: Prepare app
+      env:
+        RAILS_ENV: test
       run: |
-         RAILS_ENV=test rails db:create
-         rails db:migrate RAILS_ENV=test
+         rails db:create
+         rails db:schema:load
 
     - name: Run tests
       run: |
