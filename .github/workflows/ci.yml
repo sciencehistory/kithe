@@ -25,7 +25,6 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        matrix:
         include:
           - gemfile: rails_52
             ruby: 2.5
