@@ -32,6 +32,9 @@ jobs:
           - gemfile: rails_60
             ruby: 2.7
 
+          - gemfile: rails_61
+            ruby: 2.7
+
     name: test ${{ matrix.gemfile }}, ruby ${{ matrix.ruby }}
 
     steps:

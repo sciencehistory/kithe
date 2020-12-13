@@ -15,7 +15,7 @@ gemspec
 # gem 'byebug', group: [:development, :test]
 
 group :development, :test do
-  gem 'rspec-rails', '~> 3.8'
+  gem 'rspec-rails', '~> 4.0'
   gem 'pry-byebug', '~> 3.6'
   gem 'factory_bot_rails', '~> 4.11'
 end

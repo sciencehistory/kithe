@@ -60,7 +60,7 @@ So you want to start an app that uses kithe. We should later provide better 'get
 
 * Again re-iterate that kithe requires your Rails app use postgres, 9.5+.
 
-* kithe requires Rails 5.2 or 6.0.
+* kithe works with Rails 5.2 through 6.1.
 
 * To install migrations from kithe to setup your database for it's models: `rake kithe_engine:install:migrations`
 
