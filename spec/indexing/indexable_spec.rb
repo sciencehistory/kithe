@@ -46,7 +46,7 @@ describe Kithe::Indexable, type: :model do
 
         expect(WebMock).to have_requested(:post, @solr_update_url).
           with { |req|
-            JSON.parse(req.body) == { "delete" => work.id }
+            JSON.parse(req.body) == { "delete" => work.send(Kithe.indexable_settings.solr_id_value_attribute) }
           }
       end
     end

@@ -8,7 +8,7 @@ module Kithe
       @writer_class_name = writer_class_name
       @writer_settings = writer_settings
       @model_name_solr_field = model_name_solr_field
-      @solr_id_value_attribute = solr_id_value_attribute
+      @solr_id_value_attribute = solr_id_value_attribute || 'id'
     end
 
     # Use configured solr_url, and merge together with configured

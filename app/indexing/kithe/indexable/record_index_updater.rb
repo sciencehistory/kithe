@@ -44,7 +44,7 @@ module Kithe
             writer.put(context)
           end
         else
-          writer.delete(record.id)
+          writer.delete(record.send(Kithe.indexable_settings.solr_id_value_attribute))
         end
       end
 
