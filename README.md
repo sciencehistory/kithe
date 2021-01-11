@@ -87,7 +87,8 @@ This is a Rails 'engine' whose template was created with: `rails plugin new kith
 
 * Note we are currently using the standard rails-generated dummy app in spec/dummy for testing, rather than [engine_cart](https://github.com/cbeer/engine_cart) or [combustion](https://github.com/pat/combustion).
   * Before you run the tests for the first time, create the database by running: `rails db:setup`. This will create two databases, kithe_development and kithe_test.
-  * We do use [appraisal](https://github.com/thoughtbot/appraisal) to test under multiple rails versions,but still wtih the standard dummy app. It works for both Rails 5.2 and 6.0, because Rails structure changes have settled down.
+  * Some of the rspec tests depend on [FFmpeg](https://ffmpeg.org/) for testing file derivative transformations. Mac users can install [ffmpeg via homebrew](https://formulae.brew.sh/formula/ffmpeg): `brew install ffmpeg`
+  * We do use [appraisal](https://github.com/thoughtbot/appraisal) to test under multiple rails versions, but still with the standard dummy app. It works for both Rails 5.2 and 6.0, because Rails structure changes have settled down.
   * Locally you can run `bundle exec appraisal rspec` to run tests multiple times for each rails we have configured, or eg `bundle exec appraisal rails-60 rspec` for a particular one.
   * If the project `Gemfile` _or_ `Appraisal` file changes, you may need to re-run `bundle exec appraisal install` and commit changes.
 
