@@ -15,7 +15,7 @@ Gem::Specification.new do |s|
   s.license     = "MIT"
 
   s.files = Dir["{app,config,db,lib}/**/*", "MIT-LICENSE", "Rakefile", "README.md"]
-  s.test_files = Dir["spec/**/*"]
+  s.test_files = Dir["spec/*/"].delete_if {|a| a =~ %r{/dummy/log/}}
 
   s.required_ruby_version = '>= 2.5'
 
