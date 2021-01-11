@@ -1,6 +1,8 @@
 ## Next
 
-*
+## FIXED
+
+* Indexing: Allow configurable solr_id_value_attribute values to correctly Solr delete. https://github.com/sciencehistory/kithe/pull/109
 
 *
 
