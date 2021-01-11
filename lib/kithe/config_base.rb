@@ -9,7 +9,7 @@ module Kithe
   #
   # You may also want to consider [railsconfig](https://github.com/railsconfig/config)
   #
-  # Kithe::Config:
+  # Kithe::ConfigBase:
   #
   # * uses an explicit declared list of allowable config keys, no silent typos
   # * can read from a local YAML file or ENV, by default letting ENV override local YAML file values.
@@ -97,6 +97,11 @@ module Kithe
   # This doesn't use any locking for concurrent initial loads, which is technically not
   # great, but probably shouldn't be a problem in practice, especially in MRI. Trying to
   # do proper locking with lazy load was too hard for me right now.
+  #
+  # ## Auto-loading
+  #
+  # This is intentionally NOT in an auto-loaded directory, so it can be used more
+  # easily in Rails initialization without problems. https://github.com/rails/rails/issues/40904
   class ConfigBase
     include Singleton
 

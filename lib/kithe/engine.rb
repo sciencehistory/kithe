@@ -11,6 +11,9 @@ require 'shrine'
 require 'fx'
 require 'kithe/patch_fx'
 
+# not auto-loaded, let's just load it for backwards compat though
+require "kithe/config_base"
+
 module Kithe
   class Engine < ::Rails::Engine
     config.generators do |g|
