@@ -1,12 +1,18 @@
-## Next
+# NEXT
+
+*
+
+*
+
+*
+
+# 2.0.2
 
 ## FIXED
 
 * Indexing: Allow configurable solr_id_value_attribute values to correctly Solr delete. https://github.com/sciencehistory/kithe/pull/109
 
 * Kithe::ConfigBase source file moved to ./lib a rails non-auto-loading location, to make it easier to use in non-deprecating and functioning way from a Rails app config or initialization file, which is one of it's main use cases. https://github.com/sciencehistory/kithe/pull/112
-
-*
 
 # 2.0.1
 
