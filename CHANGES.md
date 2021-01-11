@@ -1,8 +1,8 @@
 # NEXT
 
-*
+## FIXED
 
-*
+* Reduce kithe gem release package size by eliminating accidental log files. https://github.com/sciencehistory/kithe/pull/114
 
 *
 
