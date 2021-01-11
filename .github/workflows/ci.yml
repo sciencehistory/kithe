@@ -53,6 +53,7 @@ jobs:
 
     - name: Install apt-get dependencies
       run: |
+        sudo apt-get -y update
         sudo apt-get -y install libvips-tools ffmpeg
 
     - name: Prepare app
