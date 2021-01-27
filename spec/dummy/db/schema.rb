@@ -16,7 +16,6 @@ ActiveRecord::Schema.define(version: 2019_04_04_144551) do
   enable_extension "pgcrypto"
   enable_extension "plpgsql"
 
-
   create_function :kithe_models_friendlier_id_gen, sql_definition: <<-SQL
       CREATE OR REPLACE FUNCTION public.kithe_models_friendlier_id_gen(min_value bigint, max_value bigint)
        RETURNS text
@@ -57,6 +56,7 @@ ActiveRecord::Schema.define(version: 2019_04_04_144551) do
         END;
         $function$
   SQL
+
   create_table "kithe_derivatives", force: :cascade do |t|
     t.string "key", null: false
     t.jsonb "file_data"
