@@ -32,7 +32,7 @@ Gem::Specification.new do |s|
   s.add_dependency "ruby-progressbar", "~> 1.0"
   s.add_dependency "mini_mime" # already a rails dependency, but we use in derivative filename construction
 
-  s.add_dependency "fx", ">= 0.5.0", "< 1"
+  s.add_dependency "fx", ">= 0.6.0", "< 1"
 
   s.add_dependency "traject", "~> 3.0", ">= 3.1.0.rc1" # for Solr or other indexing
   s.add_dependency "rsolr", "~> 2.2" # for some low-level solr stuff

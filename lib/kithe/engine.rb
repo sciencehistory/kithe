@@ -9,7 +9,6 @@ require 'shrine'
 # https://github.com/teoljungberg/fx/issues/33
 # https://github.com/teoljungberg/fx/pull/53
 require 'fx'
-require 'kithe/patch_fx'
 
 # not auto-loaded, let's just load it for backwards compat though
 require "kithe/config_base"
@@ -21,6 +20,14 @@ module Kithe
       g.fixture_replacement :factory_bot, :dir => 'spec/factories'
       g.assets false
       g.helper false
+    end
+
+    # the fx gem lets us include stored procedures in schema.rb. For it to work
+    # in kithe's case, the stored procedures have to be *first* in schema.rb,
+    # so they can then be referenced as default value for columns in tables
+    # subsequently created. We configure that here, forcing it for any app, yes, sorry.
+    Fx.configure do |config|
+      config.dump_functions_at_beginning_of_schema = true
     end
   end
 end
