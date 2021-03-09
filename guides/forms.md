@@ -4,6 +4,8 @@ Kithe provides some support for creating HTML edit forms with common tricky use 
 
 Kithe provides it's own `Kithe::FormBuilder` simple_form builder, with added kithe functionality, which you can use automatically with the provided helper method `kithe_form_for` instead of `simple_form_for`.  Some of the generated HTML assumes bootstrap 4 -- [include bootstrap](https://github.com/twbs/bootstrap-rubygem) in your app, and generate bootstrap 4 simple_form configuration with `rails generate simple_form:install --bootstrap`.  This will also generate configuration for a simple_form wrapper called `vertical_collection`, which kithe generators use as default.
 
+This guide is about the form builder, but on the back-end see also Kithe's extensions to Rails "Strong Params", [Kithe::Parameters](../app/models/kithe/parameters.rb).
+
 ## Repeatable input fields
 
 Your Kithe::Work or other Kithe::Models may use attr_json _array_ attributes -- either simple strings, or sometimes an array of nested/compound models. You want to to provide a form that lets the user add or remove these elements, to make multiples.

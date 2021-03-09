@@ -35,6 +35,8 @@ Some guide documentation is available to explain each of kithe's major functiona
   * Kithe objects use UUIDv4's as internal primary keys, but also provide a "friendlier_id" with a shorter unique alphanumeric identifier for URLs and other UI. By default they are supplied by a postgres stored procedure, but your code can set them to whatever you like.
 
 * [Form support](./guides/forms.md): Dealing with complex and _repeatable_ data, as our modelling layer allows, can be tricky in an HTML form. We supply javascript-backed Rails form input help for repeatable and compound/nested data.
+  * An extension to Rails "strong parameters" that make some common patterns for
+    embedded JSON attributes more convenient, [Kithe::Parameters](./app/models/kithe/parameters.rb).
 
 * [File handling](./guides/file_handling.md): Handling files is at the core of digital repository use cases. We need a file handling framework that is flexible, predictable and reliable, and architected for performance. We try to give you one based on the [shrine](https://shrinerb.com) file attachment toolkit for ruby.
 
