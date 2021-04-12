@@ -48,7 +48,8 @@ module Kithe
         first, *rest = *path
 
         result = if obj.kind_of?(Array)
-          obj.flat_map { |item| obj_extractor(item, path) }
+          first_path_element = path.shift # remove it from path
+          obj.flat_map { |item| obj_extractor(item, [first_path_element]) }
         elsif obj.kind_of?(Hash)
           obj[first]
         else
