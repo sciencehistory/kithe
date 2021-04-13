@@ -1,5 +1,10 @@
 # NEXT
 
+## ADDED
+
+* kithe_determine_mime_type plugin keeps using `audio/flac` as in previous versions of marcel,
+  instead of `audio/x-flac` as in marcel 1.0. https://github.com/sciencehistory/kithe/pull/117
+
 ## FIXED
 
 * Fix bug in obj_extract macro for cases of intermediate array valueshttps://github.com/sciencehistory/kithe/pull/116
