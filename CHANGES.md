@@ -1,43 +1,43 @@
-# NEXT
+## NEXT
 
-## ADDED
+### Added
 
 * kithe_determine_mime_type plugin keeps using `audio/flac` as in previous versions of marcel,
   instead of `audio/x-flac` as in marcel 1.0. https://github.com/sciencehistory/kithe/pull/117
 
-## FIXED
+### Fixed
 
 * Fix bug in obj_extract macro for cases of intermediate array valueshttps://github.com/sciencehistory/kithe/pull/116
 
 * avoid deprecated ActiveModel::Error API https://github.com/sciencehistory/kithe/pull/118
 
-# 2.0.3
+## 2.0.3
 
-## FIXED
+### Fixed
 
 * Reduce kithe gem release package size by eliminating accidental log files. https://github.com/sciencehistory/kithe/pull/114
 
-# 2.0.2
+## 2.0.2
 
-## FIXED
+### Fixed
 
 * Indexing: Allow configurable solr_id_value_attribute values to correctly Solr delete. https://github.com/sciencehistory/kithe/pull/109
 
 * Kithe::ConfigBase source file moved to ./lib a rails non-auto-loading location, to make it easier to use in non-deprecating and functioning way from a Rails app config or initialization file, which is one of it's main use cases. https://github.com/sciencehistory/kithe/pull/112
 
-# 2.0.1
+## 2.0.1
 
-## FIXED
+### Fixed
 
 * Fix default traject logger Rails.logger [#98](https://github.com/sciencehistory/kithe/pull/98)
 
-# 2.0.0
+## 2.0.0
 
 **We aren't aware of anyone other than Science History Institute using kithe 1.x in production, so haven't invested time in making the change notes _quite_ as complete or migration process as painless as if we were. But if you are in this situation please get in touch via GH Issues for guidance.**
 
 * use fx gem to so schema.rb can contain pg functions, no need for structure.sql anymore, and consuming apps won't be forced to use structure.sql. They ARE forced to use fx gem's overrides of Rails schema dumping, including some local patches. https://github.com/teoljungberg/fx https://github.com/teoljungberg/fx/pull/53
 
-## File attachment handling and derivatives
+### File attachment handling and derivatives
 
 The main changes in kithe 2.0 are around file attachment handling: upgrading to [shrine](https://shrinerb.com/) 3.x, and changing derivatives from custom implementation to be based on shrine 3.x's.
 
