@@ -9,7 +9,7 @@
 
 * Fix bug in obj_extract macro for cases of intermediate array valueshttps://github.com/sciencehistory/kithe/pull/116
 
-*
+* avoid deprecated ActiveModel::Error API https://github.com/sciencehistory/kithe/pull/118
 
 # 2.0.3
 
