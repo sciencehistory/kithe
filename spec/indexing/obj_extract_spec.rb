@@ -134,6 +134,21 @@ describe "ObjExtract traject macro" do
     end
   end
 
+  describe "non-terminal array path" do
+    let(:record) { OpenStruct.new( list: [OpenStruct.new(author: [OpenStruct.new(firstname: "John", lastname: "Smith")])] ) }
+
+    before do
+      indexer.configure do
+        to_field "result", obj_extract(:list, :author, :lastname)
+      end
+    end
+
+    it "extracts" do
+      result = indexer.map_record(record)
+      expect(result["result"]).to eq(["Smith"])
+    end
+  end
+
   describe "hash" do
     before do
       indexer.configure do
