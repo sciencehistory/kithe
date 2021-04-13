@@ -53,6 +53,18 @@ RSpec.describe Kithe::Asset, type: :model do
       expect(asset.file.id).to match %r{\Aasset/#{asset.id}/.*\.jpg}
     end
 
+    describe "flac file" do
+      let(:source_path) { Kithe::Engine.root.join("spec/test_support/audio/silent.flac") }
+
+      it "calls it audio/flac not audio/x-flac" do
+        asset.file = source
+        asset.save!
+        asset.reload
+
+        expect(asset.content_type).to eq("audio/flac")
+      end
+    end
+
     describe "pdf file" do
 
       it "extracts page count" do

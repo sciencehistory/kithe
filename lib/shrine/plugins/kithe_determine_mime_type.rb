@@ -19,6 +19,12 @@ class Shrine
     # Ensure that if mime-type can't be otherwise determined, it is assigned
     # "application/octet-stream", basically the type for generic binary.
     class KitheDetermineMimeType
+      # marcel version 1.0 says audio/x-flac, whereas previous versions
+      # said audio/flac, which we prefer. Let's fix it.
+      RPELACE_CONTENT_TYPES = {
+        "audio/x-flac" => "audio/flac"
+      }
+
       def self.load_dependencies(uploader, *)
         uploader.plugin :determine_mime_type, analyzer: -> (io, analyzers) do
           mime_type = analyzers[:marcel].call(io)
@@ -29,6 +35,9 @@ class Shrine
           end
 
           mime_type = "application/octet-stream" if mime_type.blank?
+
+          # Are there any we prefer an alternate spelling of?
+          mime_type = RPELACE_CONTENT_TYPES.fetch(mime_type, mime_type)
 
           mime_type
         end
