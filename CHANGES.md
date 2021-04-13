@@ -1,5 +1,7 @@
 ## NEXT
 
+## 2.1.0
+
 ### Added
 
 * kithe_determine_mime_type plugin keeps using `audio/flac` as in previous versions of marcel,
