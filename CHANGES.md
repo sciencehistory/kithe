@@ -1,5 +1,9 @@
 ## NEXT
 
+### Added
+
+* Include AttrJson::Record::QueryScopes in Kithe::Model https://github.com/sciencehistory/kithe/pull/120
+
 ## 2.1.0
 
 ### Added

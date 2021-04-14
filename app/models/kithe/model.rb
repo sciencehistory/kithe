@@ -7,6 +7,7 @@ class Kithe::Model < ActiveRecord::Base
 
   include AttrJson::Record
   include AttrJson::NestedAttributes
+  include AttrJson::Record::QueryScopes
   include AttrJson::Record::Dirty
   include Kithe::Indexable
 
