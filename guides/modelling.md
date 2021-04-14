@@ -110,6 +110,10 @@ Note that you can provide validations on your compound models. Kithe provides so
 
 See the [attr_json](https://github.com/jrochkind/attr_json) gem for more documentation on definining metadata with attr_json.
 
+Kithe::Model includes AttrJson querying methods, so for instance:
+
+    Work.jsonb_contains("author.first" => "John")
+
 ### Race conditions and optimistic locking
 
 One down-side of storing all attributes serialized in a json hash, is that every save to db with Rails will overwrite the entire json_attributes column. If you have two processes/threads whose execution overlaps, one trying to update (eg) a "publisher" attribute and the other a "language" attribute -- one of the updates could be lost.
