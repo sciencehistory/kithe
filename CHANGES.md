@@ -1,5 +1,9 @@
 ## NEXT
 
+### Added
+
+* Spec and doc custom already-working conditional logic within define_derivative. https://github.com/sciencehistory/kithe/pull/123
+
 ### Changed
 
 * Removed hacky workaround to shrine missing func around lazy downloads of originals
@@ -15,7 +19,7 @@
 
 ### Fixed
 
-* Fix bug in obj_extract macro for cases of intermediate array valueshttps://github.com/sciencehistory/kithe/pull/116
+* Fix bug in obj_extract macro for cases of intermediate array values https://github.com/sciencehistory/kithe/pull/116
 
 * avoid deprecated ActiveModel::Error API https://github.com/sciencehistory/kithe/pull/118
 
