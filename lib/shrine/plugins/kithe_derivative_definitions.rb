@@ -10,7 +10,11 @@ class Shrine
 
         # Register our derivative processor, that will create our registered derivatives,
         # with our custom options.
-        uploader::Attacher.derivatives(:kithe_derivatives) do |original, **options|
+        #
+        # We do download: false, so when our `lazy` argument is in use, original does not get eagerly downloaded,
+        # but only gets downloaded if needed to make derivatives. This is great for performance, especially
+        # when running batch job to add just missing derivatives.
+        uploader::Attacher.derivatives(:kithe_derivatives, download: false) do |original, **options|
           Kithe::Asset::DerivativeCreator.new(self.class.kithe_derivative_definitions,
             source_io: original,
             shrine_attacher: self,
