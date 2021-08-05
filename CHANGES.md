@@ -1,5 +1,11 @@
 ## NEXT
 
+### Changed
+
+* Removed hacky workaround to shrine missing func around lazy downloads of originals
+  when procesing derivatives. Can use shrine func `download:false` introduced in shrine 3.3
+  instead. https://github.com/sciencehistory/kithe/pull/122
+
 ## 2.1.0
 
 ### Added

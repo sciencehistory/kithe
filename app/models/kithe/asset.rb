@@ -81,31 +81,11 @@ class Kithe::Asset < Kithe::Model
     source = file
     return false unless source
 
-    #local_files = file_attacher.process_derivatives(:kithe_derivatives, only: only, except: except, lazy: lazy)
-    local_files = _process_kithe_derivatives_without_download(source, only: only, except: except, lazy: lazy)
+    local_files = file_attacher.process_derivatives(:kithe_derivatives, only: only, except: except, lazy: lazy)
 
     file_attacher.add_persisted_derivatives(local_files)
   end
 
-  # Working around Shrine's insistence on pre-downloading original before calling derivative processor.
-  # We want to avoid that, so when our `lazy` argument is in use, original does not get eagerly downloaded,
-  # but only gets downloaded if needed to make derivatives.
-  #
-  # This is a somewhat hacky way to do that, loking at the internals of shrine `process_derivatives`,
-  # and pulling them out to skip the parts we don't want. We also lose shrine instrumentation
-  # around this action.
-  #
-  # See: https://github.com/shrinerb/shrine/issues/470
-  #
-  # If that were resolved, the 'ordinary' shrine thing would be to replace calls
-  # to this local private method with:
-  #
-  #     file_attacher.process_derivatives(:kithe_derivatives, only: only, except: except, lazy: lazy)
-  #
-  private def _process_kithe_derivatives_without_download(source, **options)
-    processor = file_attacher.class.derivatives_processor(:kithe_derivatives)
-    local_files = file_attacher.instance_exec(source, **options, &processor)
-  end
 
   # Just a convennience for file_attacher.add_persisted_derivatives (from :kithe_derivatives),
   # feel free to use that if you want to add more than one etc.  By default stores to
