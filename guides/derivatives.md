@@ -108,14 +108,14 @@ end
 
 If multiple derivatives definitions are provided for the same key, only the _most specific_ will be run (content-type with subtype, content-type with primary type only, definition with no content-type).
 
-If you need more complicated conditional logic, you can just put it in a single derivative definition. If your block takes a `record` keyword argument, you can get the Kithe::Asset to query and branch upon.
+If you need more complicated conditional logic, you can just put it in a single derivative definition. If your block takes an `attacher` keyword argument, you will get a `Shrine::Attacher` subclass instance, from which you can call `attacher.record` to get the original Asset model object, or `attacher.file` to get the original file as a `Shrine::UploadedFile` subclass instance.
 
 ```ruby
 class Asset < Kithe::Asset
-  define_derivative(:complicated) do |original_file, record:|
-    if record.content_type == "application/x-my-thing"
+  define_derivative(:complicated) do |original_file, attacher:|
+    if attacher.file.content_type == "application/x-my-thing"
       return io_object
-    elsif record.size < 2.megabytes
+    elsif attacher.file.size < 2.megabytes
       return something_else
     end
     # okay to sometimes return nil
@@ -123,15 +123,15 @@ class Asset < Kithe::Asset
 end
 ```
 
-### custom conditional deriative creation
+### custom conditional derivative creation
 
 If your define_derivative block just returns nil, no derivative will be created. This is a way
 to write whatever logic you want for whether to create a derivative.
 
 ```ruby
-define_derivative(:maybe) do |original_file, record:|
-  if should_create_maybe_deriv?(record)
-    make_maybe_deriv(record)
+define_derivative(:maybe) do |original_file, attacher:|
+  if should_create_maybe_deriv?(attacher.record)
+    make_maybe_deriv(original_file)
   end
 end
 ```
