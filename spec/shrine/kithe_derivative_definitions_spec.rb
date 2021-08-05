@@ -256,6 +256,19 @@ describe "Shrine::Plugins::KitheDerivativeDefinitions", queue_adapter: :test do
     end
   end
 
+  describe "block that returns nil" do
+    before do
+      # hacky confusing way to set this up for testing, sorry.
+      CustomUploader::Attacher.kithe_derivative_definitions = []
+      CustomUploader::Attacher.define_derivative(:returns_nothing) { |o| nil }
+    end
+
+    it "does not complain, does not add derivative" do
+      asset.file_attacher.create_derivatives(:kithe_derivatives)
+      expect(asset.file_derivatives.keys).not_to include(:returns_nothing)
+    end
+  end
+
   describe "lazy creation" do
     before do
       # Create existing derivatives for existing definitions, which we assume exist

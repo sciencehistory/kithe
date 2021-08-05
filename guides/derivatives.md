@@ -123,6 +123,19 @@ class Asset < Kithe::Asset
 end
 ```
 
+### custom conditional deriative creation
+
+If your define_derivative block just returns nil, no derivative will be created. This is a way
+to write whatever logic you want for whether to create a derivative.
+
+```ruby
+define_derivative(:maybe) do |original_file, record:|
+  if should_create_maybe_deriv?(record)
+    make_maybe_deriv(record)
+  end
+end
+```
+
 
 ### Definining non-default derivatives
 
