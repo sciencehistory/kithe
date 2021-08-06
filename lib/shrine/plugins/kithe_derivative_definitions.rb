@@ -48,10 +48,12 @@ class Shrine
         # Tempfile and Dir.mktmpdir may be useful.
         #
         # If in order to do your transformation you need additional information about the original,
-        # just add a `record:` keyword argument to your block, and the Asset object will be passed in:
+        # just add a `attacher:` keyword argument to your block, and a `Shrine::Attacher` subclass
+        # will be passed in. You can then get the model object from `attacher.record`, or the
+        # original file as a `Shrine::UploadedFile` object with `attacher.file`.
         #
-        #     define_derivative :thumbnail do |original_file, record:|
-        #        record.width, record.height, record.content_type # etc
+        #     define_derivative :thumbnail do |original_file, attacher:|
+        #        attacher.record.title, attacher.file.width, attacher.file.content_type # etc
         #     end
         #
         # Derivatives are normally uploaded to the Shrine storage labeled :kithe_derivatives,
