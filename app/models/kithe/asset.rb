@@ -124,6 +124,14 @@ class Kithe::Asset < Kithe::Model
     result && result.values.first
   end
 
+  # Like #update_derivative, but can update multiple at once.
+  #
+  #     asset.update_derivatives({ "big_thumb" => big_thumb_io, "small_thumb" => small_thumb_io })
+  #
+  # Options from kithe `add_persisted_derivatives`/shrine `add_derivative` supported.
+  #
+  #     asset.update_derivatives({ "big_thumb" => big_thumb_io, "small_thumb" => small_thumb_io }, delete_false)
+  #
   def update_derivatives(deriv_hash, **options)
     file_attacher.add_persisted_derivatives(deriv_hash, **options)
   end
