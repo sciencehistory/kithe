@@ -51,13 +51,15 @@ So you want to start an app that uses kithe. We should later provide better 'get
 
 ## Why kithe?
 
-Kithe tries to let you develop your app like "an ordinary Rails app" (in all it's possible variations), while handling some of the rough spots common to the kinds of modelling and administration common to digital collections domains.  But developers should be able to use standard Rails patterns and skills to develop an app to your specific local needs, familiar and no more complicated than building any other Rails app.
+Kithe tries to let you develop your app like "an ordinary Rails app" (in all it's possible variations), while handling some of the rough spots common to the kinds of modelling and administration common to digital collections domains.  But developers should be able to use standard Rails patterns and skills to develop an app to your specific local needs, familiar, no more complicated than building any other Rails app. You add features to a kithe app just like building Rails, using whatever patterns you like. We support modern Rails versions, 5.2+.
 
 In that kithe provides tools and not a turnkey app, develping an app based on kythe in some ways similar to developing an app based on [valkyrie](https://github.com/samvera-labs/valkyrie) (but not hyrax). They both provide basic architecture for modelling/persistence, although in quite different ways. Kithe also provides tools in addition to modelling/persistence, but does _not_ provide the data-mapper/repository pattern valkyrie does, or any built-in abstraction for persisting anywhere but a postgres DB.
 
 If you are comparing it to a "solution bundle" digital collections platform like hyrax, kithe may seem like more work. But experience has shown us that in our domain, "solution bundles" can turn out less of a "turnkey" approach than they seem, and can have greater development cost over total app lifecycle than anticipated. If you have similar experience that leads you to consider a more 'bespoke' app approach -- you may want to consider kithe. We hope to provide architecturally simple support and standardization for your custom app, taking care of some of the common "hard parts" and leaving you with flexibility to build out the app that meets your needs.
 
 Kithe has beeen developed in tandem with the Science History Institute's in-development [replacement digital collections](https://github.com/sciencehistory/scihist_digicoll) app, which has been in production for several years using kithe.
+
+[The University of Minnesota found kithe](https://docs.google.com/presentation/d/1Z4AoIDOaxbY4pt3mDhNt6MfUs6VIMjysKKmaYQpjuk8/edit?usp=sharing) to pair well with GeoBlacklight, an easy way to provide the persistence layer and metadata editing UI that blacklight on it's own lacks.
 
 We are serious about [semantic verisioning](https://semver.org/) and will endeavor to release backwards breaking changes only with a major release, and minimize major releases.
 
