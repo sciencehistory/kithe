@@ -28,7 +28,7 @@ describe Shrine::Plugins::KithePersistedDerivatives, queue_adapter: :test do
 
   describe "#add_persisted_derivatives" do
     it "can add and persist" do
-      asset.file_attacher.add_persisted_derivatives(sample: sample_deriv_file!)
+      asset.file_attacher.add_persisted_derivatives({ sample: sample_deriv_file! })
 
       expect(asset.changed?).to be(false)
       expect(asset.file_derivatives[:sample]).to be_present
@@ -74,12 +74,12 @@ describe Shrine::Plugins::KithePersistedDerivatives, queue_adapter: :test do
 
       it "will refuse" do
         expect {
-          asset.file_attacher.add_persisted_derivatives(sample: sample_deriv_file!)
+          asset.file_attacher.add_persisted_derivatives({ sample: sample_deriv_file! })
         }.to raise_error(TypeError)
       end
 
       it "can be forced" do
-        asset.file_attacher.add_persisted_derivatives({sample: sample_deriv_file!}, allow_other_changes: true)
+        asset.file_attacher.add_persisted_derivatives({ sample: sample_deriv_file! }, allow_other_changes: true)
 
         expect(asset.changed?).to be(false)
         asset.reload
@@ -93,7 +93,7 @@ describe Shrine::Plugins::KithePersistedDerivatives, queue_adapter: :test do
 
       it "refuses even with other_changes: true" do
         expect {
-          asset.file_attacher.add_persisted_derivatives({sample: sample_deriv_file!}, allow_other_changes: true)
+          asset.file_attacher.add_persisted_derivatives({ sample: sample_deriv_file! }, allow_other_changes: true)
         }.to raise_error(TypeError)
       end
 
@@ -128,7 +128,7 @@ describe Shrine::Plugins::KithePersistedDerivatives, queue_adapter: :test do
         file = sample_deriv_file!
         local_file_path = file.path
 
-        expect(asset.file_attacher.add_persisted_derivatives(sample: file)).to be(false)
+        expect(asset.file_attacher.add_persisted_derivatives({sample: file})).to be(false)
 
         expect(File.exist?(local_file_path)).to be(false)
       end
@@ -151,7 +151,7 @@ describe Shrine::Plugins::KithePersistedDerivatives, queue_adapter: :test do
         file = sample_deriv_file!
         local_file_path = file.path
 
-        expect(asset.file_attacher.add_persisted_derivatives(new_try: file)).to be(false)
+        expect(asset.file_attacher.add_persisted_derivatives({new_try: file})).to be(false)
 
 
         expect(asset.changed?).to be(false)
@@ -331,10 +331,10 @@ describe Shrine::Plugins::KithePersistedDerivatives, queue_adapter: :test do
 
   describe "#remove_persisted_derivatives" do
     before do
-      asset.file_attacher.add_persisted_derivatives(
+      asset.file_attacher.add_persisted_derivatives({
         sample1: fakeio("sample 1"),
         sample2: fakeio("sample 2")
-      )
+      })
     end
 
     it "can remove" do

@@ -5,6 +5,8 @@
 * Doc-only change, update docs fro kithe 2.0 change to define_derivative block parameter,
   `attacher:` not `record:`. https://github.com/sciencehistory/kithe/pull/124
 
+* Ruby 3.0 compatibility.
+
 ### Added
 
 * Spec and doc custom already-working conditional logic within define_derivative. https://github.com/sciencehistory/kithe/pull/123
