@@ -81,7 +81,7 @@ describe Kithe::FfmpegTransformer do
       instance = described_class.new(output_suffix: 'flac', bitrate: '32k')
       output = instance.call(input_file)
       expect(output).to be_kind_of(Tempfile)
-      expect(Marcel::MimeType.for(output)).to eq("audio/x-flac")
+      expect(Marcel::MimeType.for(output)).to eq("audio/flac")
       output.close!
     end
   end
