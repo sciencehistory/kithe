@@ -42,7 +42,7 @@ class ArrayInclusionValidator < ActiveModel::EachValidator
 
     unless not_allowed_values.blank?
       formatted_rejected = not_allowed_values.uniq.collect(&:inspect).join(",")
-      record.errors.add(attribute, :inclusion, options.except(:in).merge!(rejected_values: formatted_rejected, value: value))
+      record.errors.add(attribute, :inclusion, **options.except(:in).merge!(rejected_values: formatted_rejected, value: value))
     end
   end
 end
