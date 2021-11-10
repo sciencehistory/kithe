@@ -97,6 +97,8 @@ module Kithe
         # only call on-finish if we have a writer, batch writers are lazily
         # created and maybe we never created one
         if @writer
+          # if we created the writer ourselves locally and nobody
+          # specified an on_finish, close our locally-created writer.
           on_finish = if @local_writer && @on_finish.nil?
             proc {|writer| writer.close }
           else
@@ -105,7 +107,7 @@ module Kithe
           on_finish.call(@writer) if on_finish
         end
 
-        Thread.current[THREAD_CURRENT_KEY] = @original_thread_current_settings
+        Thread.current[THREAD_CURRENT_KEY] = @original_settings
       end
 
       private

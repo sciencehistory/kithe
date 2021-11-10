@@ -202,6 +202,22 @@ describe Kithe::Indexable, type: :model do
 
           expect(Thread.current[Kithe::Indexable::ThreadSettings::THREAD_CURRENT_KEY]).to be_nil
         end
+
+        it "can be disabled when there's a nested disable block" do
+          stub_request(:post, @solr_update_url)
+
+          Kithe::Indexable.index_with(disable_callbacks: true) do
+
+            Kithe::Indexable.index_with(disable_callbacks: true) do
+              TestWork.create!(title: "test_a")
+            end
+
+            TestWork.create!(title: "test_b")
+          end
+          expect(WebMock).not_to have_requested(:post, @solr_update_url)
+        end
+
+
       end
 
       describe "specified writer" do
