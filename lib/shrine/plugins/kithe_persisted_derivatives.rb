@@ -26,7 +26,10 @@ class Shrine
         # Like the shrine `add_derivatives` method, but also *persists* the
         # derivatives (saves to db), in a realiably concurrency-safe way.
         #
-        #     attacher.add_persisted_derivatives({ deriv_key1: io1, deriv_key2: io2 })
+        # For ruby 3 compatibility, make sure you supply local_files as a hash
+        # literal with curly braces:
+        #
+        #     attacher.add_persisted_derivatives({ derivative_name1: io_obj1, deriv2: io2 })
         #
         # Generally can take any options that shrine `add_derivatives`
         # can take, including custom `storage` or `metadata` arguments.
