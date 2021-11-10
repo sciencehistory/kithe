@@ -7,6 +7,8 @@
 
 * Ruby 3.0 compatibility.
 
+* Fix nested Kithe::Indexable.index_with calls. https://github.com/sciencehistory/kithe/pull/131
+
 ### Added
 
 * Spec and doc custom already-working conditional logic within define_derivative. https://github.com/sciencehistory/kithe/pull/123
