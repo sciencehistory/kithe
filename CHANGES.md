@@ -2,6 +2,26 @@
 
 ### Fixed
 
+*
+
+*
+
+### Added
+
+*
+
+*
+
+### Changed
+
+*
+
+*
+
+## 2.2.0 (Nov 15 2021)
+
+### Fixed
+
 * Doc-only change, update docs fro kithe 2.0 change to define_derivative block parameter,
   `attacher:` not `record:`. https://github.com/sciencehistory/kithe/pull/124
 
