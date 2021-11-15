@@ -120,6 +120,9 @@ module Kithe
     #
     # By default will use a per-update writer, or thread/block-specific writer configured with `self.index_with`,
     # or you can pass one in.
+    #
+    # This method is part of Kithe API, including allowing local apps to override! Backwards
+    # compatibilty matters for semver with any change to method signature.
     def update_index(mapper: kithe_indexable_mapper, writer:nil)
       RecordIndexUpdater.new(self, mapper: mapper, writer: writer).update_index
     end
