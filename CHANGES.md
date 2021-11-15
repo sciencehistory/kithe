@@ -13,6 +13,8 @@
 
 * Spec and doc custom already-working conditional logic within define_derivative. https://github.com/sciencehistory/kithe/pull/123
 
+* Documentation on local over-ride to Kithe::Model#update_index to implement local indexing customization. https://github.com/sciencehistory/kithe/pull/132
+
 ### Changed
 
 * Removed hacky workaround to shrine missing func around lazy downloads of originals

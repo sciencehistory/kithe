@@ -249,6 +249,15 @@ If you don't need "realtime visible" solr updates, you might want the indexing t
 
 Alternately or additionally, we could use some of the concurrency built into traject. If you don't need realtime-visible solr updates, we could enable the threading support in the Traject indexer and/or writer, to have some operations occur in an in-process thread -- could be especially interesting for batch updates. This would also need further analysis, the current way kithe uses traject isn't suitable for entirely out-of-band async processing.
 
+## Customizing update_index
+
+It is part kithe the API to let you override `update_index` on a mdoel to customize it. To try to implement asynchronous patterns?  Or, maybe to try to make updates conditional on what data has changed, or let update to a member record re-index it's parent?  It gets a little bit tricky, unfortunately. But you can see one local attempt to experiment with that here: https://github.com/sciencehistory/scihist_digicoll/pull/1462
+
+If you override `update_asset`, please add a trailing `**` to declared method args to allow
+forwards-compatibility, eg:
+
+     def update_index(mapper: kithe_indexable_mapper, writer:nil, **)
+
 ## Use with non Kithe::Model ActiveRecord classes?
 
 While Kithe::Indexable was developed for use with `Kithe::Model` (your collections, works, and assets), it's implementation should be independent of it. (Although we aren't currently testing that).
