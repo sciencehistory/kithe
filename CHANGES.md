@@ -2,7 +2,7 @@
 
 ### Fixed
 
-*
+* Avoid making a query on every validation https://github.com/sciencehistory/kithe/pull/134
 
 *
 
