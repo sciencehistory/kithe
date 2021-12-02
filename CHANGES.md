@@ -8,7 +8,7 @@
 
 ### Added
 
-*
+* Allow customization of Solr indexing `batching` mode batch size. https://github.com/sciencehistory/kithe/pull/135
 
 *
 

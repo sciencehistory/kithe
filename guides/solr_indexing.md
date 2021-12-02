@@ -97,6 +97,19 @@ Saving or destroying will still automatically trigger a solr sync, but all of th
 
 Note that `index_with` is implemented in terms of Thread.current, so it's batching settings apply to everything in the block, but do not automatically apply to any new threads you might create in the block.
 
+By default, batching mode uses a batch size of 100 records. You can change this globally:
+
+```ruby
+Kithe.indexable_settings.batching_mode_batch_size = 20
+```
+
+Or on an individual call to index_with:
+
+```ruby
+Kithe::Indexable.index_with(batching: 20) do
+  #...
+```
+
 ### Batch every controller?
 
 Would you like to have every controller in your app batch solr index updates within each action? You can!

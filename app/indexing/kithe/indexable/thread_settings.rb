@@ -57,7 +57,7 @@ module Kithe
       def initialize(batching:, disable_callbacks:, original_settings:,
         writer:, on_finish:)
         @original_settings = original_settings
-        @batching = !!batching
+        @batching = batching
         @disable_callbacks = disable_callbacks
         @on_finish = on_finish
 
@@ -80,8 +80,9 @@ module Kithe
       def writer
         @writer ||= begin
           if @batching
+            batch_size = (@batching == true) ? Kithe.indexable_settings.batching_mode_batch_size : @batching
             @local_writer = true
-            Kithe.indexable_settings.writer_instance!("solr_writer.batch_size" => 100)
+            Kithe.indexable_settings.writer_instance!("solr_writer.batch_size" => batch_size)
           end
         end
       end

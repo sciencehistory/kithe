@@ -170,6 +170,43 @@ describe Kithe::Indexable, type: :model do
           Kithe::Indexable.index_with(batching: true, on_finish: ->(w){ raise "should not be called" }) do
           end
         end
+
+        describe "custom batching_mode_batch_size" do
+          let(:custom_size) { 20 }
+
+          it "can be set globally" do
+            stub_request(:post, @solr_update_url)
+
+            # set custom setting
+            expect(Kithe.indexable_settings).to receive(:batching_mode_batch_size).and_return(custom_size)
+
+            # expect custom setting to be passed to index writer
+            expect(Kithe.indexable_settings.writer_class_name.constantize).to receive(:new).
+              with(hash_including("solr_writer.batch_size"=> custom_size)).
+              and_call_original
+
+            # exersize
+            Kithe::Indexable.index_with(batching: true) do
+              TestWork.create!(title: "test1")
+              TestWork.create!(title: "test2")
+            end
+          end
+
+          it "can be set per-call" do
+            stub_request(:post, @solr_update_url)
+
+            # expect custom setting to be passed to index writer
+            expect(Kithe.indexable_settings.writer_class_name.constantize).to receive(:new).
+              with(hash_including("solr_writer.batch_size"=> custom_size)).
+              and_call_original
+
+            # exersize
+            Kithe::Indexable.index_with(batching: custom_size) do
+              TestWork.create!(title: "test1")
+              TestWork.create!(title: "test2")
+            end
+          end
+        end
       end
 
       describe "auto_callbacks" do
