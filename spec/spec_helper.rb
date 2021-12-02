@@ -16,6 +16,7 @@
 #
 require 'byebug'
 require 'webmock/rspec'
+require 'db_query_matchers'
 
 RSpec.configure do |config|
 

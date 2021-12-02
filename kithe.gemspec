@@ -41,6 +41,7 @@ Gem::Specification.new do |s|
   s.add_development_dependency "appraisal" # CI testing under multiple rails versions
   s.add_development_dependency "dimensions" # checking image width of transformers in tests
 
+  s.add_development_dependency "db-query-matchers", "< 1"
 
   s.add_development_dependency "pg"
   s.add_development_dependency "yard-activesupport-concern"

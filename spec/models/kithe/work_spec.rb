@@ -43,6 +43,20 @@ RSpec.describe Kithe::Work, type: :model do
     expect(work.contained_by).to include(collection)
   end
 
+  # this was a problem with we fixed with this originally failing test
+  it "does not do an extra fetch for validation" do
+    work = FactoryBot.create(:kithe_work,
+      parent: FactoryBot.create(:kithe_work),
+      members: [FactoryBot.create(:kithe_work)],
+      contained_by: [FactoryBot.create(:kithe_collection)]).reload
+
+    work.title = "new title"
+
+    expect {
+      work.validate
+    }.not_to make_database_queries
+  end
+
   describe "sub-class with attr_json" do
     let(:subclass_name) { "TestWorkSubclass" }
     let(:subclass) do
