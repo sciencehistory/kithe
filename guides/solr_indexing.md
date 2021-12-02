@@ -222,7 +222,7 @@ This would also be a way to get indexing to go to something other than Solr, if 
 
 You can also specify whatever traject "settings" the writer may understand. For instance, if you wanted to _not_ send an update with softCommit, but just rely on `<autoSoftCommit>` in your `solrconfig.xml` (because you don't mind some latency for better performance):
 
-    Kithe::Indexalbe.settings.writer_settings.merge!(
+    Kithe.indexable_settings.writer_settings.merge!(
       "solr_writer.solr_update_args" => {}
     )
 
