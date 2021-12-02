@@ -2,13 +2,13 @@
 
 ### Fixed
 
-* Avoid making a query on every validation https://github.com/sciencehistory/kithe/pull/134
+*
 
 *
 
 ### Added
 
-* Allow customization of Solr indexing `batching` mode batch size. https://github.com/sciencehistory/kithe/pull/135
+*
 
 *
 
@@ -17,6 +17,18 @@
 *
 
 *
+
+
+## 2.3.0 (Dec 2 2021)
+
+### Fixed
+
+* Avoid making a query on every validation https://github.com/sciencehistory/kithe/pull/134
+
+### Added
+
+* Allow customization of Solr indexing `batching` mode batch size. https://github.com/sciencehistory/kithe/pull/135
+
 
 ## 2.2.0 (Nov 15 2021)
 
