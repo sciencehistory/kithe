@@ -90,6 +90,12 @@ To instead batch updates within a certain context do:
 ```ruby
 Kithe::Indexable.index_with(batching: true) do
   # some things that may save or destroy indexable objects
+  #
+  # IF you want to use an explicit transaction batch (you may or may not), you need to
+  # do it INSIDE any index_with block if you want the index_with to work right...
+  Kithe::Model.transaction.do
+    # ...
+  end
 end
 ```
 
