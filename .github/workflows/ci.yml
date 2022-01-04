@@ -5,6 +5,10 @@ on:
     branches: [ master ]
   pull_request:
     branches: [ '**' ]
+  # UTC Tuesdays 0900. 3/4am ET. note, not sure where notifications failed scheduled builds go...
+  schedule:
+    - cron: '0 9 * * TUE'
+
 
 env:
   POSTGRES_USER: postgres
