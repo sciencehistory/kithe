@@ -33,8 +33,10 @@ module TemporaryClassForSpecs
     end
 
     after(:each) do
-      # grr....
-      ActiveSupport::Dependencies::Reference.clear!
+      # only exists before Rails 7
+      if defined?(ActiveSupport::Dependencies::Reference.clear!)
+        ActiveSupport::Dependencies::Reference.clear!
+      end
     end
   end
 end
