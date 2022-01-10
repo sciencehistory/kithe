@@ -5,6 +5,10 @@ on:
     branches: [ master ]
   pull_request:
     branches: [ '**' ]
+  # UTC Tuesdays 0900. 3/4am ET. note, not sure where notifications failed scheduled builds go...
+  schedule:
+    - cron: '0 9 * * TUE'
+
 
 env:
   POSTGRES_USER: postgres
@@ -33,7 +37,7 @@ jobs:
             ruby: 2.7
 
           - gemfile: rails_61
-            ruby: 3.0
+            ruby: '3.0'
 
     name: test ${{ matrix.gemfile }}, ruby ${{ matrix.ruby }}
 
