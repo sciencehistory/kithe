@@ -304,7 +304,7 @@ class AssetUploader < Kithe::AssetUploader
 end
 ```
 
-## Custom Metadata
+## Custom Metadata and Characterization
 
 You can use shrine's [add_metadata](https://shrinerb.com/docs/plugins/add_metadata) plugin, already included in `Kithe::AssetUploader` to add arbitrary metadata.
 
@@ -315,6 +315,25 @@ class AssetUploader < Kithe::AssetUploader
   add_metadata :something_fancy do |source_io, derivative:nil, **context|
     if context[:action] != :cache && derivative.nil?
       calculate_fancy_content(source_io)
+    end
+  end
+end
+```
+
+Kithe also provides a helper class to do audio/video characterization with `ffprobe` (a tool
+that comes with ffmpeg). Here's an example of extracting multiple metadata fields, only for video input, using an `ffprobe`-based extractor that comes with kithe -- executing only on `store` action, and only for originals not derivatives.
+
+```ruby
+# audio/video file characterization
+add_metadata do |source_io, derivative:nil, **context|
+  # only after promotion, and not for derivatives...
+  if context[:action] != :cache && derivative.nil? &&
+       context.dig(:metadata, "mime_type") =~ /\A(video|audio)\//
+    # ffprobe can use a URL and very efficiently only retrieve what bytes it needs...
+    if source_io.respond_to?(:url)
+      Kithe::FfprobeCharacterization.new(source_io.url).normalized_metadata
+    elsif source_io.kind_of?(File)
+      Kithe::FfprobeCharacterization.new(source_io).normalized_metadata
     end
   end
 end
