@@ -8,7 +8,7 @@
 
 ### Added
 
-*
+* FfprobeCharacterization helper class for a/v characterization metadata https://github.com/sciencehistory/kithe/pull/139
 
 *
 
