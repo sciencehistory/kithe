@@ -32,6 +32,49 @@ module Kithe
       @input_arg = input
     end
 
+    # a helper for creating a block for shrine uploader, you can always use
+    # FFprobeCharecterization.new directly too!
+    #
+    # * Does not run on "cache" action, only on promotion (or manual execution).
+    #
+    # * Will run only on items with "audio/" or "video/" content-type.
+    #
+    # * By default only on main original, not derivatives, although
+    #   you can pass `run_on_derivatives: true` if desired.
+    #
+    # Will use ffprobe with direct URL if possible based on source_io (ffprobe
+    # can very efficiently access only bytes needed from URL), otherwise will
+    # download local temp copy if necessary.
+    #
+    #    class AssetUploader < Kithe::AssetUploader
+    #      add_metadata do |source_io, **context|
+    #        Kithe::FfprobeCharacterization.characterize_from_uploader(source_io, context)
+    #      end
+    #
+    #      #...
+    #    end
+    #
+    def self.characterize_from_uploader(source_io, add_metadata_context, run_on_derivatives: false)
+      # only for A/V please
+      return {} unless add_metadata_context.dig(:metadata, "mime_type")&.start_with?(%r{\A(audio|video)/})
+
+      # don't run on cache, only on promotion or manual trigger
+      return {} unless add_metadata_context[:action] != :cache
+
+      # don't run on derivatives unless option given
+      return {} unless add_metadata_context[:derivative].nil? || run_on_derivatives
+
+      # ffprobe can use a URL and very efficiently only retrieve what bytes it needs...
+      if source_io.respond_to?(:url)
+        Kithe::FfprobeCharacterization.new(source_io.url).normalized_metadata
+      else
+        # if not already a file, will download, possibly slow, but gets us to go.
+        Shrine.with_file do |file|
+          Kithe::FfprobeCharacterization.new(file.path).normalized_metadata
+        end
+      end
+    end
+
     # ffprobe args come from this suggestion:
     #
     # https://gist.github.com/nrk/2286511?permalink_comment_id=2593200#gistcomment-2593200

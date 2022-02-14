@@ -325,20 +325,8 @@ that comes with ffmpeg). Here's an example of extracting multiple metadata field
 
 ```ruby
 # audio/video file characterization
-add_metadata do |source_io, derivative:nil, **context|
-  # only after promotion, and not for derivatives...
-  if context[:action] != :cache && derivative.nil? &&
-       context.dig(:metadata, "mime_type") =~ /\A(video|audio)\//
-    # ffprobe can use a URL and very efficiently only retrieve what bytes it needs...
-    if source_io.respond_to?(:url)
-      Kithe::FfprobeCharacterization.new(source_io.url).normalized_metadata
-    else
-      # if not already a file, will download, possibly slow, but gets us to go.
-      Shrine.with_file do |file|
-        Kithe::FfprobeCharacterization.new(file.path).normalized_metadata
-      end
-    end
-  end
+add_metadata do |source_io, context|
+  Kithe::FfprobeCharacterization.characterize_from_uploader(source_io, context)
 end
 ```
 
