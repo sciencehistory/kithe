@@ -28,7 +28,7 @@ class Kithe::Asset < Kithe::Model
   delegate :stored?, to: :file_attacher
   delegate :set_promotion_directives, :promotion_directives, to: :file_attacher
   # delegate "metadata" as #file_metadata
-  delegate :metadata, to: :file, prefix: true
+  delegate :metadata, to: :file, prefix: true, allow_nil: true
 
   # will be sent to file_attacher.set_promotion_directives, provided by our
   # kithe_promotion_hooks shrine plugin.
