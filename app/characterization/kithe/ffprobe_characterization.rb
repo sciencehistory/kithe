@@ -133,6 +133,12 @@ module Kithe
       }.compact
     end
 
+    # just the ffprobe version please. This is also available
+    # in ffprobe_hash
+    def ffprobe_version
+      ffprobe_hash.dig("program_version", "version")
+    end
+
     private
 
     def ffprobe_stdout

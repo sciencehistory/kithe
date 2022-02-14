@@ -33,6 +33,10 @@ describe Kithe::FfprobeCharacterization do
       expect(characterization.ffprobe_hash).to have_key("ffprobe_options_used")
     end
 
+    it "can return ffprobe version" do
+      expect(characterization.ffprobe_version).to match /[0-9.]+/
+    end
+
     describe "with File input" do
       let(:input_file) { File.open(input_path, encoding: "BINARY") }
       let(:characterization) { described_class.new(input_file)}
