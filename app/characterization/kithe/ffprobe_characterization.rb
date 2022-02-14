@@ -24,6 +24,7 @@ module Kithe
   #
   class FfprobeCharacterization
     class_attribute :ffprobe_command, default: "ffprobe"
+    class_attribute :ffprobe_timeout, default: 10
 
     attr_reader :input_arg
 
@@ -146,7 +147,7 @@ module Kithe
                             ffprobe_command,
                             *ffprobe_options,
                             input_arg,
-                            timeout: 10).out
+                            timeout: ffprobe_timeout).out
     end
 
     def first_video_stream_json
