@@ -8,9 +8,7 @@
 
 ### Added
 
-* FfprobeCharacterization helper class for a/v characterization metadata https://github.com/sciencehistory/kithe/pull/139
-
-* Create an Asset#file_metadata method that delegates to file.metadata for convenience https://github.com/sciencehistory/kithe/pull/140
+*
 
 *
 
@@ -18,7 +16,14 @@
 
 *
 
-*
+
+## 2.4.0 (14 Feb 2022)
+
+### Added
+
+* FfprobeCharacterization helper class for a/v characterization metadata https://github.com/sciencehistory/kithe/pull/139
+
+* Create an Asset#file_metadata method that delegates to file.metadata for convenience https://github.com/sciencehistory/kithe/pull/140
 
 
 ## 2.3.0 (Dec 2 2021)
