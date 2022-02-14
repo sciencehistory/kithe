@@ -58,6 +58,30 @@ describe Kithe::FfprobeCharacterization do
         })
       end
     end
+
+    describe "with URL input" do
+      let(:input_url) { "http://exaple.org/some_file.mp4"}
+      before do
+        stub_request(:get, input_url).to_return(body: File.open(input_path))
+      end
+
+      it "can return normalized data" do
+        expect(characterization.normalized_metadata).to eq({
+          "width" => 224,
+          "height" => 168,
+          "frame_rate" => 15.0,
+          "duration_seconds" => 2.006,
+          "audio_codec" =>"aac",
+          "video_codec" => "h264",
+          "audio_bitrate" => 369135,
+          "video_bitrate" => 105848,
+          "bitrate" => 484466,
+          "audio_sample_rate" => 48000,
+          "audio_channels" => 6,
+          "audio_channel_layout" => "5.1"
+        })
+      end
+    end
   end
 
   describe "audio" do
