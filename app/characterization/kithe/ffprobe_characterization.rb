@@ -124,10 +124,10 @@ module Kithe
         "duration_seconds" => ffprobe_hash&.dig("format", "duration")&.to_f&.round(3),
         "audio_codec" => first_audio_stream_json&.dig("codec_name"),
         "video_codec" => first_video_stream_json&.dig("codec_name"),
-        "audio_bitrate" => first_audio_stream_json&.dig("bit_rate")&.to_i,
-        "video_bitrate" => first_video_stream_json&.dig("bit_rate")&.to_i,
+        "audio_bitrate" => first_audio_stream_json&.dig("bit_rate")&.to_i, # in bps
+        "video_bitrate" => first_video_stream_json&.dig("bit_rate")&.to_i, # in bps
         # extra ones not ActiveEncode
-        "bitrate" => ffprobe_hash.dig("format", "bit_rate")&.to_i, # overall bitrate of whole file
+        "bitrate" => ffprobe_hash.dig("format", "bit_rate")&.to_i, # overall bitrate of whole file in bps
         "audio_sample_rate" => first_audio_stream_json&.dig("sample_rate")&.to_i, # in Hz
         "audio_channels" => first_audio_stream_json&.dig("channels")&.to_i, # usually 1 or 2 (for stereo)
         "audio_channel_layout" => first_audio_stream_json&.dig("channel_layout"), # stereo or mono or (dolby) 2.1, or something else.
