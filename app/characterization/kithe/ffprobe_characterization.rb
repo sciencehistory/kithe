@@ -168,7 +168,12 @@ module Kithe
     # which we let ruby rational do for us.
     def video_frame_rate_as_float
       avg_frame_rate = first_video_stream_json&.dig("avg_frame_rate")
-      Rational(avg_frame_rate).to_f.round(2) if avg_frame_rate
+
+      return nil unless avg_frame_rate
+
+      return nil if avg_frame_rate.split("/")[1] == "0" # sometimes it returns '0/0', don't know why.
+
+      Rational(avg_frame_rate).to_f.round(2)
     end
   end
 end
