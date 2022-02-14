@@ -12,6 +12,11 @@ module Kithe
   #
   #     metadata = FfprobeCharacterization.new(url).normalized_metadata
   #
+  # Normalized metadata is a *flat* hash of typed JSON-able values. It uses
+  # keys based on what the ActiveEncode gem seems to use, but adds some extras
+  # and makes a few tweaks. See the #normalized_metadata method source for
+  # keys supplied.
+  #
   # Or the complete FFprobe response as JSON. (We try to use ffprobe options that
   # are exhausitive as to what is returned, including ffprobe version(s))
   #
