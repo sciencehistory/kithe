@@ -70,11 +70,11 @@ module Kithe
       return {} unless add_metadata_context[:derivative].nil? || run_on_derivatives
 
       # ffprobe can use a URL and very efficiently only retrieve what bytes it needs...
-      if source_io.respond_to?(:url)
+      if source_io.respond_to?(:url) && source_io.url.start_with?(/\Ahttps?:/)
         Kithe::FfprobeCharacterization.new(source_io.url).normalized_metadata
       else
         # if not already a file, will download, possibly slow, but gets us to go.
-        Shrine.with_file do |file|
+        Shrine.with_file(source_io) do |file|
           Kithe::FfprobeCharacterization.new(file.path).normalized_metadata
         end
       end

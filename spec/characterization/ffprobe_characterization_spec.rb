@@ -76,4 +76,51 @@ describe Kithe::FfprobeCharacterization do
       })
     end
   end
+
+  describe ".characterize_from_uploader" do
+    let(:video_file_path) { Kithe::Engine.root.join("spec", "test_support", "video", "very_small_h264.mp4").to_s }
+
+    temporary_class("UploaderWithFfprobeCharacterization") do
+      Class.new(Kithe::AssetUploader) do
+        add_metadata do |source_io, context|
+          Kithe::FfprobeCharacterization.characterize_from_uploader(source_io, context)
+        end
+      end
+    end
+
+    temporary_class("CustomAsset") do
+      Class.new(Kithe::Asset) do
+        set_shrine_uploader(UploaderWithFfprobeCharacterization)
+      end
+    end
+
+    describe "on cache storage", queue_adapter: :test do
+      it "does not characterize" do
+        asset = CustomAsset.create!(title: "test", file: File.open(video_file_path))
+        asset.reload
+
+        expect(asset.file.metadata.keys).not_to include("bitrate", "duration_seconds")
+      end
+    end
+
+    describe "after promotion", queue_adapter: :inline do
+      it "characterizes" do
+        asset = CustomAsset.create!(title: "test", file: File.open(video_file_path))
+        asset.reload
+
+        expect(asset.file.metadata.keys).to include("bitrate","duration_seconds")
+      end
+
+      describe "with image file" do
+        let(:image_file_path) { Kithe::Engine.root.join("spec", "test_support", "images", "photo_800x586.jpg").to_s }
+
+        it "does not characterize or error" do
+          asset = CustomAsset.create!(title: "test", file: File.open(image_file_path))
+          asset.reload
+
+          expect(asset.file.metadata.keys).not_to include("bitrate", "duration_seconds")
+        end
+      end
+    end
+  end
 end
