@@ -145,8 +145,6 @@ module Kithe
       @ffprobe_output ||= TTY::Command.new(printer: :null).run(
                             ffprobe_command,
                             *ffprobe_options,
-                            # warning some S3 urls are failing, some weird escaping, have to figure
-                            # it out.
                             input_arg,
                             timeout: 10).out
     end
