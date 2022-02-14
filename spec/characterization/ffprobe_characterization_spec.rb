@@ -6,8 +6,8 @@ describe Kithe::FfprobeCharacterization do
     let(:input_path) { Kithe::Engine.root.join("spec", "test_support", "video", "very_small_h264.mp4").to_s }
     let(:characterization) { described_class.new(input_path)}
 
-    it "returns normalized data" do
-      expect(characterization.normalized_metadata).to eq({
+    let(:normalized_output) do
+      {
         "width" => 224,
         "height" => 168,
         "frame_rate" => 15.0,
@@ -20,7 +20,11 @@ describe Kithe::FfprobeCharacterization do
         "audio_sample_rate" => 48000,
         "audio_channels" => 6,
         "audio_channel_layout" => "5.1"
-      })
+      }
+    end
+
+    it "returns normalized data" do
+      expect(characterization.normalized_metadata).to eq(normalized_output)
     end
 
     it "can return complete output" do
@@ -42,20 +46,7 @@ describe Kithe::FfprobeCharacterization do
       let(:characterization) { described_class.new(input_file)}
 
       it "can return normalized data" do
-        expect(characterization.normalized_metadata).to eq({
-          "width" => 224,
-          "height" => 168,
-          "frame_rate" => 15.0,
-          "duration_seconds" => 2.006,
-          "audio_codec" =>"aac",
-          "video_codec" => "h264",
-          "audio_bitrate" => 369135,
-          "video_bitrate" => 105848,
-          "bitrate" => 484466,
-          "audio_sample_rate" => 48000,
-          "audio_channels" => 6,
-          "audio_channel_layout" => "5.1"
-        })
+        expect(characterization.normalized_metadata).to eq(normalized_output)
       end
     end
 
@@ -66,20 +57,7 @@ describe Kithe::FfprobeCharacterization do
       end
 
       it "can return normalized data" do
-        expect(characterization.normalized_metadata).to eq({
-          "width" => 224,
-          "height" => 168,
-          "frame_rate" => 15.0,
-          "duration_seconds" => 2.006,
-          "audio_codec" =>"aac",
-          "video_codec" => "h264",
-          "audio_bitrate" => 369135,
-          "video_bitrate" => 105848,
-          "bitrate" => 484466,
-          "audio_sample_rate" => 48000,
-          "audio_channels" => 6,
-          "audio_channel_layout" => "5.1"
-        })
+        expect(characterization.normalized_metadata).to eq(normalized_output)
       end
     end
   end
