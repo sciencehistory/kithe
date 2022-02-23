@@ -101,6 +101,38 @@ class Shrine
           end.freeze
         end
       end
+
+      module AttacherMethods
+        # a helper method that you can use in your own shrine processors to
+        # handle only/except/lazy guarding logic.
+        #
+        # @return [Boolean] should the `key` be processed based on only/except/lazy conditions?
+        #
+        # @param key [Symbol] derivative key to check for guarded processing
+        # @param only [Array<Symbol>] If present, method will only return true if `key` is included in `only`
+        # @param except [Array<Symbol] If present, method will only return true if `key` is NOT included in `except`
+        # @param lazy [Boolean] If true, method will only return true if derivative key is not already present
+        #   in attacher with a value.
+        #
+        def process_kithe_derivative?(key, **options)
+          key = key.to_sym
+          only = options[:only] && Array(options[:only]).map(&:to_sym)
+          except = options[:except] && Array(options[:except]).map(&:to_sym)
+          lazy = !! options[:lazy]
+
+          (only.nil? ? true : only.include?(key)) &&
+          (except.nil? || ! except.include?(key)) &&
+          (!lazy || !derivatives.keys.include?(key))
+        end
+
+        # Convenience to check #process_kithe_derivative? for multiple keys at once,
+        # @return true if any key returns true
+        #
+        # @example process_any_kithe_derivative?([:thumb_mini, :thumb_large], only: [:thumb_large, :thumb_mega], lazy: true)
+        def process_any_kithe_derivative?(keys, **options)
+          keys.any? { |k| process_kithe_derivative?(k, **options) }
+        end
+      end
     end
     register_plugin(:kithe_derivative_definitions, KitheDerivativeDefinitions)
   end
