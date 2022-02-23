@@ -7,8 +7,7 @@ It would be a good idea to review shrine derivatives documentation:
 * https://shrinerb.com/docs/plugins/derivatives
 * https://shrinerb.com/docs/processing
 
-Kithe adds automatic derivative creation after promotion (only of derivatives defined using kithe mechanisms for `kithe_derivatives` processor, more below); and additional methods for defining and managing derivatives, including reliable concurrency-safe
-derivatives modification.
+Kithe adds: automatic derivative creation after promotion (only of kithe-controlled derivatives, more below); a custom way of defining derivatives to allow more management options; reliable concurrency-safe derivatives modification.
 
 You don't have to use kithe's value-added derivative features, but we recommend it.
 
@@ -32,7 +31,7 @@ The object returned does not need to be a `File` object, it can be any [IO or IO
 
 The kithe derivative definition functionality comes from a kithe plugin to shrine, [kithe_derivative_definitions](../lib/shrine/plugins/kithe_derivative_definitions.rb).
 
-Once defined, you _could_ create them using standard shrine methods, as the `kithe_derivatives` processor is regsitered as a standard shrine derivatives processor to execute these definitions:
+These kithe derivative definitions will be created by a registered standard shrine derivatives processor with key `kithe_derivatives`, and could be addressed as such with standard shrine functionality:
 
 ```ruby
 # NOT RECOMMENDED
@@ -48,51 +47,6 @@ If you do need to manually trigger derivative creation, you can use kithe's conc
 asset.create_derivatives
 ```
 
-More below.
-
-### Kithe-provided derivative-creation tools
-
-While you can write whatever logic you want as a derivative definition, kithe currently packages two (more in the future) services:
-
-    * Kithe::VipsCliImageToJpeg, which can create a resized JPG from an image input, using a shell out to the `vips` and `vipsthumbnail` command-line tools.
-
-    * Kithe::FfmpegTransformer, which creates audio files from any audio file original, using a shell out to the `ffmpeg` command-line tool.
-
-```ruby
-class Asset < Kithe::Asset
-  define_derivative(:download_small) do |original_file|
-    Kithe::VipsCliImageToJpeg.new(max_width: 500).call(original_file)
-  end
-end
-```
-
-If you pass `thumbnail_mode: true` when instantiating Kithe::VipsCliImageToJpeg, in addition to resizing it will apply additional best-practice transformations to minimize file size when displaying in a browser, such as: translate to sRGB color space, and strip internal JPG metadata and color profile information.
-
-```ruby
-class Asset < Kithe::Asset
-  define_derivative(:thumb_small) do |original_file|
-    Kithe::VipsCliImageToJpeg.new(max_width: 500, thumbnail_mode: true).call(original_file)
-  end
-end
-```
-Some audio examples using `Kithe::FfmpegTransformer`.
-
-```ruby
-# Create a stereo 128k mp3 derivative. output_suffix is the only mandatory argument.
-define_derivative('mp3', content_type: "audio") do |original_file|
-  Kithe::FfmpegTransformer.new(bitrate: '128k', output_suffix: 'mp3').call(original_file)
-end
-
-# A mono webm file at only 64k:
-define_derivative('webm', content_type: "audio") do |original_file|
-  Kithe::FfmpegTransformer.new(bitrate: '64k', force_mono: true, output_suffix: 'webm').call(original_file)
-end
-
-# libopus is used by default for webm conversions, but you could specify another codec:
-define_derivative('webm', content_type: "audio") do |original_file|
-  Kithe::FfmpegTransformer.new(output_suffix: 'webm', audio_codec: 'libopencore-amrwb').call(original_file)
-end
-```
 
 ### Definining derivatives for specific original content-type
 
@@ -149,7 +103,57 @@ class Asset < Kithe::Asset
 end
 ```
 
-## Manually triggering derivative definitions to be created
+
+### Kithe-provided derivative-creation tools
+
+While you can write whatever logic you want as a derivative definition, kithe currently packages two (more in the future) services:
+
+#### Kithe::VipsCliImageToJpeg
+
+Which can create a resized JPG from an image input, using a shell out to the `vips` and `vipsthumbnail` command-line tools.
+
+
+```ruby
+class Asset < Kithe::Asset
+  define_derivative(:download_small) do |original_file|
+    Kithe::VipsCliImageToJpeg.new(max_width: 500).call(original_file)
+  end
+end
+```
+
+If you pass `thumbnail_mode: true` when instantiating Kithe::VipsCliImageToJpeg, in addition to resizing it will apply additional best-practice transformations to minimize file size when displaying in a browser, such as: translate to sRGB color space, and strip internal JPG metadata and color profile information.
+
+```ruby
+class Asset < Kithe::Asset
+  define_derivative(:thumb_small, content_type: "image") do |original_file|
+    Kithe::VipsCliImageToJpeg.new(max_width: 500, thumbnail_mode: true).call(original_file)
+  end
+end
+```
+
+#### Kithe::FfmpegTransformer
+
+Which creates audio files from any audio file original, using a shell out to the `ffmpeg` command-line tool.
+
+
+```ruby
+# Create a stereo 128k mp3 derivative. output_suffix is the only mandatory argument.
+define_derivative('mp3', content_type: "audio") do |original_file|
+  Kithe::FfmpegTransformer.new(bitrate: '128k', output_suffix: 'mp3').call(original_file)
+end
+
+# A mono webm file at only 64k:
+define_derivative('webm', content_type: "audio") do |original_file|
+  Kithe::FfmpegTransformer.new(bitrate: '64k', force_mono: true, output_suffix: 'webm').call(original_file)
+end
+
+# libopus is used by default for webm conversions, but you could specify another codec:
+define_derivative('webm', content_type: "audio") do |original_file|
+  Kithe::FfmpegTransformer.new(output_suffix: 'webm', audio_codec: 'libopencore-amrwb').call(original_file)
+end
+```
+
+## Manually triggering creaton of derivatives from definitions
 
 You can always call `Kithe::Asset#create_derivatives` on any asset to trigger the `kithe_derivatives` processor in a concurrency-safe way, creating all derivatives you defined with kithe `define_derivative` as above. This is the same method ordinarily used by kithe for automatic lifecycle derivarive creation. When you call it manually, it will always be executed inline without triggering a BG job, if you want concurrency you can wrap it yourself.
 
@@ -170,6 +174,44 @@ some_asset.create_derivatives(only: [:thumb_small, :thumb_medium])
 ```
 
 Derivative definitions not applicable to the content-type of an asset original will simply be skipped. Derivative definitions defined as `create_default: false`, will only be used if included in an `only` argument.
+
+
+## More complex derivative handling with a shrine processor
+
+The Kithe `define_derivative` lets you define a block to create a single derivative, that will have a local file passed to it.
+
+If you need more control, you can use a [standard shrine derivative processor](https://shrinerb.com/docs/plugins/derivatives). You might do this for higher performance implementations where you avoid downloading a local file, or want to create several derivatives in one block for performance reasons.
+
+You can register your shrine derivatives processor to be used by kithe lifecycle control (automatic creation, and inline/background control) by adding to an Attacher property in your custom uploader.
+
+```ruby
+class AssetUploader < Kithe::uploader
+  # kithe property
+  Attacher.kithe_include_derivatives_processors += [:my_custom_processor]
+
+  # pure shrine derivatives processor
+  Attacher.derivatives(:my_custom_processor, download: false) do |original, **options|
+    return {} unless process_any_kithe_derivative?([:huge_thumb, :tiny_thumb], **options)
+
+    return_derivatives = {}
+
+    if process_kithe_derivative?(:huge_thumb, **options)
+      return_derivatives[:huge_thumb] = create_something_huge
+    end
+
+    if process_kithe_derivative?(:tny_thumb, **options)
+      return_derivatives[:tiny_thumb] = create_something_tiny
+    end
+
+    return_derivatives
+  end
+end
+```
+
+Kithe provides those methods `process_any_kithe_derivative?` and `process_kithe_derivative?` that
+can be used to implement respect for :only, :except, and :lazy arguments. When you provide your
+own shrine derivative processor you need to implement support for only/except/lazy yourself, but
+these methods can be used to do it easily.
 
 ## Rake tasks
 
