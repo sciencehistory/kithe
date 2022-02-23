@@ -5,8 +5,24 @@ class Shrine
         # use Rails class_attribute to conveniently have a class-level place
         # to store our derivative definitions that are inheritable and overrideable.
         # We store it on the Attacher class, because that's where shrine
-        # puts derivative processor definitions, so seems appropriate.
+        # puts derivative processor definitions, so seems appropriate. Normally
+        # not touched directly by non-kithe code.
         uploader::Attacher.class_attribute :kithe_derivative_definitions, instance_writer: false, default: []
+
+        # Kithe exersizes lifecycle control over derivatives, normally just the
+        # shrine processor labelled :kithe_derivatives. But you can opt additional shrine
+        # derivative processors into kithe control by listing their labels in this attribute.
+        #
+        # @example
+        #
+        #     class AssetUploader < Kithe::AssetUploader
+        #       Attacher.kithe_include_derivatives_processors += [:my_processor]
+        #       Attacher.derivatives(:my_processor) do |original|
+        #         derivatives
+        #       end
+        #     end
+        #
+        uploader::Attacher.class_attribute :kithe_include_derivatives_processors, instance_writer: false, default: []
 
         # Register our derivative processor, that will create our registered derivatives,
         # with our custom options.
@@ -31,11 +47,12 @@ class Shrine
         #
         # The most basic definition consists of a derivative key, and a ruby block that
         # takes the original file, transforms it, and returns a ruby File or other
-        # (shrine-compatible) IO-like object. It will usually be done inside a custom Asset
-        # class definition.
+        # (shrine-compatible) IO-like object. It will usually be done inside your custom
+        # AssetUploader class definition.
         #
-        #     class Asset < Kithe::Asset
-        #       define_derivative :thumbnail do |original_file|
+        #     class AssetUploader < Kithe::AssetUploader
+        #       Attacher.define_derivative :thumbnail do |original_file|
+        #         someTempFileOrOtherIo
         #       end
         #     end
         #
@@ -52,7 +69,7 @@ class Shrine
         # will be passed in. You can then get the model object from `attacher.record`, or the
         # original file as a `Shrine::UploadedFile` object with `attacher.file`.
         #
-        #     define_derivative :thumbnail do |original_file, attacher:|
+        #     Attacher.define_derivative :thumbnail do |original_file, attacher:|
         #        attacher.record.title, attacher.file.width, attacher.file.content_type # etc
         #     end
         #
@@ -62,7 +79,7 @@ class Shrine
         # remain, and be accessible, where they were created; there is no built-in solution at present
         # for moving them).
         #
-        #     define_derivative :thumbnail, storage_key: :my_thumb_storage do |original| # ...
+        #     Attacher.define_derivative :thumbnail, storage_key: :my_thumb_storage do |original| # ...
         #
         # You can also set `default_create: false` if you want a particular definition not to be
         # included in a no-arg `asset.create_derivatives` that is normally triggered on asset creation.

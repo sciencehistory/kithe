@@ -84,6 +84,13 @@ class Kithe::Asset < Kithe::Model
 
     local_files = file_attacher.process_derivatives(:kithe_derivatives, only: only, except: except, lazy: lazy)
 
+    # include any other configured processors
+    file_attacher.kithe_include_derivatives_processors.each do |processor|
+      local_files.merge!(
+        file_attacher.process_derivatives(processor.to_sym, only: only, except: except, lazy: lazy)
+      )
+    end
+
     file_attacher.add_persisted_derivatives(local_files)
   end
 
@@ -186,7 +193,8 @@ class Kithe::Asset < Kithe::Model
 
   # called by after_promotion hook
   def schedule_derivatives
-    return unless self.file_attacher.kithe_derivative_definitions.present? # no need to schedule if we don't have any
+    # no need to schedule if we don't have any
+    return unless self.file_attacher.kithe_derivative_definitions.present? || self.file_attacher.kithe_include_derivatives_processors.present?
 
     Kithe::TimingPromotionDirective.new(key: :create_derivatives, directives: file_attacher.promotion_directives) do |directive|
       if directive.inline?
