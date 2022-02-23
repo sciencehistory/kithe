@@ -120,6 +120,54 @@ class Shrine
       end
 
       module AttacherMethods
+
+
+        # Similar to shrine create_derivatives, but with kithe standards:
+        #
+        # * Will call the :kithe_derivatives processor (that handles any define_derivative definitions),
+        #   plus any processors you've configured with kithe_include_derivatives_processors
+        #
+        # * Uses the methods added by :kithe_persisted_derivatives to add derivatives completely
+        #   concurrency-safely, if the model had it's attachment changed concurrently, you
+        #   won't get derivatives attached that belong to old version of original attachment,
+        #   and won't get any leftover "orphaned" derivatives either.
+        #
+        # The :kithe_derivatives processor has additional logic and options for determining
+        # *which* derivative definitions -- created with `define_deriative` will be executed:
+        #
+        # * Ordinarily will create a definition for every definition that has not been marked
+        #  `default_create: false`.
+        #
+        # * But you can also pass `only` and/or `except` to customize the list of definitions to be created,
+        #   possibly including some that are `default_create: false`.
+        #
+        # * Will normally re-create derivatives (per existing definitions) even if they already exist,
+        #   but pass `lazy: false` to skip creating if a derivative with a given key already exists.
+        #   This will use the asset `derivatives` association, so if you are doing this in bulk for several
+        #   assets, you should eager-load the derivatives association for efficiency.
+        #
+        # If you've added any custom processors with `kithe_include_derivatives_processors`, it's
+        # your responsibility to make them respect those options. See #process_kithe_derivative?
+        # helper method.
+        #
+        # create_derivatives should be idempotent. If it has failed having only created some derivatives,
+        # you can always just run it again.
+        #
+        def kithe_create_derivatives(only: nil, except: nil, lazy: false)
+          return false unless file
+
+          local_files = self.process_derivatives(:kithe_derivatives, only: only, except: except, lazy: lazy)
+
+          # include any other configured processors
+          self.kithe_include_derivatives_processors.each do |processor|
+            local_files.merge!(
+              self.process_derivatives(processor.to_sym, only: only, except: except, lazy: lazy)
+            )
+          end
+
+          self.add_persisted_derivatives(local_files)
+        end
+
         # a helper method that you can use in your own shrine processors to
         # handle only/except/lazy guarding logic.
         #
