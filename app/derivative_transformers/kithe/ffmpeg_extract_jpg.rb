@@ -18,8 +18,9 @@ module Kithe
     # @param frame_sample_size [Integer] argument passed to ffmpeg thumbnail filter,
     #   how many frames to sample, starting at start_seconds, to choose representative
     #   thumbnail. If set to false, thumbnail filter won't be used. If this one
-    #   goes past the end of the video, ffmpeg is fine with it. [Default 900, around
-    #   30 seconds at 30 fps]
+    #   goes past the end of the video, ffmpeg is fine with it. Set to `false` to
+    #   disable use of ffmpeg sample feature, and just use exact frame at start_seconds.
+    #   [Default 900, around 30 seconds at 30 fps]
     #
     # @width_pixels [Integer] output thumb at this width. aspect ratio will be
     #   maintained. Warning, if it's larger than video original, ffmpeg will
