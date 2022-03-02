@@ -204,19 +204,21 @@ class AssetUploader < Kithe::uploader
 
   # pure shrine derivatives processor
   Attacher.derivatives(:my_custom_processor, download: false) do |original, **options|
-    return {} unless process_any_kithe_derivative?([:huge_thumb, :tiny_thumb], **options)
+    if process_any_kithe_derivative?([:huge_thumb, :tiny_thumb], **options)
+      return_derivatives = {}
 
-    return_derivatives = {}
+      if process_kithe_derivative?(:huge_thumb, **options)
+        return_derivatives[:huge_thumb] = create_something_huge
+      end
 
-    if process_kithe_derivative?(:huge_thumb, **options)
-      return_derivatives[:huge_thumb] = create_something_huge
+      if process_kithe_derivative?(:tny_thumb, **options)
+        return_derivatives[:tiny_thumb] = create_something_tiny
+      end
+
+      return_derivatives
+    else
+      {}
     end
-
-    if process_kithe_derivative?(:tny_thumb, **options)
-      return_derivatives[:tiny_thumb] = create_something_tiny
-    end
-
-    return_derivatives
   end
 end
 ```
