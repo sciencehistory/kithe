@@ -43,48 +43,24 @@ class Kithe::Asset < Kithe::Model
   before_promotion :refresh_metadata_before_promotion
   after_promotion :schedule_derivatives
 
-  # A convenience to call file_attacher.create_persisted_derivatives (from :kithe_derivatives)
-  # to create derivatives with conncurrent access safety, with the :kithe_derivatives
-  # processor argument, to create derivatives defined using kithe_derivative_definitions.
+  # Proxies to file_attacher.kithe_create_derivatives to create kithe managed derivatives.
   #
-  # This is designed for use with kithe_derivatives processor, and has options only relevant
-  # to it, although could be expanded to take a processor argument in the future if needed.
+  # This will include any derivatives you created with in the uploader with kithe
+  # Attacher.define_derivative, as well as any derivative processors you opted into
+  # kithe management with `kithe_include_derivatives_processors` in uploader.
   #
-  # Create derivatives for every definition added to uploader/attacher with kithe_derivatives
-  # `define_derivative`. Ordinarily will create a definition for every definition
-  # that has not been marked `default_create: false`.
+  # This is safe for concurrent updates to the underlying model, the derivatives will
+  # be consistent and not left orphaned.
   #
-  # But you can also pass `only` and/or `except` to customize the list of definitions to be created,
-  # possibly including some that are `default_create: false`.
+  # By default it will create all derivatives configured for default generation,
+  # but you can customize by listing derivative keys with :only and :except options,
+  # and with :lazy option which, if true, only executes derivative creation if
+  # a given derivative doesn't already exist.
   #
-  # create_derivatives should be idempotent. If it has failed having only created some derivatives,
-  # you can always just run it again.
-  #
-  # Will normally re-create derivatives (per existing definitions) even if they already exist,
-  # but pass `lazy: false` to skip creating if a derivative with a given key already exists.
-  # This will use the asset `derivatives` association, so if you are doing this in bulk for several
-  # assets, you should eager-load the derivatives association for efficiency.
-  #
-  # ## Avoiding eager-download
-  #
-  # Additionally, this has a feature to 'trick' shrine into not eager downloading
-  # the original before our kithe_derivatives processor has a chance to decide if it
-  # needs to create any derivatives (based on `lazy` arg), making no-op
-  # create_derivatives so much faster and more efficient, which matters when doing
-  # bulk operations say with our rake task.
-  #
-  # kithe_derivatives processor must then do a Shrine.with_file to make sure
-  # it's a local file, when needed.
-  #
-  # See https://github.com/shrinerb/shrine/issues/470
-  #
+  # See more in docs for kithe at
+  # Shrine::Plugins::KitheDerivativeDefinitions::AttacherMethods#kithe_create_derivatives
   def create_derivatives(only: nil, except: nil, lazy: false)
-    source = file
-    return false unless source
-
-    local_files = file_attacher.process_derivatives(:kithe_derivatives, only: only, except: except, lazy: lazy)
-
-    file_attacher.add_persisted_derivatives(local_files)
+    file_attacher.kithe_create_derivatives(only: only, except: except, lazy: lazy)
   end
 
 
@@ -186,7 +162,8 @@ class Kithe::Asset < Kithe::Model
 
   # called by after_promotion hook
   def schedule_derivatives
-    return unless self.file_attacher.kithe_derivative_definitions.present? # no need to schedule if we don't have any
+    # no need to schedule if we don't have any
+    return unless self.file_attacher.kithe_derivative_definitions.present? || self.file_attacher.kithe_include_derivatives_processors.present?
 
     Kithe::TimingPromotionDirective.new(key: :create_derivatives, directives: file_attacher.promotion_directives) do |directive|
       if directive.inline?

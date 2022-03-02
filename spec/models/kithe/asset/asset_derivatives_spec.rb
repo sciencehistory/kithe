@@ -77,6 +77,32 @@ describe "customized shrine derivatives", queue_adapter: :inline do
       expect(asset.file_derivatives.keys).to be_empty
     end
 
+    describe "with additional derivative processor opted in" do
+      temporary_class("CustomUploader") do
+        Class.new(Kithe::AssetUploader) do
+          self::Attacher.derivatives(:additional_custom) do |io|
+            {
+              additional_custom_added: StringIO.new("additional custom added")
+            }
+          end
+          self::Attacher.kithe_include_derivatives_processors += [:additional_custom]
+        end
+      end
+
+      temporary_class("CustomAsset") do
+        Class.new(Kithe::Asset) do
+          set_shrine_uploader(CustomUploader)
+        end
+      end
+
+      it "calls custom derivatives processor" do
+        asset = CustomAsset.create!(title: "test", file: File.open(original_file_path))
+        asset.reload
+
+        expect(asset.file_derivatives[:additional_custom_added]).to be_present
+      end
+    end
+
     describe "with existing derivative", queue_adapter: :inline do
       let(:asset) do
         asset = CustomAsset.create!(title: "test", file: File.open(original_file_path))

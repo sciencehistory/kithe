@@ -313,4 +313,38 @@ describe "Shrine::Plugins::KitheDerivativeDefinitions", queue_adapter: :test do
       expect(CustomUploader::Attacher.defined_derivative_keys).to eq([])
     end
   end
+
+  describe "#process_kithe_derivative?" do
+    it "returns true for anything if no conditions" do
+      expect(asset.file_attacher.process_kithe_derivative?(:anything)).to be true
+    end
+
+    it "returns false if not in a present :only" do
+      expect(asset.file_attacher.process_kithe_derivative?(:something, only: [:else])).to be false
+    end
+
+    it "returns false if in a present :except" do
+      expect(asset.file_attacher.process_kithe_derivative?(:something, except: :something)).to be false
+    end
+
+    describe "lazy" do
+      let(:key) { "some_key" }
+      before do
+        asset.file_attacher.add_persisted_derivatives({key => StringIO.new("existing #{key} asset")})
+      end
+
+      it "returns false if lazy and present" do
+        expect(asset.file_attacher.process_kithe_derivative?(key, lazy: true)).to be false
+      end
+    end
+
+    describe "process_any_kithe_derivative?" do
+      it "returns true if any are true" do
+        expect(asset.file_attacher.process_any_kithe_derivative?([:only1, :only2], only: [:only1, :only2], except: [:only2])).to be true
+      end
+      it "returns false if none are true" do
+        expect(asset.file_attacher.process_any_kithe_derivative?([:only1, :only2], only: [:only2], except: [:only2])).to be false
+      end
+    end
+  end
 end

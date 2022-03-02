@@ -22,6 +22,13 @@ module Kithe
   #
   #     ffprobe_results = FfprobeCharacterization.new(url).ffprobe_hash
   #
+  # The class method .characterize_from_uploader can usefully extract a URL if possible
+  # or else execute with a file, such as from a shrine `add_metadata` block.
+  #
+  #     add_metadata do |source_io, **context|
+  #       Kithe::FfprobeCharacterization.characterize_from_uploader(source_io, context)
+  #     end
+  #
   class FfprobeCharacterization
     class_attribute :ffprobe_command, default: "ffprobe"
     class_attribute :ffprobe_timeout, default: 10
