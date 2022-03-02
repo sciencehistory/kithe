@@ -10,7 +10,7 @@
 
 * Tools for using a standard shrine derivatives processor with kithe features, including lifecycle management and guard options. https://github.com/sciencehistory/kithe/pull/143
 
-*
+* add Kithe::FfmpegExtractJpg service for extracting frame from video  https://github.com/sciencehistory/kithe/pull/144
 
 ### Changed
 

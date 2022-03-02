@@ -106,7 +106,7 @@ end
 
 ### Kithe-provided derivative-creation tools
 
-While you can write whatever logic you want as a derivative definition, kithe currently packages two (more in the future) services:
+While you can write whatever logic you want as a derivative definition, kithe currently packages a few services:
 
 #### Kithe::VipsCliImageToJpeg
 
@@ -151,6 +151,19 @@ end
 define_derivative('webm', content_type: "audio") do |original_file|
   Kithe::FfmpegTransformer.new(output_suffix: 'webm', audio_codec: 'libopencore-amrwb').call(original_file)
 end
+```
+
+#### Kithe::FfmpegExtractJpg
+
+Can extract a thumbnail from a video file, via ffmpeg. One handy thing about it is it can use
+ffmpeg's ability to extract from a *remote* URL without downloading the whole file. This can be
+convenient for performance/efficiency if you store your originals on cloud storage.
+
+However, to take advantage of this feature, avoiding a download, you'd have to write some more
+complex code. Same if you want to produce multiple resolution thumbnails. This isn't yet fully documented, but be aware of the existence of this service.
+
+```ruby
+image_tmp_file = Kithe::FfmpegExtractJpg.new(start_seconds: start_seconds).call(original)
 ```
 
 ## Manually triggering creaton of derivatives from definitions
