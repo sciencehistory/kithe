@@ -8,7 +8,7 @@
 
 ### Added
 
-*
+* Work#members association is ordered by default, by position column, then created_at.
 
 *
 
