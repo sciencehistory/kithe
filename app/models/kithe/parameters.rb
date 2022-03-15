@@ -63,11 +63,24 @@
 class Kithe::Parameters < ActionController::Parameters
   attr_reader :auto_allowed_keys
 
-  def initialize(hash = {})
-    if hash.respond_to?(:to_unsafe_h)
-      hash = hash.to_unsafe_h
+
+  # Rails 7 adds another initializer method, annoyingly
+  if Rails.version.split.first.to_i >= 7
+    def initialize(hash = {}, logging_context = {})
+      if hash.respond_to?(:to_unsafe_h)
+        hash = hash.to_unsafe_h
+      end
+
+      super(hash, logging_context)
     end
-    super(hash)
+  else
+    def initialize(hash = {})
+      if hash.respond_to?(:to_unsafe_h)
+        hash = hash.to_unsafe_h
+      end
+
+      super(hash)
+    end
   end
 
   def permit_attr_json(klass, except:nil)
