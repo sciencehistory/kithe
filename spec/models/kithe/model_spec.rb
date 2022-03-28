@@ -46,7 +46,7 @@ module Kithe
 
         work.contained_by << collection2
         expect(collection2.contains.to_a).to eq([work])
-        expect(work.contained_by.to_a).to match([collection1, collection2])
+        expect(work.contained_by.to_a).to match_array([collection1, collection2])
 
         work.destroy!
         collection1.reload
