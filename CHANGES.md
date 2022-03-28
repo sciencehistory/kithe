@@ -8,7 +8,7 @@
 
 ### Added
 
-*
+* Allow remove_derivatives to receive string arg normalized to symbol https://github.com/sciencehistory/kithe/pull/147
 
 *
 
