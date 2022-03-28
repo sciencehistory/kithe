@@ -134,6 +134,10 @@ class Shrine
         def remove_persisted_derivatives(*paths, **options)
           return if paths.empty?
 
+          # Shrine does weird things if we pass in Strings, let's save ourselves
+          # the terrible debugging on that mistake, and noramlize to symbols
+          paths = paths.collect(&:to_sym)
+
           other_changes_allowed = !!options.delete(:allow_other_changes)
           if record && !other_changes_allowed && record.changed?
             raise TypeError.new("Can't safely add_persisted_derivatives on model with unsaved changes. Pass `allow_other_changes: true` to force.")
