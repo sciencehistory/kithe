@@ -8,7 +8,7 @@
 
 ### Added
 
-*
+* Support Rails 7.0. https://github.com/sciencehistory/kithe/pull/137
 
 *
 
