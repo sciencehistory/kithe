@@ -68,12 +68,24 @@ module Kithe
     def _call(ffmpeg_source_arg)
       tempfile = Tempfile.new(['temp_deriv', ".jpg"])
 
+      ffmpeg_args = produce_ffmpeg_args(input_arg: ffmpeg_source_arg, output_path: tempfile.path)
+
+      TTY::Command.new(printer: :null).run(*ffmpeg_args)
+
+      return tempfile
+    rescue StandardError => e
+      tempfile.unlink if tempfile
+      raise e
+    end
+
+    def produce_ffmpeg_args(input_arg:, output_path:)
       ffmpeg_args = [ffmpeg_command, "-y"]
+
       if start_seconds && start_seconds > 0
         ffmpeg_args.concat ["-ss", start_seconds.to_i]
       end
 
-      ffmpeg_args.concat ["-i", ffmpeg_source_arg]
+      ffmpeg_args.concat ["-i", input_arg]
 
       video_filter_parts = []
       video_filter_parts << "thumbnail=#{frame_sample_size}" if frame_sample_size
@@ -84,14 +96,7 @@ module Kithe
 
       ffmpeg_args.concat ["-frames:v",  "1"]
 
-      ffmpeg_args << tempfile.path
-
-      TTY::Command.new(printer: :null).run(*ffmpeg_args)
-
-      return tempfile
-    rescue StandardError => e
-      tempfile.unlink if tempfile
-      raise e
+      ffmpeg_args << output_path
     end
   end
 end
