@@ -88,9 +88,10 @@ module Kithe
       ffmpeg_args.concat ["-i", input_arg]
 
       video_filter_parts = []
-      video_filter_parts << "thumbnail=#{frame_sample_size}" if frame_sample_size
+      video_filter_parts << "thumbnail=#{frame_sample_size}" if (frame_sample_size || 0) > 1
       video_filter_parts << "scale=#{width_pixels}:-1" if width_pixels
-      if video_filter_parts
+
+      if video_filter_parts.present?
         ffmpeg_args.concat ["-vf", video_filter_parts.join(',')]
       end
 
