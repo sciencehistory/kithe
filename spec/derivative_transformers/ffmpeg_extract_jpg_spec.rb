@@ -12,8 +12,8 @@ describe Kithe::FfmpegExtractJpg do
       expect(Marcel::MimeType.for(StringIO.new(result.read))).to eq "image/jpeg"
     end
 
-    it "can extract without frame sample" do
-      extractor = Kithe::FfmpegExtractJpg.new(frame_sample_size: false)
+    it "can extract with a frame sample" do
+      extractor = Kithe::FfmpegExtractJpg.new(frame_sample_size: 300)
 
       result = extractor.call(video_path)
 
