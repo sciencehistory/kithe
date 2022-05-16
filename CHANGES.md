@@ -1,8 +1,12 @@
 ## NEXT
 
+### Backwards incompatible change
+
+* FfmpegExtractJpg defaults to frame_sample_size: false, no frame sampling. It was too RAM risky. https://github.com/sciencehistory/kithe/pull/150
+
 ### Fixed
 
-*
+* Fix bug in FfmpegExtractJpg where you couldn't turn off frame sampling. https://github.com/sciencehistory/kithe/pull/150
 
 *
 
