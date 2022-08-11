@@ -8,7 +8,7 @@
 
 * Fix bug in FfmpegExtractJpg where you couldn't turn off frame sampling. https://github.com/sciencehistory/kithe/pull/150
 
-*
+* Allow Kithe.indexable_settings.writer_settings to be mutated as per docs https://github.com/sciencehistory/kithe/pull/151
 
 ### Added
 

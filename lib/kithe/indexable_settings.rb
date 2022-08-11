@@ -6,22 +6,21 @@ module Kithe
     def initialize(solr_url:, writer_class_name:, writer_settings:,
                    model_name_solr_field:, solr_id_value_attribute:, disable_callbacks: false,
                    batching_mode_batch_size: 100)
-      @solr_url = solr_url
       @writer_class_name = writer_class_name
       @writer_settings = writer_settings
       @model_name_solr_field = model_name_solr_field
       @solr_id_value_attribute = solr_id_value_attribute || 'id'
       @batching_mode_batch_size = batching_mode_batch_size
+
+      # use our local setter to set solr_url also in writer_settings
+      solr_url = solr_url
     end
 
-    # Use configured solr_url, and merge together with configured
-    # writer_settings
-    def writer_settings
-      if solr_url
-        { "solr.url" => solr_url }.merge(@writer_settings)
-      else
-        @writer_settings
-      end
+
+    # set solr_url also in writer_settings, cause it's expected there.
+    def solr_url=(v)
+      @solr_url = v
+      writer_settings["solr.url"] = v if writer_settings
     end
 
     # Turn writer_class_name into an actual Class object.
