@@ -32,8 +32,11 @@ class Kithe::Model < ActiveRecord::Base
   # this should only apply to Works, but we define it here so we can preload it
   # when fetching all Kithe::Model. And it's to Kithe::Model so it can include
   # both Works and Assets. We do some app-level validation to try and make it used
-  # as intended.
-  has_many :members, class_name: "Kithe::Model", foreign_key: :parent_id, inverse_of: :parent, dependent: :destroy
+  # as intended. Members are by default ordered by position, then created_at.
+  has_many :members, -> { order(position: :asc, created_at: :asc) },
+    class_name: "Kithe::Model", foreign_key: :parent_id,
+    inverse_of: :parent, dependent: :destroy
+
   belongs_to :parent, class_name: "Kithe::Model", inverse_of: :members, optional: true
 
   # a self-referential many-to-many is a bit confusing, but our "contains" relation

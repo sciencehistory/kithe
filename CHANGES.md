@@ -13,11 +13,12 @@
 ### Added
 
 
+* Work#members association is ordered by default, by position column, then created_at. https://github.com/sciencehistory/kithe/pull/146
+
 * Allow remove_derivatives to receive string arg normalized to symbol https://github.com/sciencehistory/kithe/pull/147
 
 * Support Rails 7.0. https://github.com/sciencehistory/kithe/pull/137
 
-*
 
 ### Changed
 
