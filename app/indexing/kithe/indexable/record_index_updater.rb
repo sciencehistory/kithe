@@ -24,6 +24,9 @@ module Kithe
       #   it's nil, meaning we'll find the indexer to use from current thread settings,
       #   or global settings.
       #
+      #   (note: this design means we can't currently use traject processing_thread_pool for
+      #   concurrency, sorry.)
+      #
       # @param writer [Traject::Writer] Can pass i a custom Traject::Writer which the
       #   index representation will be sent to. By default it's nil, meaning we'll find
       #   the writer to use from current thread settings or global settings.
