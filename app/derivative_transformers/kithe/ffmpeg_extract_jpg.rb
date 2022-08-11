@@ -15,18 +15,21 @@ module Kithe
     # @param start_seconds [Integer] seek to this point to find thumbnail. If it's
     #   after the end of the video, you won't get a thumb back though! [Default 0]
     #
-    # @param frame_sample_size [Integer] argument passed to ffmpeg thumbnail filter,
+    # @param frame_sample_size [Integer,false,nil] argument passed to ffmpeg thumbnail filter,
     #   how many frames to sample, starting at start_seconds, to choose representative
     #   thumbnail. If set to false, thumbnail filter won't be used. If this one
     #   goes past the end of the video, ffmpeg is fine with it. Set to `false` to
     #   disable use of ffmpeg sample feature, and just use exact frame at start_seconds.
-    #   [Default 900, around 30 seconds at 30 fps]
+    #
+    #   NOTE: This can consume significant RAM depending on value and video resolution.
+    #
+    #   [Default false, not operative]
     #
     # @width_pixels [Integer] output thumb at this width. aspect ratio will be
     #   maintained. Warning, if it's larger than video original, ffmpeg will
     #   upscale!  If set to nil, thumb will be output at original video
     #   resolution. [Default nil]
-    def initialize(start_seconds: 0, frame_sample_size: 900, width_pixels: nil)
+    def initialize(start_seconds: 0, frame_sample_size: false, width_pixels: nil)
       @start_seconds = start_seconds
       @frame_sample_size = frame_sample_size
       @width_pixels = width_pixels
@@ -68,23 +71,7 @@ module Kithe
     def _call(ffmpeg_source_arg)
       tempfile = Tempfile.new(['temp_deriv', ".jpg"])
 
-      ffmpeg_args = [ffmpeg_command, "-y"]
-      if start_seconds && start_seconds > 0
-        ffmpeg_args.concat ["-ss", start_seconds.to_i]
-      end
-
-      ffmpeg_args.concat ["-i", ffmpeg_source_arg]
-
-      video_filter_parts = []
-      video_filter_parts << "thumbnail=#{frame_sample_size}" if frame_sample_size
-      video_filter_parts << "scale=#{width_pixels}:-1" if width_pixels
-      if video_filter_parts
-        ffmpeg_args.concat ["-vf", video_filter_parts.join(',')]
-      end
-
-      ffmpeg_args.concat ["-frames:v",  "1"]
-
-      ffmpeg_args << tempfile.path
+      ffmpeg_args = produce_ffmpeg_args(input_arg: ffmpeg_source_arg, output_path: tempfile.path)
 
       TTY::Command.new(printer: :null).run(*ffmpeg_args)
 
@@ -92,6 +79,28 @@ module Kithe
     rescue StandardError => e
       tempfile.unlink if tempfile
       raise e
+    end
+
+    def produce_ffmpeg_args(input_arg:, output_path:)
+      ffmpeg_args = [ffmpeg_command, "-y"]
+
+      if start_seconds && start_seconds > 0
+        ffmpeg_args.concat ["-ss", start_seconds.to_i]
+      end
+
+      ffmpeg_args.concat ["-i", input_arg]
+
+      video_filter_parts = []
+      video_filter_parts << "thumbnail=#{frame_sample_size}" if (frame_sample_size || 0) > 1
+      video_filter_parts << "scale=#{width_pixels}:-1" if width_pixels
+
+      if video_filter_parts.present?
+        ffmpeg_args.concat ["-vf", video_filter_parts.join(',')]
+      end
+
+      ffmpeg_args.concat ["-frames:v",  "1"]
+
+      ffmpeg_args << output_path
     end
   end
 end

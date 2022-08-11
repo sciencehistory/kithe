@@ -39,10 +39,14 @@ jobs:
           - gemfile: rails_61
             ruby: '3.0'
 
+          - gemfile: rails_70
+            ruby: '3.1'
+
+
     name: test ${{ matrix.gemfile }}, ruby ${{ matrix.ruby }}
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
 
     - name: Set up Ruby
       uses: ruby/setup-ruby@v1
@@ -64,8 +68,8 @@ jobs:
       env:
         RAILS_ENV: test
       run: |
-         rails db:create
-         rails db:schema:load
+         bundle exec rails db:create
+         bundle exec rails db:schema:load
 
     - name: Run tests
       run: |

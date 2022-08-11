@@ -351,6 +351,14 @@ describe Shrine::Plugins::KithePersistedDerivatives, queue_adapter: :test do
       expect(removed.first.exists?).to be(false)
     end
 
+    it "can remove string argument normalized to symbol" do
+      removed = asset.file_attacher.remove_persisted_derivatives("sample1")
+
+      expect(asset.file_derivatives.keys).to eq([:sample2])
+      expect(removed.first).to be_kind_of(Shrine::UploadedFile)
+      expect(removed.first.exists?).to be false
+    end
+
     describe "if someone else removed first" do
       before do
         another_copy = asset.class.find(asset.id)

@@ -244,11 +244,11 @@ This functionality is provided by the [kithe_peristed_derivatives](../lib/shrine
 
 You can use all of these methods with derivatives created by standard shrine derivatives processors, not just the `kithe_derivatives` processor.
 
-`Asset#remove_derivative` will delete derivatives, making sure the actual files are cleaned up from storage, and save the `Asset` model reflecting the change.
+`Asset#remove_derivatives` will delete derivatives, making sure the actual files are cleaned up from storage, and save the `Asset` model reflecting the change.
 
 ```ruby
-asset.remove_derivative(:thumb_small)
-asset.remove_derivative(:thumb_small, :thumb_large)
+asset.remove_derivatives(:thumb_small)
+asset.remove_derivatives(:thumb_small, :thumb_large)
 ```
 
 You can add (or replace) derivatives, as a specified file, with `Asset.update_derivative` or `update_derivatives`.

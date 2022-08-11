@@ -133,11 +133,15 @@ class Kithe::Model < ActiveRecord::Base
         LIMIT 1;
     EOS
 
-    # trying to use a prepared statement, hoping it means performance advantage
+    # trying to use a prepared statement, hoping it means performance advantage,
+    # this is super undocumented
+
+    bind = ActiveRecord::Relation::QueryAttribute.new("m.id", self.representative_id, ActiveRecord::Type::Value.new)
+
     result = self.class.connection.select_all(
       recursive_cte,
       "set_leaf_representative",
-      [[nil, self.representative_id]],
+      [bind],
       preparable: true
     ).first.try(:dig, "id")
 
