@@ -1,5 +1,20 @@
 ## NEXT
 
+### Fixed
+
+*
+
+*
+
+### Added
+
+*
+
+*
+
+
+## 2.6.0 (Aug 11 2022)
+
 ### Backwards incompatible change
 
 * FfmpegExtractJpg defaults to frame_sample_size: false, no frame sampling. It was too RAM risky. https://github.com/sciencehistory/kithe/pull/150
@@ -12,17 +27,12 @@
 
 ### Added
 
-
 * Work#members association is ordered by default, by position column, then created_at. https://github.com/sciencehistory/kithe/pull/146
 
 * Allow remove_derivatives to receive string arg normalized to symbol https://github.com/sciencehistory/kithe/pull/147
 
 * Support Rails 7.0. https://github.com/sciencehistory/kithe/pull/137
 
-
-### Changed
-
-*
 
 ## 2.5.0 (2 Mar 2022)
 
