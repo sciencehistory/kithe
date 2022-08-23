@@ -12,6 +12,10 @@
 
 *
 
+## 2.6.1 (Aug 23 2022)
+
+Reverts "Work#members association is ordered by default" from 2.6.0, turns out backwards incompat. https://github.com/sciencehistory/kithe/pull/153
+
 
 ## 2.6.0 (Aug 11 2022)
 
@@ -27,7 +31,7 @@
 
 ### Added
 
-* Work#members association is ordered by default, by position column, then created_at. https://github.com/sciencehistory/kithe/pull/146
+* Work#members association is ordered by default, by position column, then created_at. https://github.com/sciencehistory/kithe/pull/146 [REVERTED in 2.6.1]
 
 * Allow remove_derivatives to receive string arg normalized to symbol https://github.com/sciencehistory/kithe/pull/147
 
