@@ -37,15 +37,6 @@ RSpec.describe Kithe::Work, type: :model do
     }.to raise_error(ActiveRecord::RecordInvalid)
   end
 
-  it "sorts members properly" do
-    work.members << FactoryBot.create(:kithe_asset, title: "three", position: nil, created_at: 2.days.ago)
-    work.members << FactoryBot.create(:kithe_asset, title: "two", position: 2)
-    work.members << FactoryBot.create(:kithe_asset, title: "four", position: nil, created_at: 1.day.ago)
-    work.members << FactoryBot.create(:kithe_asset, title: "one", position: 1)
-
-    expect(work.members.map(&:title)).to eq(["one", "two", "three", "four"])
-  end
-
   it "can create new with collection id" do
     work = FactoryBot.build(:kithe_work, contained_by_ids: [collection.id])
     work.save!
