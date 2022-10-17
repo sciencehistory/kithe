@@ -46,7 +46,7 @@ So you want to start an app that uses kithe. We should later provide better 'get
 
 * Kithe view support generally assumes your app uses bootstrap 4, and uses [simple form](https://github.com/plataformatec/simple_form) configured with bootstrap settings. See https://github.com/plataformatec/simple_form#bootstrap . So you should install simple_form and bootstrap 4.
 
-* Specific additional pre-requisites/requirements can sometimes be found in individual feature docs. And include the Javascript from [cocoon](https://github.com/nathanvda/cocoon), for form support for repeatable-field editing forms. We haven't quite figured out our preferred sane approach for sharing Javascript via kithe.
+* Specific additional pre-requisites/requirements can sometimes be found in individual feature docs. And include the Javascript from [cocoon](https://github.com/nathanvda/cocoon), for form support for repeatable-field editing forms. (Only needs cocoon-compatible javascript, so you can use via NPM package without actually using the cocoon gem!)
 
 
 ## Why kithe?

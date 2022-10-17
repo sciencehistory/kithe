@@ -20,6 +20,10 @@ We do _not_ use the the Cocoon rails helpers to generate HTML though, we use our
 
 Like cocoon, the kithe `repeatable_attr_input` method takes the HTML for a "new element", and puts it in a data-association-insertion-template attribute on the "add a new one" link.
 
+As we only use the cocoon JS, you can use the cocoon NPM package alone without the cocoon gem --
+or use another cocoon-compatible npm package that does not require jquery like cocoon does, see
+cocoon README.
+
 ### Examples
 
 #### Repeated model
