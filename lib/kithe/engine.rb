@@ -15,6 +15,23 @@ require "kithe/config_base"
 
 module Kithe
   class Engine < ::Rails::Engine
+
+    # Rails Single-table-inheritance auto-load workaround, further worked around
+    # for Rails 7.
+    #
+    # https://github.com/rails/rails/issues/46625
+    # https://github.com/rails/rails/issues/45307
+    #
+    # Descendants wont' be pre-loaded during initialization, but this is the best
+    # we can do.
+    initializer ("kithe.preload_single_table_inheritance") do
+      unless Rails.configuration.cache_classes && Rails.configuration.eager_load
+        Rails.configuration.to_prepare do
+          Kithe::Model.preload_sti unless Kithe::Model.preloaded
+        end
+      end
+    end
+
     config.generators do |g|
       g.test_framework :rspec, :fixture => false
       g.fixture_replacement :factory_bot, :dir => 'spec/factories'
