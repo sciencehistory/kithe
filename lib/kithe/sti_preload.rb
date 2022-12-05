@@ -8,8 +8,13 @@ module Kithe
   # on particular inheritance hieararchies.
   #
   # We include in our Kithe::Model, which uses Single-Table Inheritance
+  #
+  # BUT NOTE:  What's in Rails Guide right now actually breaks in Rails 7.
+  #
+  # We've messed with based on https://github.com/rails/rails/issues/45307 et al.
+  #
   module StiPreload
-    unless Rails.application.config.eager_load
+    unless Rails.configuration.cache_classes && Rails.configuration.eager_load
       extend ActiveSupport::Concern
 
       included do
@@ -17,10 +22,13 @@ module Kithe
       end
 
       class_methods do
-        def descendants
-          preload_sti unless preloaded
-          super
-        end
+
+        # For Rails 7, this now breaks; we work around with an after_initialize hook
+        # in ./kithe/engine.rb . See more links there.
+        # def descendants
+        #   preload_sti unless preloaded
+        #   super
+        # end
 
         # Constantizes all types present in the database. There might be more on
         # disk, but that does not matter in practice as far as the STI API is

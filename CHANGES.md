@@ -3,7 +3,6 @@
 ### Fixed
 
 *
-
 *
 
 ### Added
@@ -11,6 +10,13 @@
 *
 
 *
+
+## 2.7.0
+
+### Fixed
+
+* A fix for Rails 7 and Kithe::Model Single-Table Inheritance in development-mode. https://github.com/sciencehistory/kithe/pull/154
+
 
 ## 2.6.1 (Aug 23 2022)
 
