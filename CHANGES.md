@@ -11,6 +11,12 @@
 
 *
 
+## 2.7.1
+
+### Fixed
+
+* Severe bug in Single-Table Inheritance fix in 2.7.0 fixed, https://github.com/sciencehistory/kithe/pull/156
+
 ## 2.7.0
 
 ### Fixed
