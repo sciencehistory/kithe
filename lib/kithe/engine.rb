@@ -25,9 +25,9 @@ module Kithe
     # Descendants wont' be pre-loaded during initialization, but this is the best
     # we can do.
     initializer ("kithe.preload_single_table_inheritance") do
-      unless false && Rails.configuration.cache_classes && Rails.configuration.eager_load
+      unless Rails.configuration.cache_classes && Rails.configuration.eager_load
         Rails.configuration.to_prepare do
-          Kithe::Model.preload_sti unless Kithe::Model.preloaded
+          Kithe::Model.preload_sti if Kithe::Model.respond_to?(:preloaded) && !Kithe::Model.preloaded
         rescue ActiveRecord::NoDatabaseError, ActiveRecord::StatementInvalid => e
           Rails.logger.debug("Could not pre-load Kithe::Models Single-Table Inheritance descendents: #{e.inspect}")
         end
