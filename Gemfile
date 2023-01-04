@@ -16,6 +16,7 @@ gemspec
 
 group :development, :test do
   gem 'rspec-rails', '~> 6.0'
+  gem 'rspec-mocks', '>= 3.12.1' # for ruby 3.2 need at least
   gem 'pry-byebug', '~> 3.6'
   gem 'factory_bot_rails', '~> 6.2'
   # only used for current mechanism of testing working with cocoon JS
