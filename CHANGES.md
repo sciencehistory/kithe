@@ -11,6 +11,13 @@
 
 *
 
+## 2.8.0
+
+## Added
+
+* Allow attr_json 2.0, while still allowing 1.0.  If you want one or the other specifically, you may want to lock in your own gemfile. https://github.com/jrochkind/attr_json/blob/master/CHANGELOG.md#200
+
+
 ## 2.7.1
 
 ### Fixed
