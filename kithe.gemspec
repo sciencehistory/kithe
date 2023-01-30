@@ -20,7 +20,7 @@ Gem::Specification.new do |s|
   s.required_ruby_version = '>= 2.5'
 
   s.add_dependency "rails", ">= 5.2.1", "< 7.1"
-  s.add_dependency "attr_json", "< 2.0.0"
+  s.add_dependency "attr_json", "< 3.0.0"
 
   s.add_dependency "simple_form", ">= 4.0", "< 6.0"
   s.add_dependency "shrine", "~> 3.3" # file attachment handling
