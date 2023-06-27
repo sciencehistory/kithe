@@ -47,7 +47,14 @@ module Kithe
           end
         end
 
-        [response, _documents]
+        if _documents.nil?
+          # NIL, not even empty array -- we are in Blacklight 8+ where this method is supposed
+          # to return just ONE object, response
+          response
+        else
+          # Blacklight 7, where this method needs to return two objects
+          [response, _documents]
+        end
       end
     end
   end
