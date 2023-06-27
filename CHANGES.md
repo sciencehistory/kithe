@@ -11,9 +11,16 @@
 
 *
 
+## 2.9.0
+
+### Fixed
+
+* Make Kithe::BlacklightTools::SearchServiceBulkLoad / Kithe::BlacklightTools::BulkLoadingSearchService compatible with Blacklight 8.x. Remains compatible with previous BL as well. https://github.com/sciencehistory/kithe/pull/163
+
+
 ## 2.8.0
 
-## Added
+### Added
 
 * Allow attr_json 2.0, while still allowing 1.0.  If you want one or the other specifically, you may want to lock in your own gemfile. https://github.com/jrochkind/attr_json/blob/master/CHANGELOG.md#200
 
