@@ -77,6 +77,14 @@ describe "customized shrine derivatives", queue_adapter: :inline do
       expect(asset.file_derivatives.keys).to be_empty
     end
 
+    it "can pass options to remove_derivatives" do
+      asset = CustomAsset.new(title: "test")
+
+      expect(asset.file_attacher).to receive(:remove_persisted_derivatives).with(:something, { :allow_other_changes=>true })
+
+      asset.remove_derivatives(:something, allow_other_changes: true)
+    end
+
     describe "with additional derivative processor opted in" do
       temporary_class("CustomUploader") do
         Class.new(Kithe::AssetUploader) do
