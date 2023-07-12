@@ -11,6 +11,12 @@
 
 *
 
+## 2.9.1
+
+### Fixed
+
+*  Asset#remove_derivatives should delegate extra options too. https://github.com/sciencehistory/kithe/pull/164
+
 ## 2.9.0
 
 ### Fixed
