@@ -44,7 +44,7 @@ describe Shrine::Plugins::KithePersistedDerivatives, queue_adapter: :test do
       file = sample_deriv_file!
       asset.file_attacher.add_persisted_derivatives({sample: file}, delete: false)
 
-      expect(File.exists?(file.path)).to eq(true)
+      expect(File.exist?(file.path)).to eq(true)
     end
 
     it "can use custom storage" do
