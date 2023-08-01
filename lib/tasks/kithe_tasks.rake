@@ -12,6 +12,7 @@ namespace :kithe do
       opts.on("--lazy", "Lazy create") { options[:lazy] = true }
       opts.on("--asset-id=FRIENDLIER_IDS", "comma-seperated list of asset (friendlier) ids") { |ids| options[:asset_ids] = ids.split(",") }
       opts.on("--work-id=FRIENDLIER_IDS", "comma-seperated list of work (friendlier) ids") { |ids| options[:work_ids] = ids.split(",") }
+      opts.on("--bg[=QUEUE_NAME]", "queue up ActiveJob per asset to create, with optional queue name") { |queue| options[:bg] = queue || true}
     end.tap do |parser|
       parser.parse!(parser.order(ARGV) {})
     end
@@ -27,10 +28,25 @@ namespace :kithe do
     scope.find_each do |asset|
       begin
         progress_bar.title = asset.friendlier_id
-        asset.create_derivatives(
-          only: options[:derivative_keys],
-          lazy: !!options[:lazy]
-        )
+
+        if options[:bg]
+          job_scope = Kithe::CreateDerivativesJob
+
+          if options[:bg].kind_of?(String)
+            job_scope = job_scope.set(queue: options[:bg])
+          end
+
+          job_scope.perform_later(
+            asset,
+            only: options[:derivative_keys],
+            lazy: !!options[:lazy]
+          )
+        else
+          asset.create_derivatives(
+            only: options[:derivative_keys],
+            lazy: !!options[:lazy]
+          )
+        end
       rescue Shrine::FileNotFound => e
         progress_bar.log("original missing for #{asset.friendlier_id}")
         # it's cool, skip it
