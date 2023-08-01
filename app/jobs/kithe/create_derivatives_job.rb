@@ -1,6 +1,22 @@
 module Kithe
+  # Create derivatives in a bg job.
+  #
+  # Used as part of kithe standard ingest flow, to create all derivatives in bg job for new
+  # ingest
+  #
+  # Can also be used explicitly, with args, to create only certain derivs, optionally lazily
+  #
+  # @example
+  #
+  #   CreateDerivativesJob.new(asset).perform_later
+  #
+  #   CreateDerivativesJob.new(asset, lazy: true).perform_later
+  #
+  #   CreateDerivativesJob.new(asset, only: :some_deriv, lazy: true).perform_later
+  #
+  #   CreateDerivativesJob.new(asset, except: :other_deriv, lazy: true).perform_later
   class CreateDerivativesJob < Job
-    def perform(asset)
+    def perform(asset, lazy: false, only: nil, except: nil)
         asset.create_derivatives
     end
     # This error typically occurs when several large assets, whose derivatives
