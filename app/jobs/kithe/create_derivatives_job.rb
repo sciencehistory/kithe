@@ -17,7 +17,7 @@ module Kithe
   #   CreateDerivativesJob.new(asset, except: :other_deriv, lazy: true).perform_later
   class CreateDerivativesJob < Job
     def perform(asset, lazy: false, only: nil, except: nil)
-        asset.create_derivatives
+        asset.create_derivatives(lazy: lazy, only: only, except: except)
     end
     # This error typically occurs when several large assets, whose derivatives
     # take a long time to generate, are deleted immediately after ingest.
