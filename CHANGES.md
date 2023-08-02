@@ -7,7 +7,8 @@
 
 ### Added
 
-*
+*  `Kithe::CreateDerivativesJob` can take arguments for #create_derivatives, and rake task
+   `kithe:create_derivatives` can now be used to enqueue bg jobs, one per asset. https://github.com/sciencehistory/kithe/pull/166
 
 *
 

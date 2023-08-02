@@ -234,7 +234,21 @@ Kithe gives you some rake tasks for creating derivatives in bulk. The tasks will
 
 `./bin/rake kithe:create_derivatives:lazy_defaults` will go through all assets, and create derivatives for all derivative definitions you have configured, only for those derivative keys that don't yet exist. This is useful if you've added a new derivative definition, or otherwise want to ensure all derivatives are created.
 
-`./bin/rake kithe:create_derivatives` has more flexibility specify derivative definitions to create and other parameters, including forcefully re-creating (if your definitions have changed). More example docs could be useful, but for now try running `./bin/rake kithe:create_derivatives -- -h`
+`./bin/rake kithe:create_derivatives` has more flexibility specify derivative definitions to create and other parameters, including forcefully re-creating (if your definitions have changed). It also has the ability to create background jobs (ActiveJob) per asset for actual creation work.
+
+Run `./bin/rake kithe:create_derivatives -- -h` for some argument info. (Note the `--` separator argument).
+
+    # IDs are friendlier_id
+    ./bin/rake kithe:create_derivatives --work-id=tnroyhj,x7kpj2z
+
+    # Specify specific derivatives, and/or lazy creation (only if not already present)
+    ./bin/rake kithe:create_derivatives --lazy --derivative=my_derivative_name,other
+
+    # Specify create per-asset bg jobs for creation
+    ./bin/rake kithe:create_derivatives --lazy --bg
+
+    # Or specify specific ActiveJob queue too
+    ./bin/rake kithe:create_derivatives --lazy --derivative=some_name --bg=queue_name
 
 ## Manually modifying derivatives
 
