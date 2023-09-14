@@ -7,7 +7,8 @@
 
 ### Added
 
-*
+* Re-use of single shared source tempfile for multiple `add_metadata` and `before_promotion` hooks,
+  using `Shrine.with_file`, so long as `Shrine.plugin :tempfile` is enabled in local app. https://github.com/sciencehistory/kithe/pull/167
 
 ## 2.10.0
 
