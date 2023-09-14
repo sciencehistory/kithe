@@ -23,6 +23,27 @@ class Shrine
     # Because getting this right required some shuffling around of where the wrapping happened, it
     # was convenient and avoided confusion to isolate wrapping in a class method that can be used
     # anywhere, and only depends on args passed in, no implicit state anywhere.
+    #
+    # ## Sharing same tempfile for processing
+    #
+    # If we have maybe multiple before_promotion hooks that all need an on-disk file,
+    # PLUS maybe multiple `add_metadata` hooks that need an on-desk file -- we
+    # ABSOLUTELY do NOT each to do a separate copy/download from possibly remote cloud source!
+    #
+    # The default shrine implementation using Down::ChunkedIO may avoid that (not necessarily
+    # as a contract!), BUT still makes multiple local copies, which can still be a performance issue
+    # for large files.
+    #
+    # The solution is the [Shrine tempfile plugin](https://shrinerb.com/docs/plugins/tempfile), which
+    # requires the UploadedFile to be opened *around* all uses of `Shrine.with_file`.
+    #
+    # We include some pretty kludgey code to make this a thing.
+    #
+    # To take advantage of it, you DO need to add `Shrine.plugin :tempfile` in your app, we don't
+    # want to force this global on apps!
+    #
+    # Note *after_promotion* hooks won't share the common tempfile, since the UploadedFile location
+    # has been changed from the one we opened!
     class KithePromotionCallbacks
       def self.load_dependencies(uploader, *)
         uploader.plugin :kithe_promotion_directives
@@ -36,7 +57,20 @@ class Shrine
       #        promotion_logic # sometimes `super`
       #     end
       #
+      # This also contains some pretty kludgey code to open the underlying Shrine::UploadedFile
+      # *around* the before_promotion hooks AND promotion.  When combined with Shrine tempfile plugin,
+      # this means all `before_promotion` hooks and `add_metadata` hooks can use `Shrine.with_file`
+      # to get the
       def self.with_promotion_callbacks(model)
+        # only if Shrine::UploadedFile isn't *already* open we definitely want
+        # to open it and keep it open -- so WITH Shrine tempfile plugin, we can have
+        # various hooks sharing the same tempfile instead of making multiple copies.
+        unless model.file_attacher.file.opened?
+          model.file_attacher.file.open
+          self_opened_file = model.file_attacher.file
+        end
+
+
         # If callbacks haven't been skipped, and we have a model that implements
         # callbacks, wrap yield in callbacks.
         #
@@ -44,12 +78,19 @@ class Shrine
         if (  !model.file_attacher.promotion_directives["skip_callbacks"] &&
               model &&
               model.class.respond_to?(:_promotion_callbacks) )
+
           model.run_callbacks(:promotion) do
             yield
           end
+
         else
           yield
         end
+      ensure
+        # only if we DID open the Shrine::UploadedFile ourselves, for the purpose of
+        # using a common tempfile with Shrine tempfile plugin,
+        # make sure to clean up after ourselves by closing it.
+        self_opened_file.close if self_opened_file && self_opened_file.opened?
       end
 
       module AttacherMethods
