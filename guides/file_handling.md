@@ -227,6 +227,27 @@ class LocalAsset < Kithe::Asset
 
 At the point the before callback is triggered, metadata has already been extracted, and you have access to it. If you abort the promotion, the extracted metadata will not be saved, and promotion won't happen. It's up to you and your app to log or store or notify that this happened in whatever way makes sense, kithe data structures won't make it clear why promotion didn't happen.
 
+### Re-use of local source file for performance
+
+If you need access ot a file on disk, you want to use `Shrine.with_file` on the `source_io`.
+
+```ruby
+class LocalAsset < Kithe::Asset
+  before_promotion do
+    Shrine.with_file(self.file) do |local_file|
+      # ...
+    end
+  end
+end
+```
+
+**AND** you should make sure to add the shrine `tempfile` plugin to the global `Shrine` object in an initializer:
+
+```ruby
+Shrine.plugin :tempfile
+```
+
+Then, kithe will make sure that a single local copy is made during the promotion process and re-used for all your metadata and before_promotion hooks.
 
 <a name="customizingLifecycle"></a>
 ### Customizing the ingest lifecycle
@@ -319,6 +340,30 @@ class AssetUploader < Kithe::AssetUploader
   end
 end
 ```
+
+### Re-use of local source file for performance
+
+If you need access ot a file on disk, you want to use `Shrine.with_file` on the `source_io`.
+
+```ruby
+class AssetUploader < Kithe::AssetUploader
+  add_metadata :something_fancy do |source_io, derivative:nil, **context|
+    Shrine.with_file(source_io) do |local_file|
+      # ...
+    end
+  end
+end
+```
+
+**AND** you want to make sure to add the shrine `tempfile` plugin to the global `Shrine` object in an initializer:
+
+```ruby
+Shrine.plugin :tempfile
+```
+
+Then, kithe will make sure that a single local copy is made during the promotion process and re-used for all your metadata and before_promotion hooks.
+
+### FFprobe helper
 
 Kithe also provides a helper class to do audio/video characterization with `ffprobe` (a tool
 that comes with ffmpeg). Here's an example of extracting multiple metadata fields, only for video input, using an `ffprobe`-based extractor that comes with kithe -- executing only on `store` action, and only for originals not derivatives.

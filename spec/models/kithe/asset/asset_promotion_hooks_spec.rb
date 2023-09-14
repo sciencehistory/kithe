@@ -33,6 +33,87 @@ describe "Kithe::Asset promotion hooks", queue_adapter: :inline do
     end
   end
 
+  describe "with multiple before_promotion and metadata hooks" do
+    before do
+      $file_paths = {}
+    end
+
+    temporary_class("CustomUploader") do
+      Class.new(Kithe::AssetUploader) do
+        add_metadata do |source_io|
+          Shrine.with_file(source_io) do |file|
+            $file_paths[:metadata1] = file.path
+          end
+
+          nil
+        end
+
+        add_metadata do |source_io|
+          Shrine.with_file(source_io) do |file|
+            $file_paths[:metadata2] = file.path
+          end
+
+          nil
+        end
+      end
+    end
+
+    temporary_class("TestAsset") do
+      Class.new(Kithe::Asset) do
+        set_shrine_uploader(CustomUploader)
+
+        before_promotion do
+          Shrine.with_file(self.file) do |file|
+            $file_paths[:before_promotion1] = file.path
+          end
+        end
+
+        before_promotion do
+          Shrine.with_file(self.file) do |file|
+            $file_paths[:before_promotion2] = file.path
+          end
+        end
+      end
+    end
+
+    before do
+      # very hacky way to temporarily add :tempfile plugin to `Shrine` global.
+      # Hacky but it works!
+
+      new_shrine = Shrine.dup
+      new_shrine.plugin :tempfile
+
+      stub_const("Shrine", new_shrine)
+    end
+
+    it "they share a tempfile when using Shrine.with_file and tempfile plugin" do
+      unsaved_asset # create but don't save yet
+
+      # We want to make sure the internal shrine io is properly closed, but
+      # we have really NO way to reach it but this hack.
+      allow_any_instance_of(Shrine::UploadedFile).to receive(:open).and_wrap_original do |original_method, *args, &block|
+        $opened_io = original_method.call(*args, &block)
+      end
+
+      unsaved_asset.save!
+
+      expect($opened_io.closed?).to be true
+      expect($file_paths.values.uniq.count).to eq 1
+    end
+
+    it "share a tempfile even if previously manually opened file" do
+      orig_io = nil
+
+      unsaved_asset.file.open do |file|
+        orig_io = unsaved_asset.file.to_io
+        unsaved_asset.save!
+      end
+
+      expect($file_paths.values.uniq.count).to eq 1
+      expect(orig_io.closed?).to be true
+    end
+  end
+
   describe "before_promotion cancellation" do
     temporary_class("TestAsset") do
       Class.new(Kithe::Asset) do
