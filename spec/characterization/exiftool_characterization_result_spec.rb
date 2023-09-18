@@ -51,4 +51,23 @@ describe Kithe::ExiftoolCharacterization do
 
     expect(result.creation_date).to eq Date.new(2023, 6, 28)
   end
+
+  describe "validation warnings" do
+    let(:hash) {
+      Kithe::ExiftoolCharacterization.new.call((Kithe::Engine.root + "spec/test_support/images/corrupt_bad.tiff").to_s)
+    }
+
+    it "are output" do
+      expect(result.exiftool_validation_warnings).to contain_exactly(
+        "Missing required TIFF IFD0 tag 0x0100 ImageWidth",
+        "Missing required TIFF IFD0 tag 0x0101 ImageHeight",
+        "Missing required TIFF IFD0 tag 0x0106 PhotometricInterpretation",
+        "Missing required TIFF IFD0 tag 0x0111 StripOffsets",
+        "Missing required TIFF IFD0 tag 0x0116 RowsPerStrip",
+        "Missing required TIFF IFD0 tag 0x0117 StripByteCounts",
+        "Missing required TIFF IFD0 tag 0x011a XResolution",
+        "Missing required TIFF IFD0 tag 0x011b YResolution"
+      )
+    end
+  end
 end

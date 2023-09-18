@@ -5,13 +5,18 @@ module Kithe
     # It can be really tricky to get this reliably from arbitrary files/cameras, there's a lot of variety
     # in EXIF/XMP/etc use.
     #
+    # We also normalize exiftool validation warnings in #exiftool_validation_warnings, they're
+    # kind of a pain to extract
+    #
     # We do this right now for our use cases, in terms of what data we want, and what is actually
     # found in ours. PR's welcome to generalize!
     #
-    # In the future, we might have differnet result classes for different versions of exiftool or ways
+    # In the future, we might have different result classes for different versions of exiftool or ways
     # of calling it, it's best to instantiate this with:
     #
     #     result = Kithe::ExiftoolChacterization.presenter(some_result_hash)
+    #     result.camera_model
+    #     result.exiftool_validation_warnings
     class Result
       attr_reader :result
 
@@ -88,6 +93,15 @@ module Kithe
         Date.strptime(str_date, '%Y:%m:%d')
       rescue Date::Error
         return nil
+      end
+
+      # Multiple exiftool validation warnings are annoyingly in keys `ExifTool:Warning`,
+      # `ExifTool:Copy1:Warning`, `ExifTool:Copy2:Warning`, etc. We provide a convenience
+      # method to fetch em all and return them as an array.
+      #
+      # @return Array[String]
+      def exiftool_validation_warnings
+        @exiftool_validation_warnings ||= result.slice( *result.keys.grep(/ExifTool(:Copy\d+):Warning/) ).values
       end
 
     end

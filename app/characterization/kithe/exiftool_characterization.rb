@@ -8,6 +8,9 @@ module Kithe
   # Results are extended with exact command-line arguments given to exiftool in key `Kithe:CliArgs` as
   # an array of Strings.
   #
+  # We ask exiftool to check for validation errors, and output them too, although they are
+  # output in exiftool json with kind of inconvenient key patterns.
+  #
   # Results can be parsed with accompanying Kithe::Exiftool::Characterization::Result class --
   # in future, if different versions or invocations of exiftool produce different hash results,
   # we can provide different Results parsers, and a switching method to choose right one
@@ -22,6 +25,7 @@ module Kithe
   #     presenter.bits_per_sample
   #     presenter.make
   #     presenter.model
+  #     presenter.exiftool_validation_warnings # Array of strings
   #
   # * exiftool needs to be installed
   #
