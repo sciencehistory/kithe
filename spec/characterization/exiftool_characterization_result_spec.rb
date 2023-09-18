@@ -70,4 +70,21 @@ describe Kithe::ExiftoolCharacterization do
       )
     end
   end
+
+  describe "nil input" do
+    let(:result) {
+      Kithe::ExiftoolCharacterization::Result.new(nil)
+    }
+
+    it "nil output with no complaints" do
+      expect(result.camera_lens).to eq nil
+
+      expect(result.creation_date).to eq nil
+
+      expect(result.dpi).to eq nil
+
+      expect(result.exiftool_validation_warnings).to eq []
+    end
+
+  end
 end

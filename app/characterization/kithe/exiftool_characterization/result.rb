@@ -21,7 +21,7 @@ module Kithe
       attr_reader :result
 
       def initialize(hash)
-        @result = hash
+        @result = hash || {}
       end
 
       def exiftool_version
@@ -90,6 +90,8 @@ module Kithe
       # @return Date
       def creation_date
         str_date = result["EXIF:DateTimeOriginal"] || result["EXIF:DateTimeOriginal"] || result["XMP:DateCreated"]
+        return nil unless str_date
+
         Date.strptime(str_date, '%Y:%m:%d')
       rescue Date::Error
         return nil
