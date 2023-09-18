@@ -65,7 +65,7 @@ jobs:
     - name: Install apt-get dependencies
       run: |
         sudo apt-get -y update
-        sudo apt-get -y install libvips-tools ffmpeg
+        sudo apt-get -y install libvips-tools ffmpeg exiftool
 
     - name: Prepare app
       env:
