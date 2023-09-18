@@ -31,6 +31,8 @@ module Kithe
   #   all included, but a bit annoying when it puts in extraneous `Copy1` for singular
   #   results sometimes too.
   class ExiftoolCharacterization
+    class_attribute :exiftool_command, default: "exiftool"
+
     attr_accessor :file_path
 
     # Returns a nice presenter object with methods that get out metadata
@@ -68,7 +70,7 @@ module Kithe
       # it's still usually returning a nice json hash with error message, just store that
       # in the exiftool_result area anyway!
       result = cmd.run!(
-        "exiftool",
+        exiftool_command,
         *exiftool_args,
         file_path.to_s)
 
