@@ -18,6 +18,11 @@ module Kithe
   # @example
   #     hash = Kithe::ExiftoolCharacterization.new.call(file_path)
   #
+  #     presenter = Kithe::ExiftoolCharacterization.presenter(hash)
+  #     presenter.bits_per_sample
+  #     presenter.make
+  #     presenter.model
+  #
   # * exiftool needs to be installed
   #
   # * Runs with -G0:4 so keys might look like `EXIF:BitsPerSample` or in some cases
@@ -27,6 +32,17 @@ module Kithe
   #   results sometimes too.
   class ExiftoolCharacterization
     attr_accessor :file_path
+
+    # Returns a nice presenter object with methods that get out metadata
+    # we are interested in -- in the future, might return differnet classes
+    # for specific data, looking at `Exiftool:Version` or `Kithe:CliArgs`
+    # keys to switch.
+    #
+    # @param hash [Hash] a hash returned by ExiftoolCharacterization.call
+    # @return a presenter
+    def self.presenter(hash)
+      Kithe::ExiftoolCharacterization::Result.new(hash)
+    end
 
     # @param file_path [String] path to a local file
     # @returns Hash
