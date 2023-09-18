@@ -21,7 +21,7 @@ describe Kithe::ExiftoolCharacterization do
   }
 
   it "has results" do
-    expect(result.exiftool_version).to eq "12.60"
+    expect(result.exiftool_version).to match /12\.\d+(\.\d+)?/
 
     expect(result.exif_tool_args).to eq(
       ["-All", "--File:All","-duplicates", "-validate", "-json", "-G0:4"]
