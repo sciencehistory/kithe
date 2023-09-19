@@ -375,6 +375,29 @@ add_metadata do |source_io, context|
 end
 ```
 
+### Exiftool helper
+
+Kithe includes a convenience class for running and interpreting exiftool output. The tool outputs
+json, but as it's fairly large, you might want to create a separate attribute from shrine metadata
+and store it there. This shows one way you might do that:
+
+```ruby
+class MyAsset < Kithe::Asset
+  before_promotion :store_exiftool
+
+  def store_exiftool
+    # assume we've created an attribute for exiftool_result
+    Shrine.with_file(self.file) do |local_file|
+      self.exiftool_result = Kithe::ExiftoolCharacterization.new.call(local_file.path)
+    end
+  end
+end
+
+## then later....
+exiftool_result = Kithe::ExiftoolCharacterization.presenter_for(some_asset.exiftool_result)
+exiftool_result.camera_model # etc
+```
+
 ## Validation?
 
 The built-in [shrine validation architecture](https://github.com/shrinerb/shrine/blob/master/doc/validation.md#readme) is targetted at interactive forms, and doesn't make a lot of sense in our scenario where  where metadata extraction and promotion happen in the background.
