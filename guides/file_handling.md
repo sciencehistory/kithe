@@ -394,7 +394,7 @@ class MyAsset < Kithe::Asset
 end
 
 ## then later....
-exiftool_result = Kithe::ExiftoolCharacterization.presenter(some_asset.exiftool_result)
+exiftool_result = Kithe::ExiftoolCharacterization.presenter_for(some_asset.exiftool_result)
 exiftool_result.camera_model # etc
 ```
 

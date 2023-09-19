@@ -21,7 +21,7 @@ module Kithe
   # @example
   #     hash = Kithe::ExiftoolCharacterization.new.call(file_path)
   #
-  #     presenter = Kithe::ExiftoolCharacterization.presenter(hash)
+  #     presenter = Kithe::ExiftoolCharacterization.presenter_for(hash)
   #     presenter.bits_per_sample
   #     presenter.make
   #     presenter.model
@@ -46,7 +46,7 @@ module Kithe
     #
     # @param hash [Hash] a hash returned by ExiftoolCharacterization.call
     # @return a presenter
-    def self.presenter(hash)
+    def self.presenter_for(hash)
       Kithe::ExiftoolCharacterization::Result.new(hash)
     end
 

@@ -20,6 +20,10 @@ describe Kithe::ExiftoolCharacterization do
    Kithe::ExiftoolCharacterization::Result.new(hash)
   }
 
+  it "can be produced by Kithe::ExiftoolCharacterization.presenter_for" do
+    expect(Kithe::ExiftoolCharacterization.presenter_for(hash)).to be_kind_of Kithe::ExiftoolCharacterization::Result
+  end
+
   it "has results" do
     expect(result.exiftool_version).to match /12\.\d+(\.\d+)?/
 
