@@ -29,8 +29,10 @@ class Kithe::Model < ActiveRecord::Base
 
   # keep json_attributes column out of #inspect display of model shown in logs and
   # console -- because it can be huge, and is generally duplicated by individual
-  # attributes already included.
-  self.filter_attributes = [:json_attributes]
+  # attributes already included. filter_attributes only supported in Rails 6+
+  if self.respond_to?(:filter_attributes)
+    self.filter_attributes += [:json_attributes]
+  end
 
   validates_presence_of :title
 
