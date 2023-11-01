@@ -5,9 +5,10 @@ source "https://rubygems.org"
 gem "rails", "~> 6.0"
 
 group :development, :test do
-  gem "rspec-rails", "~> 4.0"
+  gem "rspec-rails", "~> 6.0"
+  gem "rspec-mocks", ">= 3.12.1"
   gem "pry-byebug", "~> 3.6"
-  gem "factory_bot_rails", "~> 4.11"
+  gem "factory_bot_rails", "~> 6.2"
   gem "sprockets-rails"
 end
 
