@@ -12,6 +12,10 @@
 
 *
 
+## Removed
+
+* Dropped support for Rails < 6, and attr_json < 2. https://github.com/sciencehistory/kithe/pull/170
+
 ## 2.11.0
 
 ### Added
