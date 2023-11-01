@@ -2,7 +2,7 @@
 
 ### Added
 
-* Support Rails 7.1 https://github.com/sciencehistory/kithe/pull/172
+*
 
 *
 
@@ -12,7 +12,14 @@
 
 *
 
-## Removed
+## 2.12.0
+
+### Added
+
+* Support Rails 7.1 https://github.com/sciencehistory/kithe/pull/172
+
+
+## Changed
 
 * Dropped support for Rails < 6, and attr_json < 2. https://github.com/sciencehistory/kithe/pull/170
 
