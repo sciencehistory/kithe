@@ -2,7 +2,7 @@
 
 ### Added
 
-*
+* Support Rails 7.1 https://github.com/sciencehistory/kithe/pull/172
 
 *
 
