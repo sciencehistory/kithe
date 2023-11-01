@@ -30,9 +30,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - gemfile: rails_52
-            ruby: 2.5
-
           - gemfile: rails_60
             ruby: 2.7
 
