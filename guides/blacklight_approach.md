@@ -34,7 +34,7 @@ class SolrDocument
   include Blacklight::SolrDocument
   # ...
 
-  attr_acessor :model
+  attr_accessor :model
 end
 ```
 
