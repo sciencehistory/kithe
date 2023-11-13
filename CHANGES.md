@@ -2,7 +2,7 @@
 
 ### Added
 
-*
+*  Kithe::Model sub-classes filter_attributes :json_attributes https://github.com/sciencehistory/kithe/pull/169
 
 *
 

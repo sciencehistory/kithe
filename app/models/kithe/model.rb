@@ -27,6 +27,13 @@ class Kithe::Model < ActiveRecord::Base
 
   attr_json_config(default_accepts_nested_attributes: { reject_if: :all_blank })
 
+  # keep json_attributes column out of #inspect display of model shown in logs and
+  # console -- because it can be huge, and is generally duplicated by individual
+  # attributes already included. filter_attributes only supported in Rails 6+
+  if self.respond_to?(:filter_attributes)
+    self.filter_attributes += [:json_attributes]
+  end
+
   validates_presence_of :title
 
   # this should only apply to Works, but we define it here so we can preload it
