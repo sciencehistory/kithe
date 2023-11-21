@@ -15,7 +15,7 @@ gemspec
 # gem 'byebug', group: [:development, :test]
 
 group :development, :test do
-  gem 'rspec-rails', '~> 6.0'
+  gem 'rspec-rails', '>= 5.0', '< 7'
   gem 'rspec-mocks', '>= 3.12.1' # for ruby 3.2 need at least
   gem 'pry-byebug', '~> 3.6'
   # 6.3.0 and 6.4.0 have a bug https://github.com/thoughtbot/factory_bot_rails/issues/433
