@@ -2,17 +2,26 @@
 
 ### Added
 
-*  Kithe::Model sub-classes filter_attributes :json_attributes https://github.com/sciencehistory/kithe/pull/169
+*
 
-* New method Kithe::Model.kithe_earlier_after_commit can be used to register an after_commit
-  hook that will fire BEFORE any existing after_commit hooks -- including shrine promotion-related
-  ones -- and will work consistently in any version of Rails including Rails 7.1 with run_after_transaction_callbacks_in_order_defined. https://github.com/sciencehistory/kithe/pull/178
+*
 
 ### Fixed
 
 *
 
 *
+
+
+## 2.13.0
+
+### Added
+
+*  Kithe::Model sub-classes filter_attributes :json_attributes https://github.com/sciencehistory/kithe/pull/169
+
+* New method Kithe::Model.kithe_earlier_after_commit can be used to register an after_commit
+  hook that will fire BEFORE any existing after_commit hooks -- including shrine promotion-related
+  ones -- and will work consistently in any version of Rails including Rails 7.1 with run_after_transaction_callbacks_in_order_defined. https://github.com/sciencehistory/kithe/pull/178
 
 ## 2.12.0
 
