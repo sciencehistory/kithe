@@ -154,6 +154,40 @@ class Kithe::Model < ActiveRecord::Base
     self.leaf_representative_id = result
   end
 
+  # Insert an after_commit hook that will run BEFORE any existing after_commit hooks,
+  # regardless of Rails version and run_after_transaction_callbacks_in_order_defined configuration.
+  #
+  # Sometimes you need to insert an after_commit hook that goes BEFORE shrine's after_commit
+  # callbacks for promotion in activerecord after_commit
+  #
+  # In Rails prior to 7.1, that happens automatically just by adding an after_commit.
+  # But Rails 7.1 by default changes the order of after_commit AND removes the ability
+  # to alter it with prepend! https://github.com/rails/rails/issues/50118
+  #
+  # We add this method, that will do the right thing -- making sure the new hook we are adding
+  # is run BEFORE any existing ones -- in both Rails < 7.1 and Rails 7.1 with
+  # run_after_transaction_callbacks_in_order_defined
+  #
+  # @example
+  #
+  #     class MyAsset < Kithe::Asset
+  #       kithe_earlier_after_commit :some_method_to_run_first
+  #
+  #       kithe_earlier_after_commit do
+  #         # This code will be in an after_commit that comes BEFORE
+  #         # any existing ones
+  #       end
+  #     end
+  #
+  def self.kithe_earlier_after_commit(*args, &block)
+    # confusingly in this state, we need prepend FALSE to have this new callback be registered to go
+    # FIRST. And this actually is correct and works whether or not run_after_transaction_callbacks_in_order_defined
+    # Very confusing, we test thorougly.
+    set_options_for_callbacks!(args, {prepend: false})
+
+    set_callback(:commit, :after, *args, &block)
+  end
+
   private
 
 
