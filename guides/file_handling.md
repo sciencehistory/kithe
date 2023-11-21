@@ -175,6 +175,25 @@ If you have a reference to a Kithe::Asset instance, you can see if it's been pro
 
 In any case, when you assign and save _new_ file information on an asset, any previous stored bytes and derivatives are automatically cleaned up for you, in a reliable and concurrency-safe fashion.
 
+### an after_commit that happens before shrine promotion?
+
+Shrine promotes `cache` file to `stored` in an ActiveRecord `after_commit` hook it registers on Asset.
+
+Sometimes you want your own after_commit hook that happens _before_ this, at a point when
+Rails dirty tracking `previous_changes` still records the change that _triggered_ the promotion,
+rather than the promotion itself. Depending on the version of Rails you are using and configuraition, this may happen anyway, or be very hard to make happen.
+
+We give you a method to ensure a after_commit hook that happens _before_ previously
+registered after_commits, that is _before_ the Shrine promotion after_commit.
+
+    class MyAsset < Kithe::Asset
+      kithe_earlier_after_commit :will_execute_before_promotion
+
+      kithe_earlier_after_commit do
+        # will execute before promotion
+      end
+    end
+
 <a name="readingFiles"></a>
 ### Reading files and file info
 
