@@ -56,6 +56,17 @@ describe Kithe::ExiftoolCharacterization do
     expect(result.creation_date).to eq Date.new(2023, 6, 28)
   end
 
+  describe "PDF" do
+    let(:hash) {
+      Kithe::ExiftoolCharacterization.new.call((Kithe::Engine.root + "spec/test_support/pdf/py-pdf-sample-files/minimal-document.pdf").to_s)
+    }
+
+    it "produces selected PDF-specific metadata" do
+      expect(result.page_count).to eq 1
+      expect(result.pdf_version).to eq "1.5"
+    end
+  end
+
   describe "validation warnings" do
     let(:hash) {
       Kithe::ExiftoolCharacterization.new.call((Kithe::Engine.root + "spec/test_support/images/corrupt_bad.tiff").to_s)
@@ -89,6 +100,5 @@ describe Kithe::ExiftoolCharacterization do
 
       expect(result.exiftool_validation_warnings).to eq []
     end
-
   end
 end

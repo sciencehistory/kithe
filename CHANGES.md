@@ -12,6 +12,11 @@
 
 *
 
+## 2.14.0
+
+### Added
+
+* Normalized metadata from ExiftoolCharacterization::Result supports a couple PDF values https://github.com/sciencehistory/kithe/pull/180
 
 ## 2.13.0
 
