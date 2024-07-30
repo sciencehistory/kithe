@@ -84,6 +84,14 @@ module Kithe
         result["ICC_Profile:ProfileDescription"]
       end
 
+      def pdf_version
+        result["PDF:PDFVersion"]
+      end
+
+      def page_count
+        result["PDF:PageCount"]
+      end
+
       # We look in a few places, and we only return date not time because
       # getting timezone info is unusual, and it's all we need right now.
       #
