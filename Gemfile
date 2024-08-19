@@ -20,6 +20,11 @@ group :development, :test do
   gem 'pry-byebug', '~> 3.6'
   # 6.3.0 and 6.4.0 have a bug https://github.com/thoughtbot/factory_bot_rails/issues/433
   gem 'factory_bot_rails', '~> 6.2', "!= 6.3.0", "!= 6.4.0"
-  # only used for current mechanism of testing working with cocoon JS
+
+
+  # sprockets-rails is generated into gemfile in Rails 7.0, where it
+  # was a gemspec dependency in previous rails. We'll just
+  # add it here because we need it for testing cocoon integration,
+  # and we are currently including cocoon via sprockets.
   gem "sprockets-rails"
 end
