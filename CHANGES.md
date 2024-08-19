@@ -12,6 +12,12 @@
 
 *
 
+## 2.15.0
+
+### Added
+
+* Allow Rails 7.2 in gemspec, no code changes required. https://github.com/sciencehistory/kithe/pull/181
+
 ## 2.14.0
 
 ### Added
