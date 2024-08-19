@@ -12,6 +12,12 @@
 
 *
 
+## 2.15.1
+
+### Fixed
+
+* Use new ActiveRecord enum args in Raisl 7.0+ to avoid Rails 7.2 deprecation notice. https://github.com/sciencehistory/kithe/pull/182
+
 ## 2.15.0
 
 ### Added

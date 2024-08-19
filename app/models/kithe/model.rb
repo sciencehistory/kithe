@@ -23,7 +23,13 @@ class Kithe::Model < ActiveRecord::Base
   #
   # Since the rails enum uses an int field, this doens't take up too much extra
   # space in pg or anything, and is convenient.
-  enum kithe_model_type: { collection: 0, work: 1, asset: 2}
+  #
+  # Start using new non-deprecated args in Rails 7.0
+  if Rails.gem_version < Gem::Version.new("7.0")
+    enum kithe_model_type: { collection: 0, work: 1, asset: 2}
+  else
+    enum :kithe_model_type, { collection: 0, work: 1, asset: 2}
+  end
 
   attr_json_config(default_accepts_nested_attributes: { reject_if: :all_blank })
 
