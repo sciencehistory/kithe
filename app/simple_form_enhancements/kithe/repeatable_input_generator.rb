@@ -175,8 +175,11 @@ class Kithe::RepeatableInputGenerator
   # Wraps with the proper DOM for cocooon JS, along with the remove button.
   # @yield pass block with content to wrap
   def wrap_with_repeatable_ui
-    # cocoon JS wants "nested-fields"
-    template.content_tag(:div, class: "nested-fields form-row") do
+    # * cocoon JS wants "nested-fields"
+    # * 'row' and `g-3 are for bootstrap 5 -- but doens't mess up bootstrap 4 because
+    #      conveniently the 'form-row' ends up taking precedence.
+    # * form-row is for bootstrap 4. Doesn't exist in bootstrap 5.
+    template.content_tag(:div, class: "nested-fields form-row row g-3") do
       template.content_tag(:div, class: "col") do
         yield
       end +
