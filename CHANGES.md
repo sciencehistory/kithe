@@ -8,7 +8,7 @@
 
 ### Fixed
 
-*
+* Fix repeatable_attr_input for Bootstrap 5.x. https://github.com/sciencehistory/kithe/pull/183
 
 *
 
