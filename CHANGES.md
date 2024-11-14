@@ -2,15 +2,21 @@
 
 ### Added
 
-* Allow and test on Rails 8 https://github.com/sciencehistory/kithe/pull/184
-
 *
 
 ### Fixed
 
-* Fix repeatable_attr_input for Bootstrap 5.x. https://github.com/sciencehistory/kithe/pull/183
-
 *
+
+## 2.16.0
+
+### Added
+
+* Allow and test on Rails 8 https://github.com/sciencehistory/kithe/pull/184
+
+### Fixed
+
+* Fix repeatable_attr_input for Bootstrap 5.x. https://github.com/sciencehistory/kithe/pull/183
 
 ## 2.15.1
 
