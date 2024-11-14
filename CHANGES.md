@@ -2,7 +2,7 @@
 
 ### Added
 
-*
+* Allow and test on Rails 8 https://github.com/sciencehistory/kithe/pull/184
 
 *
 
