@@ -48,6 +48,9 @@ jobs:
           - gemfile: rails_72
             ruby: '3.3'
 
+          - gemfile: rails_80
+            ruby: '3.3'
+
 
     name: test ${{ matrix.gemfile }}, ruby ${{ matrix.ruby }}
 
