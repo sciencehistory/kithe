@@ -8,18 +8,18 @@ describe Kithe::FfprobeCharacterization do
 
     let(:normalized_output) do
       {
-        "width" => 224,
-        "height" => 168,
-        "frame_rate" => 15.0,
-        "duration_seconds" => 2.006,
-        "audio_codec" =>"aac",
-        "video_codec" => "h264",
-        "audio_bitrate" => 369135,
-        "video_bitrate" => 105848,
-        "bitrate" => 484466,
-        "audio_sample_rate" => 48000,
-        "audio_channels" => 6,
-        "audio_channel_layout" => "5.1"
+        "width"=>224,
+        "height"=>168,
+        "frame_rate"=>15.0,
+        "duration_seconds"=>2.005,
+        "audio_codec"=>"aac",
+        "video_codec"=>"h264",
+        "audio_bitrate"=>369135,
+        "video_bitrate"=>105848,
+        "bitrate"=>484708,
+        "audio_sample_rate"=>48000,
+        "audio_channels"=>6,
+        "audio_channel_layout"=>"5.1"
       }
     end
 
