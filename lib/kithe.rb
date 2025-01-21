@@ -13,6 +13,14 @@ require 'kithe/indexable_settings'
 # we can stop require'ing it here, it's just a weird workaround.
 require 'yell'
 
+
+# bug in Rails pre-7.0 requires us to manually 'require' logger dep, Rails isn't going
+# to release a fix. https://github.com/rails/rails/pull/54264
+#
+# Tried to do this conditionally only if Rails < 7.1, but hard with order of
+# dependency loading. This is fine.
+require 'logger'
+
 module Kithe
   # for ruby-progressbar
   STANDARD_PROGRESS_BAR_FORMAT = "%a %t: |%B| %R/s %c/%u %p%% %e"
