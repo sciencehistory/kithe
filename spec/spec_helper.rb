@@ -13,7 +13,7 @@
 # it.
 #
 # See http://rubydoc.info/gems/rspec-core/RSpec/Core/Configuration
-#
+
 require 'byebug'
 require 'webmock/rspec'
 require 'db_query_matchers'
