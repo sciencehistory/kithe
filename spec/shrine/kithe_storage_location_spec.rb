@@ -1,5 +1,6 @@
 require 'spec_helper'
 require 'shrine/plugins/kithe_storage_location'
+require 'ostruct'
 
 describe Shrine::Plugins::KitheStorageLocation do
   let(:uploader) { test_uploader { plugin :kithe_storage_location } }

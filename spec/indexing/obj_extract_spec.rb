@@ -1,5 +1,6 @@
 require 'rails_helper'
 require 'traject'
+require 'ostruct'
 
 # trying to write tests to be easily moved to traject if we extract this to traject itself
 describe "ObjExtract traject macro" do
