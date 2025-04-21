@@ -9,12 +9,32 @@ class Kithe::Asset::DerivativeDefinition
     @proc = proc
   end
 
+  # @return [Hash] add_metadata hash of metadata to add to derivative on storage
   def call(original_file:,attacher:)
+    add_metadata = {}
+    kwargs = {}
+
     if proc_accepts_keyword?(:attacher)
-      proc.call(original_file, attacher: attacher)
+      kwargs[:attacher] = attacher
+    end
+
+    if proc_accepts_keyword?(:add_metadata)
+      kwargs[:add_metadata] = add_metadata
+    end
+
+    return_val = if kwargs.present?
+      proc.call(original_file, **kwargs)
     else
       proc.call(original_file)
     end
+
+    # Save in context to later write to actual stored derivative metadata
+    if add_metadata.present?
+      attacher.context[:add_metadata] ||= {}
+      attacher.context[:add_metadata][key] = add_metadata
+    end
+
+    return_val
   end
 
   # Do content-type restrictions defined for this definition match a given asset?

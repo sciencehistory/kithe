@@ -171,5 +171,34 @@ describe "customized shrine derivatives", queue_adapter: :inline do
         end
       end
     end
+
+    describe "with specified addiitonal metadata" do
+      temporary_class("CustomUploader2") do
+        call_fakeio = method(:fakeio) # weird closure issue
+        deriv_path = derivative_file_path
+        Class.new(Kithe::AssetUploader) do
+          self::Attacher.define_derivative(:fixed_with_metadata) do |io, add_metadata:|
+            add_metadata[:added_metadata] = "set value"
+            call_fakeio.(File.binread(deriv_path))
+          end
+        end
+      end
+
+      temporary_class("CustomAsset2") do
+        Class.new(Kithe::Asset) do
+          set_shrine_uploader(CustomUploader2)
+        end
+      end
+
+      it "automatically sets up derivative properly" do
+        asset = CustomAsset2.create!(title: "test", file: File.open(original_file_path))
+        # happened in BG job, so have to reload to see it.
+        asset.reload
+
+        derivative = asset.file_derivatives[:fixed_with_metadata]
+        expect(derivative).to be_present
+        expect(derivative.metadata["added_metadata"]).to eq "set value"
+      end
+    end
   end
 end
