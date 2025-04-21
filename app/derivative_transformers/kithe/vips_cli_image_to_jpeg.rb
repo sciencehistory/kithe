@@ -19,8 +19,8 @@ module Kithe
   # built for use with kithe derivatives transformations, eg:
   #
   #     class Asset < KitheAsset
-  #       define_derivative(thumb) do |original_file|
-  #         Kithe::VipsCliImageToJpeg.new(max_width: 100, thumbnail_mode: true).call(original_file)
+  #       define_derivative(thumb) do |original_file, add_metadata:|
+  #         Kithe::VipsCliImageToJpeg.new(max_width: 100, thumbnail_mode: true).call(original_file, add_metadata: add_metadata)
   #       end
   #     end
   #
@@ -50,7 +50,7 @@ module Kithe
     end
 
     # Will raise TTY::Command::ExitError if the external Vips command returns non-null.
-    def call(original_file)
+    def call(original_file, add_metadata: nil)
       tempfile = Tempfile.new(["kithe_vips_cli_image_to_jpeg", ".jpg"])
 
       vips_args = []
@@ -62,7 +62,7 @@ module Kithe
         # really huge one million pixels so it should not come into play, and
         # we're constraining proportionally by width.
         # https://github.com/jcupitt/libvips/issues/781
-        vips_args.concat [vips_thumbnail_command, original_file.path]
+        vips_args.concat [vips_thumbnail_command, "--version", original_file.path]
         vips_args.concat maybe_profile_normalization_args
         vips_args.concat ["--size", "#{max_width}x65500"]
         vips_args.concat ["-o", "#{tempfile.path}#{vips_jpg_params}"]
@@ -75,7 +75,16 @@ module Kithe
         vips_args.concat ["#{tempfile.path}#{vips_jpg_params}"]
       end
 
-      TTY::Command.new(printer: :null).run(*vips_args)
+      out, err = TTY::Command.new(printer: :null).run(*vips_args)
+
+      if add_metadata
+        add_metadata[:vips_command] = vips_args.join(" ")
+
+        out =~ /vips[ \-](\d+\.\d+\.\d+.*$)/
+        if $1
+          add_metadata[:vips_version] = $1
+        end
+      end
 
       return tempfile
     end

@@ -26,6 +26,16 @@ describe Kithe::VipsCliImageToJpeg do
 
         output.close!
       end
+
+      describe "with add_metadata" do
+        it "adds metadata" do
+          add_metadata = {}
+
+          Kithe::VipsCliImageToJpeg.new(thumbnail_mode: true, max_width: width).call(input_file, add_metadata: add_metadata)
+          expect(add_metadata[:vips_version]).to match /\d+\.\d+\.\d+/
+          expect(add_metadata[:vips_command]).to match /vipsthumbnail .*\.jpg\[Q=85,interlace,optimize_coding,keep=none\]/
+        end
+      end
     end
   end
 
@@ -53,6 +63,17 @@ describe Kithe::VipsCliImageToJpeg do
 
         output.close!
       end
+
+      describe "with add_metadata" do
+        it "adds metadata" do
+          add_metadata = {}
+
+          Kithe::VipsCliImageToJpeg.new(thumbnail_mode: false, max_width: width).call(input_file, add_metadata: add_metadata)
+          expect(add_metadata[:vips_version]).to match /\d+\.\d+\.\d+/
+          expect(add_metadata[:vips_command]).to match /vipsthumbnail .*\.jpg\[Q=85,interlace,optimize_coding\]/
+        end
+      end
+
     end
   end
 end

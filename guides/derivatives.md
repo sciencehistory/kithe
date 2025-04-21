@@ -115,8 +115,8 @@ Which can create a resized JPG from an image input, using a shell out to the `vi
 
 ```ruby
 class Asset < Kithe::Asset
-  define_derivative(:download_small) do |original_file|
-    Kithe::VipsCliImageToJpeg.new(max_width: 500).call(original_file)
+  define_derivative(:download_small) do |original_file, add_metadata:|
+    Kithe::VipsCliImageToJpeg.new(max_width: 500).call(original_file, add_metadata: add_metadata)
   end
 end
 ```
@@ -125,8 +125,8 @@ If you pass `thumbnail_mode: true` when instantiating Kithe::VipsCliImageToJpeg,
 
 ```ruby
 class Asset < Kithe::Asset
-  define_derivative(:thumb_small, content_type: "image") do |original_file|
-    Kithe::VipsCliImageToJpeg.new(max_width: 500, thumbnail_mode: true).call(original_file)
+  define_derivative(:thumb_small, content_type: "image") do |original_file, add_metadata:|
+    Kithe::VipsCliImageToJpeg.new(max_width: 500, thumbnail_mode: true).call(original_file, add_metadata: add_metadata)
   end
 end
 ```
