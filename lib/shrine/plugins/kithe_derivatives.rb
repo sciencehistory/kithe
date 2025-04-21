@@ -43,6 +43,11 @@ class Shrine
             result["filename"] = "#{context[:record].friendlier_id}_#{derivative}.#{extension}"
           end
 
+          # Add timestamp for derivatives please
+          if derivative
+            result["created_at"] ||= Time.current.utc.iso8601.to_s
+          end
+
           result
         end
       end
