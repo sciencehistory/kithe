@@ -8,6 +8,10 @@ module Kithe
   # @example tempfile = FfmpegExtractJpg.new.call(url)
   # @example tempfile = FfmpegExtractJpg.new(start_seconds: 60).call(shrine_uploaded_file)
   # @example tempfile = FfmpegExtractJpg.new(start_seconds: 10, width_pixels: 420).call(shrine_uploaded_file)
+  #
+  # @example you can also provide a Hash which will be mutated with metadata relevant to
+  # the derivative created, ffmpeg version and args:
+  #     @example tempfile = FfmpegExtractJpg.new(start_seconds: 10, width_pixels: 420).call(shrine_uploaded_file, add_metadata: my_hash)
   class FfmpegExtractJpg
     class_attribute :ffmpeg_command, default: "ffmpeg"
     attr_reader :start_seconds, :frame_sample_size, :width_pixels
@@ -43,19 +47,19 @@ module Kithe
     #   Most efficient is if we have a remote URL to give ffmpeg, one way or another!
     #
     # @returns [Tempfile] jpg extracted from movie
-    def call(input_arg)
+    def call(input_arg, add_metadata:nil)
       if input_arg.kind_of?(Shrine::UploadedFile)
         if input_arg.respond_to?(:url) && input_arg.url&.start_with?(/https?\:/)
-          _call(input_arg.url)
+          _call(input_arg.url, add_metadata:)
         else
           Shrine.with_file(input_arg) do |local_file|
-            _call(local_file.path)
+            _call(local_file.path, add_metadata:)
           end
         end
       elsif input_arg.respond_to?(:path)
-        _call(input_arg.path)
+        _call(input_arg.path, add_metadata:)
       else
-        _call(input_arg.to_s)
+        _call(input_arg.to_s, add_metadata:)
       end
     end
 
@@ -67,13 +71,25 @@ module Kithe
     # @param ffmpeg_source_arg [String] filepath or URL. ffmpeg can take urls, which
     # can be very efficient.
     #
+    # @param add_metadata [Hash], optional, if provided will be filled out with metadata
+    # relevant to the derivative created -- ffmpeg version and args.
+    #
     # @returns Tempfile pointing to a thumbnail
-    def _call(ffmpeg_source_arg)
+    def _call(ffmpeg_source_arg, add_metadata: nil)
       tempfile = Tempfile.new(['temp_deriv', ".jpg"])
 
       ffmpeg_args = produce_ffmpeg_args(input_arg: ffmpeg_source_arg, output_path: tempfile.path)
 
       TTY::Command.new(printer: :null).run(*ffmpeg_args)
+
+      if add_metadata
+        add_metadata[:ffmpeg_command] = ffmpeg_args.join(" ")
+
+        `#{ffmpeg_command} -version` =~ /ffmpeg version (\d+\.\d+.*) Copyright/
+        if $1
+          add_metadata[:ffmpeg_version] = $1
+        end
+      end
 
       return tempfile
     rescue StandardError => e

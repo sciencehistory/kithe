@@ -163,7 +163,7 @@ However, to take advantage of this feature, avoiding a download, you'd have to w
 complex code. Same if you want to produce multiple resolution thumbnails. This isn't yet fully documented, but be aware of the existence of this service.
 
 ```ruby
-image_tmp_file = Kithe::FfmpegExtractJpg.new(start_seconds: start_seconds).call(original)
+image_tmp_file = Kithe::FfmpegExtractJpg.new(start_seconds: start_seconds).call(original, add_metadata: add_metadata)
 ```
 
 ## Manually triggering creaton of derivatives from definitions

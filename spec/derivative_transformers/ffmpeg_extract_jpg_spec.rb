@@ -20,6 +20,16 @@ describe Kithe::FfmpegExtractJpg do
       expect(result).to be_kind_of(Tempfile)
       expect(Marcel::MimeType.for(StringIO.new(result.read))).to eq "image/jpeg"
     end
+
+    it "sets add_metadata" do
+      add_metadata = {}
+
+      extractor = Kithe::FfmpegExtractJpg.new(frame_sample_size: 300)
+      extractor.call(video_path, add_metadata: add_metadata)
+
+      expect(add_metadata[:ffmpeg_version]).to match /\d+\.\d+/
+      expect(add_metadata[:ffmpeg_command]).to match /ffmpeg -y -i .*\.jpg/
+    end
   end
 
   describe "from File" do
@@ -31,6 +41,15 @@ describe Kithe::FfmpegExtractJpg do
       expect(result).to be_present
       expect(result).to be_kind_of(Tempfile)
       expect(Marcel::MimeType.for(StringIO.new(result.read))).to eq "image/jpeg"
+    end
+
+    it "sets add_metadata" do
+      add_metadata = {}
+
+      Kithe::FfmpegExtractJpg.new.call(video_file, add_metadata: add_metadata)
+
+      expect(add_metadata[:ffmpeg_version]).to match /\d+\.\d+/
+      expect(add_metadata[:ffmpeg_command]).to match /ffmpeg -y -i .*\.jpg/
     end
   end
 
@@ -51,6 +70,15 @@ describe Kithe::FfmpegExtractJpg do
       expect(result).to be_present
       expect(result).to be_kind_of(Tempfile)
       expect(Marcel::MimeType.for(StringIO.new(result.read))).to eq "image/jpeg"
+    end
+
+    it "sets add_metadata" do
+      add_metadata = {}
+
+      Kithe::FfmpegExtractJpg.new.call(uploaded_file_obj, add_metadata: add_metadata)
+
+      expect(add_metadata[:ffmpeg_version]).to match /\d+\.\d+/
+      expect(add_metadata[:ffmpeg_command]).to match /ffmpeg -y -i .*\.jpg/
     end
   end
 
@@ -80,6 +108,19 @@ describe Kithe::FfmpegExtractJpg do
 
       result = Kithe::FfmpegExtractJpg.new.call(uploaded_file_obj)
     end
+
+    it "sets add_metadata" do
+      add_metadata = {}
+
+      expect_any_instance_of(TTY::Command).to receive(:run) do |instance, *args|
+        expect(args[0..3]).to eq ["ffmpeg", "-y", "-i", url]
+      end
+
+      Kithe::FfmpegExtractJpg.new.call(uploaded_file_obj, add_metadata: add_metadata)
+
+      expect(add_metadata[:ffmpeg_version]).to match /\d+\.\d+/
+      expect(add_metadata[:ffmpeg_command]).to match /ffmpeg -y -i .*\.jpg/
+    end
   end
 
 
@@ -94,6 +135,19 @@ describe Kithe::FfmpegExtractJpg do
       end
 
       result = Kithe::FfmpegExtractJpg.new.call(url)
+    end
+
+    it "sets add_metadata" do
+      add_metadata = {}
+
+      expect_any_instance_of(TTY::Command).to receive(:run) do |instance, *args|
+        expect(args[0..3]).to eq ["ffmpeg", "-y", "-i", url]
+      end
+
+      Kithe::FfmpegExtractJpg.new.call(url, add_metadata: add_metadata)
+
+      expect(add_metadata[:ffmpeg_version]).to match /\d+\.\d+/
+      expect(add_metadata[:ffmpeg_command]).to match /ffmpeg -y -i .*\.jpg/
     end
   end
 end
