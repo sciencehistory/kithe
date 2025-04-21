@@ -138,18 +138,18 @@ Which creates audio files from any audio file original, using a shell out to the
 
 ```ruby
 # Create a stereo 128k mp3 derivative. output_suffix is the only mandatory argument.
-define_derivative('mp3', content_type: "audio") do |original_file|
-  Kithe::FfmpegTransformer.new(bitrate: '128k', output_suffix: 'mp3').call(original_file)
+define_derivative('mp3', content_type: "audio") do |original_file, add_metadata:|
+  Kithe::FfmpegTransformer.new(bitrate: '128k', output_suffix: 'mp3').call(original_file, add_metadata: add_metadata)
 end
 
 # A mono webm file at only 64k:
-define_derivative('webm', content_type: "audio") do |original_file|
-  Kithe::FfmpegTransformer.new(bitrate: '64k', force_mono: true, output_suffix: 'webm').call(original_file)
+define_derivative('webm', content_type: "audio") do |original_file, add_metadata:|
+  Kithe::FfmpegTransformer.new(bitrate: '64k', force_mono: true, output_suffix: 'webm').call(original_file, add_metadata: add_metadata)
 end
 
 # libopus is used by default for webm conversions, but you could specify another codec:
-define_derivative('webm', content_type: "audio") do |original_file|
-  Kithe::FfmpegTransformer.new(output_suffix: 'webm', audio_codec: 'libopencore-amrwb').call(original_file)
+define_derivative('webm', content_type: "audio") do |original_file, add_metadata:|
+  Kithe::FfmpegTransformer.new(output_suffix: 'webm', audio_codec: 'libopencore-amrwb').call(original_file, add_metadata: add_metadata)
 end
 ```
 
