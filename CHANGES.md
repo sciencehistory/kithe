@@ -8,6 +8,13 @@
 
 *
 
+## 2.17.0
+
+### Added
+
+* Kithe derivatves store created at in shrine metadata for derivative, as UTC iso8601 string https://github.com/sciencehistory/kithe/pull/190
+
+
 ## 2.16.0
 
 ### Added
