@@ -44,6 +44,10 @@ describe "customized shrine derivatives", queue_adapter: :inline do
       expect(derivative.metadata["width"]).to eq(2)
       expect(derivative.metadata["filename"]).to eq("#{asset.friendlier_id}_fixed.jpeg")
 
+      # And includes a created_at timestamp!
+      expect(derivative.metadata["created_at"]).to be_present
+      expect(DateTime.parse(derivative.metadata["created_at"])).to be_between(DateTime.current - 1.minute, DateTime.current + 1.minute)
+
       # path on storage is nice and pretty
       expect(derivative.id).to match %r{\A#{asset.id}/fixed/[a-f0-9]+\.jpeg\Z}
     end
