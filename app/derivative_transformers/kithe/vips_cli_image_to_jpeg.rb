@@ -28,6 +28,8 @@ module Kithe
   # about ruby memory leaks or the GIL. An alternative that uses vips ruby bindings
   # would also be possible, and might work well, but this is what for us is tried
   # and true.
+  #
+  # Some usage suggestions at https://www.libvips.org/API/current/Using-vipsthumbnail.html
   class VipsCliImageToJpeg
     class_attribute :srgb_profile_path, default: Kithe::Engine.root.join("lib", "vendor", "icc", "sRGB2014.icc").to_s
     class_attribute :vips_thumbnail_command, default: "vipsthumbnail"
@@ -88,7 +90,7 @@ module Kithe
     def maybe_profile_normalization_args
       return [] unless thumbnail_mode?
 
-      ["--eprofile", srgb_profile_path, "--delete"]
+      ["--export-profile", srgb_profile_path, "--delete"]
     end
 
     # Params to add on to end of JPG output path, as in:
@@ -103,7 +105,7 @@ module Kithe
     # @returns [String]
     def vips_jpg_params
       if thumbnail_mode?
-        "[Q=#{jpeg_q},interlace,optimize_coding,strip]"
+        "[Q=#{jpeg_q},interlace,optimize_coding,keep=none]"
       else
         # could be higher Q for downloads if we want, but we don't right now
         # We do avoid striping metadata, no 'strip' directive.
