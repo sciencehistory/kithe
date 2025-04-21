@@ -50,16 +50,16 @@ module Kithe
     def call(input_arg, add_metadata:nil)
       if input_arg.kind_of?(Shrine::UploadedFile)
         if input_arg.respond_to?(:url) && input_arg.url&.start_with?(/https?\:/)
-          _call(input_arg.url, add_metadata:)
+          _call(input_arg.url, add_metadata: add_metadata)
         else
           Shrine.with_file(input_arg) do |local_file|
-            _call(local_file.path, add_metadata:)
+            _call(local_file.path, add_metadata: add_metadata)
           end
         end
       elsif input_arg.respond_to?(:path)
-        _call(input_arg.path, add_metadata:)
+        _call(input_arg.path, add_metadata: add_metadata)
       else
-        _call(input_arg.to_s, add_metadata:)
+        _call(input_arg.to_s, add_metadata: add_metadata)
       end
     end
 
