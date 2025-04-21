@@ -14,6 +14,10 @@
 
 * Kithe derivatves store created at in shrine metadata for derivative, as UTC iso8601 string https://github.com/sciencehistory/kithe/pull/190
 
+### Fixed
+
+* Use up-to-date vips CLI thumbnail recommendations, without deprecated options Should be no change to thumbnails generated, just differnet form of args.https://github.com/sciencehistory/kithe/pull/192
+
 
 ## 2.16.0
 
