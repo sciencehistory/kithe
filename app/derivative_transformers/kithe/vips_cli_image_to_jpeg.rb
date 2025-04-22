@@ -31,7 +31,8 @@ module Kithe
   #
   # Some usage suggestions at https://www.libvips.org/API/current/Using-vipsthumbnail.html
   class VipsCliImageToJpeg
-    class_attribute :srgb_profile_path, default: Kithe::Engine.root.join("lib", "vendor", "icc", "sRGB2014.icc").to_s
+    # vips has a built-in srgb profile, don't need our own anymore.
+    #class_attribute :srgb_profile_path, default: Kithe::Engine.root.join("lib", "vendor", "icc", "sRGB2014.icc").to_s
     class_attribute :vips_thumbnail_command, default: "vipsthumbnail"
     class_attribute :vips_command, default: "vips"
 
@@ -90,7 +91,7 @@ module Kithe
     def maybe_profile_normalization_args
       return [] unless thumbnail_mode?
 
-      ["--export-profile", srgb_profile_path, "--delete"]
+      ["--export-profile", "srgb"]
     end
 
     # Params to add on to end of JPG output path, as in:
