@@ -29,18 +29,6 @@ The `original_file` block parameter is a ruby `File` object, which is already op
 
 The object returned does not need to be a `File` object, it can be any [IO or IO-like](https://github.com/shrinerb/shrine#io-abstraction) object. If you return a ruby `File` or `Tempfile` object, kithe will take care of cleaning the file up from the local file system. You are responsible for cleaning up any intermediate files, ruby stdlib [Tempfile](https://docs.ruby-lang.org/en/2.5.0/Tempfile.html) and [Dir.mktmpdir](https://docs.ruby-lang.org/en/2.5.0/Dir.html#method-c-mktmpdir) may be useful.
 
-You can also optionally provide an `add_metadata` keyword arg to your block. It will be given a mutable hash that you can mutate to specify JSON-compatible metadata that will be stored with the derivative.
-
-```ruby
-class MyAssetUploader < Kithe::AssetUploader
-  Attacher.define_derivative(:thumb_small) do |original_file, add_metadata:|
-    add_metadata[:my_key] = "my value"
-
-    anything_that_returns_io_like_object(original_file)
-  end
-end
-```
-
 The kithe derivative definition functionality comes from a kithe plugin to shrine, [kithe_derivative_definitions](../lib/shrine/plugins/kithe_derivative_definitions.rb).
 
 These kithe derivative definitions will be created by a registered standard shrine derivatives processor with key `kithe_derivatives`, and could be addressed as such with standard shrine functionality:
@@ -115,6 +103,19 @@ class Asset < Kithe::Asset
 end
 ```
 
+### Specifying metadata for defined derivatives
+
+You can also optionally provide an `add_metadata` keyword arg to your block. It will be given a mutable hash that you can mutate to specify JSON-compatible metadata that will be stored with the derivative.
+
+```ruby
+class MyAssetUploader < Kithe::AssetUploader
+  Attacher.define_derivative(:thumb_small) do |original_file, add_metadata:|
+    add_metadata[:my_key] = "my value"
+
+    anything_that_returns_io_like_object(original_file)
+  end
+end
+```
 
 ### Kithe-provided derivative-creation tools
 

@@ -19,7 +19,7 @@ module Kithe
   # built for use with kithe derivatives transformations, eg:
   #
   #     class Asset < KitheAsset
-  #       define_derivative(thumb) do |original_file, add_metadata:|
+  #       Attacher.define_derivative(:thumb) do |original_file, add_metadata:|
   #         Kithe::VipsCliImageToJpeg.new(max_width: 100, thumbnail_mode: true).call(original_file, add_metadata: add_metadata)
   #       end
   #     end
