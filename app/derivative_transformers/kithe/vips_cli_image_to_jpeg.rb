@@ -90,7 +90,7 @@ module Kithe
     def maybe_profile_normalization_args
       return [] unless thumbnail_mode?
 
-      ["--export-profile", srgb_profile_path, "--delete"]
+      ["--export-profile", srgb_profile_path]
     end
 
     # Params to add on to end of JPG output path, as in:
