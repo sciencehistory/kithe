@@ -16,7 +16,7 @@
 
 ### Fixed
 
-* Use up-to-date vips CLI thumbnail recommendations, without deprecated options Should be no change to thumbnails generated, just differnet form of args.https://github.com/sciencehistory/kithe/pull/192
+* Use up-to-date vips CLI thumbnail recommendations, without deprecated options Should be no change to thumbnails generated, just differnet form of args. https://github.com/sciencehistory/kithe/pull/192  https://github.com/sciencehistory/kithe/pull/194
 
 
 ## 2.16.0
