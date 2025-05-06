@@ -12,7 +12,7 @@
 
 ### Added
 
-* Kithe derivatves store created at in shrine metadata for derivative, as UTC iso8601 string https://github.com/sciencehistory/kithe/pull/190
+* Kithe derivatves store `created_at` in shrine metadata for derivative, as UTC iso8601 string https://github.com/sciencehistory/kithe/pull/190
 
 * `Attacher.define_derivative` block can now take an optional `add_metadata` keyword arg with a hash that can be mutated to set metadata on derivative. https://github.com/sciencehistory/kithe/pull/193  https://github.com/sciencehistory/kithe/blob/master/guides/derivatives.md#specifying-metadata-for-defined-derivatives
 
