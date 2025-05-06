@@ -103,6 +103,19 @@ class Asset < Kithe::Asset
 end
 ```
 
+### Specifying metadata for defined derivatives
+
+You can also optionally provide an `add_metadata` keyword arg to your block. It will be given a mutable hash that you can mutate to specify JSON-compatible metadata that will be stored with the derivative.
+
+```ruby
+class MyAssetUploader < Kithe::AssetUploader
+  Attacher.define_derivative(:thumb_small) do |original_file, add_metadata:|
+    add_metadata[:my_key] = "my value"
+
+    anything_that_returns_io_like_object(original_file)
+  end
+end
+```
 
 ### Kithe-provided derivative-creation tools
 
@@ -115,8 +128,8 @@ Which can create a resized JPG from an image input, using a shell out to the `vi
 
 ```ruby
 class Asset < Kithe::Asset
-  define_derivative(:download_small) do |original_file|
-    Kithe::VipsCliImageToJpeg.new(max_width: 500).call(original_file)
+  define_derivative(:download_small) do |original_file, add_metadata:|
+    Kithe::VipsCliImageToJpeg.new(max_width: 500).call(original_file, add_metadata: add_metadata)
   end
 end
 ```
@@ -125,8 +138,8 @@ If you pass `thumbnail_mode: true` when instantiating Kithe::VipsCliImageToJpeg,
 
 ```ruby
 class Asset < Kithe::Asset
-  define_derivative(:thumb_small, content_type: "image") do |original_file|
-    Kithe::VipsCliImageToJpeg.new(max_width: 500, thumbnail_mode: true).call(original_file)
+  define_derivative(:thumb_small, content_type: "image") do |original_file, add_metadata:|
+    Kithe::VipsCliImageToJpeg.new(max_width: 500, thumbnail_mode: true).call(original_file, add_metadata: add_metadata)
   end
 end
 ```
@@ -138,18 +151,18 @@ Which creates audio files from any audio file original, using a shell out to the
 
 ```ruby
 # Create a stereo 128k mp3 derivative. output_suffix is the only mandatory argument.
-define_derivative('mp3', content_type: "audio") do |original_file|
-  Kithe::FfmpegTransformer.new(bitrate: '128k', output_suffix: 'mp3').call(original_file)
+define_derivative('mp3', content_type: "audio") do |original_file, add_metadata:|
+  Kithe::FfmpegTransformer.new(bitrate: '128k', output_suffix: 'mp3').call(original_file, add_metadata: add_metadata)
 end
 
 # A mono webm file at only 64k:
-define_derivative('webm', content_type: "audio") do |original_file|
-  Kithe::FfmpegTransformer.new(bitrate: '64k', force_mono: true, output_suffix: 'webm').call(original_file)
+define_derivative('webm', content_type: "audio") do |original_file, add_metadata:|
+  Kithe::FfmpegTransformer.new(bitrate: '64k', force_mono: true, output_suffix: 'webm').call(original_file, add_metadata: add_metadata)
 end
 
 # libopus is used by default for webm conversions, but you could specify another codec:
-define_derivative('webm', content_type: "audio") do |original_file|
-  Kithe::FfmpegTransformer.new(output_suffix: 'webm', audio_codec: 'libopencore-amrwb').call(original_file)
+define_derivative('webm', content_type: "audio") do |original_file, add_metadata:|
+  Kithe::FfmpegTransformer.new(output_suffix: 'webm', audio_codec: 'libopencore-amrwb').call(original_file, add_metadata: add_metadata)
 end
 ```
 
@@ -163,7 +176,7 @@ However, to take advantage of this feature, avoiding a download, you'd have to w
 complex code. Same if you want to produce multiple resolution thumbnails. This isn't yet fully documented, but be aware of the existence of this service.
 
 ```ruby
-image_tmp_file = Kithe::FfmpegExtractJpg.new(start_seconds: start_seconds).call(original)
+image_tmp_file = Kithe::FfmpegExtractJpg.new(start_seconds: start_seconds).call(original, add_metadata: add_metadata)
 ```
 
 ## Manually triggering creaton of derivatives from definitions

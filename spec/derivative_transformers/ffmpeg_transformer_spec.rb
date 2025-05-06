@@ -85,4 +85,16 @@ describe Kithe::FfmpegTransformer do
       output.close!
     end
   end
+
+  describe "ffmpeg command metadata" do
+    it "is provided when arg is given" do
+      add_metadata = {}
+
+      instance = described_class.new(output_suffix: 'mp3', force_mono: true, bitrate: '32k')
+      output = instance.call(input_file, add_metadata: add_metadata)
+
+      expect(add_metadata[:ffmpeg_version]).to match /\d+\.\d+/
+      expect(add_metadata[:ffmpeg_command]).to match /ffmpeg -y -i .*\.mp3/
+    end
+  end
 end

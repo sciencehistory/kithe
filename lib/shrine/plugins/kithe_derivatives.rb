@@ -32,9 +32,13 @@ class Shrine
 
       module InstanceMethods
 
-        # Override to fix "filename" metadata to be something reasonable, regardless
+        # 1. Override to fix "filename" metadata to be something reasonable, regardless
         # of what if anything was the filename of the IO being attached. shrine S3 will
-        # insist on setting a default content-disposition with this filename.
+        # insist on setting a default content-disposition with this filename, so we
+        # can use that.
+        #
+        # 2. Set any specified derivative metadata on derivative. Specified add_metadata
+        # found in context.
         def extract_metadata(io, derivative:nil, **context)
           result = super
 
@@ -43,9 +47,13 @@ class Shrine
             result["filename"] = "#{context[:record].friendlier_id}_#{derivative}.#{extension}"
           end
 
-          # Add timestamp for derivatives please
+          # If derivative, add timestamp and any specified extra data
           if derivative
             result["created_at"] ||= Time.current.utc.iso8601.to_s
+
+            if (metadata = context.dig(:add_metadata, derivative)).present?
+              result.merge!(metadata.stringify_keys)
+            end
           end
 
           result

@@ -39,13 +39,23 @@ module Kithe
     end
 
     # Will raise TTY::Command::ExitError if the ffmpeg returns non-null.
-    def call(original_file)
+    def call(original_file, add_metadata: nil)
       tempfile = Tempfile.new(['temp_deriv', ".#{@output_suffix}"])
       # -y tells ffmpeg to overwrite the abovementioned tempfile (still empty)
       # with the output of ffmpeg.
       ffmpeg_args =  [ffmpeg_command, "-y", "-i", original_file.path]
       ffmpeg_args += transform_arguments + [tempfile.path]
-      TTY::Command.new(printer: :null).run(*ffmpeg_args)
+      out, err = TTY::Command.new(printer: :null).run(*ffmpeg_args)
+
+      if add_metadata
+        add_metadata[:ffmpeg_command] = ffmpeg_args.join(" ")
+
+        `#{ffmpeg_command} -version` =~ /ffmpeg version (\d+\.\d+.*) Copyright/
+        if $1
+          add_metadata[:ffmpeg_version] = $1
+        end
+      end
+
       return tempfile
     end
   end

@@ -14,6 +14,10 @@
 
 * Kithe derivatves store created at in shrine metadata for derivative, as UTC iso8601 string https://github.com/sciencehistory/kithe/pull/190
 
+* `Attacher.define_derivative` block can now take an optional `add_metadata` keyword arg with a hash that can be mutated to set metadata on derivative. https://github.com/sciencehistory/kithe/pull/193  https://github.com/sciencehistory/kithe/blob/master/guides/derivatives.md#specifying-metadata-for-defined-derivatives
+
+* Built-in derivative transformers will supply some creation tooling metadata if given the `add_metadata` argument. If you are using these, you might have to change the signatures on your `define_derivative` calls to take advantage of new functionality. https://github.com/sciencehistory/kithe/pull/193  https://github.com/sciencehistory/kithe/blob/master/guides/derivatives.md#kithe-provided-derivative-creation-tools
+
 ### Fixed
 
 * Use up-to-date vips CLI thumbnail recommendations, without deprecated options Should be no change to thumbnails generated, just differnet form of args. https://github.com/sciencehistory/kithe/pull/192  https://github.com/sciencehistory/kithe/pull/194
