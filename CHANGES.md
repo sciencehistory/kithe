@@ -8,6 +8,10 @@
 
 *
 
+## 2.18.0
+
+* Rails 8.1 allowed by gemspec and tested, no logic changes.
+
 ## 2.17.0
 
 ### Added
