@@ -122,18 +122,14 @@ Would you like to have every controller in your app batch solr index updates wit
 
 ```ruby
 class ApplicationController < ActionController::Base
-  around_action :batch_kithe_indexable
+  include Kithe::BatchIndexableAroundAction
 
-  def batch_kithe_indexable
-    Kithe::Indexable.index_with(batching: true) do
-      yield
-    end
-  end
+  #...
+end
 ```
 
-As `index_with(batching: true)` only creates a Traject::Writer lazily on demand, this should not add appreciable overhead to actions that don't end up triggering any Solr updates.
-
-
+This will add an around_action to all your actions that uses `Kithe::Indexable.index_with(batching: true)` to batch multiple solr index updates that take place within a Rails action
+into fewer Solr updates.
 
 ## Disabling automatic callbacks
 
