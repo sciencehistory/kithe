@@ -8,6 +8,14 @@
 
 *
 
+## 2.19.0
+
+### Added
+
+* Kithe::BatchIndexableAroundAction mixin concern, mainly so around_filter can
+live in gem source, and stay out of Rails "application trace". https://github.com/sciencehistory/kithe/pull/196
+
+
 ## 2.18.0
 
 * Rails 8.1 allowed by gemspec and tested, no logic changes.
