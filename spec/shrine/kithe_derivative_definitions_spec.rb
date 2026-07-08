@@ -65,7 +65,7 @@ describe "Shrine::Plugins::KitheDerivativeDefinitions", queue_adapter: :test do
       proc do |original_file, attacher:|
         expect(original_file.kind_of?(File) || original_file.kind_of?(Tempfile)).to be(true)
         expect(original_file.path).to be_present
-        expect(original_file.read).to eq(asset.file.read)
+        expect(original_file.read.b).to eq(asset.file.read.b)
 
         expect(attacher).to be_present
         expect(attacher).to be_kind_of(Shrine::Attacher)
@@ -93,7 +93,7 @@ describe "Shrine::Plugins::KitheDerivativeDefinitions", queue_adapter: :test do
         proc do |original_file, **kwargs|
           expect(original_file.kind_of?(File) || original_file.kind_of?(Tempfile)).to be(true)
           expect(original_file.path).to be_present
-          expect(original_file.read).to eq(asset.file.read)
+          expect(original_file.read.b).to eq(asset.file.read.b)
 
           # It really has to be a local file with a path, not just an IO.
           # Kithe wants to guarantee this, whether or not shrine does.
