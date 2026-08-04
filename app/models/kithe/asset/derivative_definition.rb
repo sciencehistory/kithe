@@ -41,13 +41,12 @@ class Kithe::Asset::DerivativeDefinition
   def applies_to_content_type?(original_content_type)
     return true if content_type.nil?
 
-    return true if content_type == original_content_type
-
     return false if original_content_type.nil?
 
-    return true if (content_type.kind_of?(Array) && content_type.include?(original_content_type))
-
-    content_type == original_content_type.sub(%r{/.+\Z}, '')
+    return Array(content_type).find do |requested_type|
+      requested_type == original_content_type ||
+      requested_type == original_content_type.sub(%r{/.+\Z}, '')
+    end.present?
   end
 
   private

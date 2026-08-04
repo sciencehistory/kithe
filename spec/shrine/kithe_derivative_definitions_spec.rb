@@ -220,11 +220,25 @@ describe "Shrine::Plugins::KitheDerivativeDefinitions", queue_adapter: :test do
         CustomUploader::Attacher.kithe_derivative_definitions = []
         CustomUploader::Attacher.define_derivative(:never_called, content_type: ["nothing/nothing", "also/nothing"]) { |o| StringIO.new("never") }
         CustomUploader::Attacher.define_derivative(:gated_positive, content_type: ["image/jpeg", "something/else"]) { |o| StringIO.new("gated positive") }
+        CustomUploader::Attacher.define_derivative(:multi_main_type, content_type: ["audio", "video"]) { |o| StringIO.new("gated multi_main_type") }
       end
 
       it "calls for one match" do
         asset.file_attacher.create_derivatives(:kithe_derivatives)
         expect(asset.file_derivatives.keys).to eq([:gated_positive])
+      end
+
+      describe "of main content types" do
+        let(:asset) do
+          CustomAsset.create(title: "test",
+            file: File.open(Kithe::Engine.root.join("spec/test_support/video/very_small_h264.mp4"))
+          )
+        end
+
+        it "calls for one match" do
+          asset.file_attacher.create_derivatives(:kithe_derivatives)
+          expect(asset.file_derivatives.keys).to eq([:multi_main_type])
+        end
       end
     end
 
