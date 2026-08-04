@@ -8,6 +8,12 @@
 
 *
 
+## 2.19.1
+
+### Fixed
+
+* for derivative definitions, should be able to list an array including main content types to match. https://github.com/sciencehistory/kithe/pull/198
+
 ## 2.19.0
 
 ### Added
