@@ -67,15 +67,17 @@ describe Kithe::FfprobeCharacterization do
     let(:characterization) { described_class.new(input_path)}
 
     it "returns normalized data" do
-      expect(characterization.normalized_metadata).to eq({
-        "duration_seconds" => 1.593,
+      expect(characterization.normalized_metadata).to include({
         "audio_codec" => "mp3",
         "audio_bitrate" => 290897,
-        "bitrate" => 292534,
         "audio_sample_rate" => 44100,
         "audio_channels" => 2,
         "audio_channel_layout" => "stereo"
       })
+
+      # different versions of ffprobe measure duration at slight difference
+      expect(characterization.normalized_metadata["duration_seconds"]).to be_within(0.05).of(1.593)
+      expect(characterization.normalized_metadata["bitrate"]).to be_within(6500).of(292534)
     end
   end
 
