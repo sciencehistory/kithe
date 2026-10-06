@@ -8,6 +8,12 @@
 
 *
 
+## 2.19.2
+
+### Fixed
+
+* stop using private Rails API, for compat with Rails 8.1.4 where it changed. https://github.com/sciencehistory/kithe/pull/201
+
 ## 2.19.1
 
 ### Fixed

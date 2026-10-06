@@ -69,4 +69,57 @@ describe "Kithe::Asset#kithe_earlier_after_commit" do
       child_asset.save!
     end
   end
+
+  describe "with on: option" do
+    temporary_class("OnAsset") do
+      Class.new(Kithe::Asset) do
+        attr_accessor :calls
+
+        kithe_earlier_after_commit :on_create_hook, on: :create
+        kithe_earlier_after_commit :on_update_hook, on: :update
+        kithe_earlier_after_commit :on_create_with_if_hook, on: :create, if: :allow_if_hook?
+
+        def allow_if_hook?
+          @allow_if_hook
+        end
+        attr_writer :allow_if_hook
+
+        def on_create_hook
+          (self.calls ||= []) << :on_create
+        end
+
+        def on_update_hook
+          (self.calls ||= []) << :on_update
+        end
+
+        def on_create_with_if_hook
+          (self.calls ||= []) << :on_create_with_if
+        end
+      end
+    end
+
+    it "only fires for the specified action" do
+      asset = OnAsset.new(title: "test")
+      asset.save!
+      expect(asset.calls).to eq([:on_create])
+
+      asset.calls = []
+      asset.title = "new title"
+      asset.save!
+      expect(asset.calls).to eq([:on_update])
+    end
+
+    it "combines on: with caller-supplied if:" do
+      asset = OnAsset.new(title: "test")
+      asset.allow_if_hook = true
+      asset.save!
+      expect(asset.calls).to contain_exactly(:on_create, :on_create_with_if)
+
+      # on: still applies even though if: is true
+      asset.calls = []
+      asset.title = "new title"
+      asset.save!
+      expect(asset.calls).to eq([:on_update])
+    end
+  end
 end
