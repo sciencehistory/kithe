@@ -189,9 +189,23 @@ class Kithe::Model < ActiveRecord::Base
     # confusingly in this state, we need prepend FALSE to have this new callback be registered to go
     # FIRST. And this actually is correct and works whether or not run_after_transaction_callbacks_in_order_defined
     # Very confusing, we test thorougly.
-    set_options_for_callbacks!(args, {prepend: false})
+    #
+    #
+    # We used to call ActiveRecord's private set_options_for_callbacks! to do this, but its
+    # signature changed incompatibly in a Rails 8.1 patch release. So we use only public
+    # API, plus the stable (but private) instance method transaction_include_any_action?
+    # to implement the `on:` option.
+    options = args.extract_options!.merge(prepend: false)
 
-    set_callback(:commit, :after, *args, &block)
+    if options[:on]
+      fire_on = Array(options.delete(:on))
+      options[:if] = [
+        -> { transaction_include_any_action?(fire_on) },
+        *options[:if]
+      ]
+    end
+
+    set_callback(:commit, :after, *args, options, &block)
   end
 
   private
