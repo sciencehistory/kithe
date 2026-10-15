@@ -76,14 +76,14 @@ class Work < Kithe::Work
 
 * Note we set it to `WorkIndexer.new`, an instance. (This is a result of some traject legacy architectural choices, and us trying to maximize performance here)
 
-Once you have set a `kithe_indexable_mapper` for your class, it will be automatically sync'd to Solr on every save or destroy. (See below for various ways to disable temporarily or permanently)
+Once you have set a `kithe_indexable_mapper` for your class, it will be automatically sync'd to Solr on every save with changes or destroy. (See below for various ways to disable temporarily or permanently)
 
 By default, it will be sent with a solr [softCommit](https://lucidworks.com/2013/08/23/understanding-transaction-logs-softcommit-and-commit-in-sorlcloud/), although this can also be customized. It's recommended you use an `autoCommit` setting your solrconfig.xml to periodically hard commit,
 since default kithe settings will only do softCommits.
 
 ## Batch updating (and batch writer-configuration changes)
 
-By default, every time you save or destroy a model with indexing set up, an individual http update request is sent to Solr. If you are doing a lot of them, this is not a very performant way to interact with Solr.
+By default, every time you save (with changes) or destroy a model with indexing set up, an individual http update request is sent to Solr. If you are doing a lot of them, this is not a very performant way to interact with Solr.
 
 To instead batch updates within a certain context do:
 
@@ -147,6 +147,24 @@ Perhaps you have indexing set up, by setting a `kithe_indexable_mapper` in your 
         # to sync with solr will not be called at all
       end
 
+
+## Skipping automatic indexing for non-indexed attributes
+
+By default, any save with changes triggers a re-index (a save with no changes does not). If some attributes have no effect on your Solr documents, you list them in `kithe_indexable_non_indexed_attributes`, and a save that changes _only_ those attributes will not trigger a re-index:
+
+```ruby
+class Work < Kithe::Work
+  attr_json :internal_note, :string
+
+  # json_attributes is the attr_json container column, which is dirty-tracked
+  # separately via each attr_json attribute anyway.
+  self.kithe_indexable_non_indexed_attributes = [:json_attributes, :internal_note]
+end
+```
+
+If you set this value, it implies including the automatic `updated_at` timestamp too, otherwise any update would still trigger a reindex! So when using this feature and indexing updated_at, you may have an out of date indexed upated_at. It can be possible to shoot yourself in the foot with this feature, please be sure you underestand
+
+Explicit calls to `#update_index` are never skipped, creates and destroys are never skipped.
 
 ## Calling #update_index manually
 
@@ -266,7 +284,9 @@ Alternately or additionally, we could use some of the concurrency built into tra
 
 ## Customizing update_index
 
-It is part kithe the API to let you override `update_index` on a mdoel to customize it. To try to implement asynchronous patterns?  Or, maybe to try to make updates conditional on what data has changed, or let update to a member record re-index it's parent?  It gets a little bit tricky, unfortunately. But you can see one local attempt to experiment with that here: https://github.com/sciencehistory/scihist_digicoll/pull/1462
+(To skip re-indexing when only some attributes changed, see `kithe_indexable_non_indexed_attributes` above.)
+
+It is part kithe the API to let you override `update_index` on a mdoel to customize it. To try to implement asynchronous patterns?  Or, maybe to let an update to a member record re-index its parent?  It gets a little bit tricky, unfortunately. But you can see one local attempt to experiment with that here: https://github.com/sciencehistory/scihist_digicoll/pull/1462
 
 If you override `update_asset`, please add a trailing `**` to declared method args to allow
 forwards-compatibility, eg:

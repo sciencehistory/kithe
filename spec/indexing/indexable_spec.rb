@@ -99,6 +99,112 @@ describe Kithe::Indexable, type: :model do
         }
     end
 
+    describe "kithe_indexable_non_indexed_attributes" do
+      temporary_class("TestWork") do
+        Class.new(Kithe::Work) do
+          attr_json :non_indexed_json, :string
+          attr_json :indexed_json, :string
+
+          self.kithe_indexable_mapper = Kithe::Indexer.new
+          self.kithe_indexable_non_indexed_attributes = [:json_attributes, :non_indexed_json]
+        end
+      end
+
+      let!(:work) do
+        stub_request(:post, @solr_update_url)
+        TestWork.create!(title: "test").tap { WebMock.reset_executed_requests! }
+      end
+
+      it "does not reindex when only non-indexed attr_json changes" do
+        work.update!(non_indexed_json: "new value")
+        expect(WebMock).not_to have_requested(:post, @solr_update_url)
+      end
+
+      it "reindexes when an indexed attr_json changes too" do
+        work.update!(non_indexed_json: "new value", indexed_json: "other")
+        expect(WebMock).to have_requested(:post, @solr_update_url)
+      end
+
+      it "reindexes when a regular attribute changes" do
+        work.update!(title: "new title")
+        expect(WebMock).to have_requested(:post, @solr_update_url)
+      end
+
+      it "reindexes if indexed change was in an earlier save of the same transaction" do
+        TestWork.transaction do
+          work.update!(title: "new title")
+          work.update!(non_indexed_json: "new value")
+        end
+        expect(WebMock).to have_requested(:post, @solr_update_url)
+      end
+
+      it "does not carry a prior transaction's change into the next" do
+        work.update!(title: "new title")
+        WebMock.reset_executed_requests!
+        work.update!(non_indexed_json: "new value")
+        expect(WebMock).not_to have_requested(:post, @solr_update_url)
+      end
+
+      it "reindexes if indexed attribute was touched after a non-indexed save in same transaction" do
+        TestWork.transaction do
+          work.update!(non_indexed_json: "new value")
+          work.touch(:created_at)
+        end
+        expect(WebMock).to have_requested(:post, @solr_update_url)
+      end
+
+      it "indexes on create, even if only non-indexed attributes are set" do
+        WebMock.reset_executed_requests!
+        new_work = TestWork.create!(title: "other", non_indexed_json: "value")
+        expect(WebMock).to have_requested(:post, @solr_update_url).
+          with { |req| JSON.parse(req.body).first["id"] == [new_work.id] }
+      end
+
+      describe "with primary key mistakenly listed as non-indexed" do
+        temporary_class("TestWork") do
+          Class.new(Kithe::Work) do
+            self.kithe_indexable_mapper = Kithe::Indexer.new
+            self.kithe_indexable_non_indexed_attributes = Kithe::Work.column_names
+          end
+        end
+
+        it "still indexes on create" do
+          WebMock.reset_executed_requests!
+          TestWork.create!(title: "other")
+          expect(WebMock).to have_requested(:post, @solr_update_url)
+        end
+      end
+
+      it "reindexes on destroy" do
+        work.destroy!
+        expect(WebMock).to have_requested(:post, @solr_update_url).
+          with { |req| JSON.parse(req.body) == { "delete" => work.id } }
+      end
+
+      it "still indexes on explicit update_index" do
+        work.update!(non_indexed_json: "new value")
+        work.update_index
+        expect(WebMock).to have_requested(:post, @solr_update_url)
+      end
+    end
+
+    describe "save with no changes" do
+      let!(:work) do
+        stub_request(:post, @solr_update_url)
+        TestWork.create!(title: "test").tap { WebMock.reset_executed_requests! }
+      end
+
+      it "does not reindex" do
+        work.save!
+        expect(WebMock).not_to have_requested(:post, @solr_update_url)
+      end
+
+      it "reindexes on touch" do
+        work.touch
+        expect(WebMock).to have_requested(:post, @solr_update_url)
+      end
+    end
+
     describe "with global disable_callbacks" do
       around do |example|
         original = Kithe.indexable_settings.disable_callbacks
