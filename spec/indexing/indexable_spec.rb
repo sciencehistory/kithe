@@ -188,6 +188,67 @@ describe Kithe::Indexable, type: :model do
       end
     end
 
+    describe "kithe_indexable_only_indexed_attributes" do
+      temporary_class("TestWork") do
+        Class.new(Kithe::Work) do
+          attr_json :other_json, :string
+
+          self.kithe_indexable_mapper = Kithe::Indexer.new
+          self.kithe_indexable_only_indexed_attributes = [:title, :json_attributes, :summary]
+          self.kithe_indexable_non_indexed_attributes = [:json_attributes]
+        end
+      end
+
+      let!(:work) do
+        stub_request(:post, @solr_update_url)
+        TestWork.create!(title: "test").tap { WebMock.reset_executed_requests! }
+      end
+
+      it "indexes on change to allowed attribute" do
+        work.update!(title: "new title")
+        expect(WebMock).to have_requested(:post, @solr_update_url)
+      end
+
+      it "does not index on change to attribute not in list" do
+        work.update!(other_json: "value")
+        expect(WebMock).not_to have_requested(:post, @solr_update_url)
+      end
+
+      it "does not index on change to attribute in both lists" do
+        work.update!(other_json: "value", json_attributes: work.json_attributes.merge("x" => "y"))
+        expect(WebMock).not_to have_requested(:post, @solr_update_url)
+      end
+
+      it "does not index on touch" do
+        work.touch
+        expect(WebMock).not_to have_requested(:post, @solr_update_url)
+      end
+
+      it "indexes on create and destroy" do
+        new_work = TestWork.create!(title: "other")
+        expect(WebMock).to have_requested(:post, @solr_update_url)
+
+        WebMock.reset_executed_requests!
+        new_work.destroy!
+        expect(WebMock).to have_requested(:post, @solr_update_url).
+          with { |req| JSON.parse(req.body) == { "delete" => new_work.id } }
+      end
+
+      describe "with primary key not in list" do
+        temporary_class("TestWork") do
+          Class.new(Kithe::Work) do
+            self.kithe_indexable_mapper = Kithe::Indexer.new
+            self.kithe_indexable_only_indexed_attributes = [:summary]
+          end
+        end
+
+        it "still indexes on create" do
+          TestWork.create!(title: "other")
+          expect(WebMock).to have_requested(:post, @solr_update_url)
+        end
+      end
+    end
+
     describe "save with no changes" do
       let!(:work) do
         stub_request(:post, @solr_update_url)

@@ -117,11 +117,18 @@ module Kithe
       #
       #     self.kithe_indexable_non_indexed_attributes = [:json_attributes, :internal_note]
       #
-      class_attribute :kithe_indexable_non_indexed_attributes, default: []
+      class_attribute :kithe_indexable_non_indexed_attributes, default: nil
 
-      # To support kithe_indexable_non_indexed_attributes, Accumulate names of changed attributes
-      # across all saves in a transaction, since after_commit only sees saved_changes from the last
-      # save.
+      # An allow-list alternative to kithe_indexable_non_indexed_attributes. If set, ONLY
+      # changes to listed attributes will trigger reindex. Create and destroy still always do.
+      #
+      #     self.kithe_indexable_only_indexed_attributes = [:title, :description]
+      #
+      class_attribute :kithe_indexable_only_indexed_attributes, default: nil
+
+      # To support kithe_indexable_non_indexed_attributes and kithe_indexable_only_indexed_attributes,
+      # accumulate names of changed attributes across all saves in a transaction, since after_commit
+      # has lost access to them from multiple individual saves in a transaction.
       after_save :_kithe_track_changed_attributes
       after_touch :_kithe_track_changed_attributes
       after_rollback { @_kithe_changed_attributes = nil }
@@ -157,7 +164,7 @@ module Kithe
     end
 
     # For the after_commit callback condition: true if this was a destroy, or any attribute changed in
-    # this transaction is not non-indexed. A save with no changes at all does not index.
+    # this transaction is considered indexed. A save with no changes at all does not index.
     # Also resets tracking for the next transaction, which is done here so it is read before it is
     # reset, regardless of after_commit callback ordering.
     def _kithe_check_possibly_indexed_changes_and_reset
@@ -165,11 +172,26 @@ module Kithe
       @_kithe_changed_attributes = nil
 
       # insist on including primary keys as indexed, to make sure we index on create.
-      non_indexed = kithe_indexable_non_indexed_attributes.map(&:to_s) - Array(self.class.primary_key).map(&:to_s)
-      # automatic timestamps change on every save, so only disregard them if the feature is in use
-      non_indexed += AUTO_TIMESTAMP_ATTRIBUTES if non_indexed.present?
+      primary_keys = Array(self.class.primary_key).map(&:to_s)
 
-      destroyed? || (changed - non_indexed).any?
+      non_indexed = if kithe_indexable_non_indexed_attributes.present?
+        # if we are excluding any, we need to exclude updated_at too, or it will end up trigger anyway
+        kithe_indexable_non_indexed_attributes.map(&:to_s) - primary_keys + AUTO_TIMESTAMP_ATTRIBUTES
+      end
+
+      only_indexed = if kithe_indexable_only_indexed_attributes.present?
+        kithe_indexable_only_indexed_attributes.map(&:to_s) + primary_keys
+      end
+
+      if only_indexed
+        changed = changed & only_indexed
+      end
+
+      if non_indexed
+        changed = changed - non_indexed
+      end
+
+      destroyed? || changed.any?
     end
   end
 end

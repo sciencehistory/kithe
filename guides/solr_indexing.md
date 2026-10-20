@@ -166,6 +166,18 @@ If you set this value, it implies including the automatic `updated_at` timestamp
 
 Explicit calls to `#update_index` are never skipped, creates and destroys are never skipped.
 
+### Alternatively, an allow-list of indexed attributes
+
+If it is easier to list the attributes that _do_ affect your Solr documents, you can use `kithe_indexable_only_indexed_attributes` instead. If it is set, _only_ changes to attributes in that list (or creation/deletion) will trigger a re-index:
+
+```ruby
+class Work < Kithe::Work
+  self.kithe_indexable_only_indexed_attributes = [:title, :description]
+end
+```
+
+(Primary key changes will also always trigger reindex)
+
 ## Calling #update_index manually
 
 Whether or not you have automatic `after_commit` callbacks enabled, you can always force a sync of a model to Solr index with:
