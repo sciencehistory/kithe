@@ -89,6 +89,10 @@ module Kithe
         !ThreadSettings.current.disabled_callbacks?
     end
 
+    # Rails sets these on every update, so they never count as a meaningful change when
+    # checking kithe_indexable_non_indexed_attributes.
+    AUTO_TIMESTAMP_ATTRIBUTES = %w{updated_at updated_on}.freeze
+
     included do
       # A whole bunch of class attributes is not great design, but it's so convenient
       # to have rails class_attribute semantics (can be set on class or instance, inherits well, so long
@@ -108,9 +112,35 @@ module Kithe
       # to have auto indexing happening.
       class_attribute :kithe_indexable_auto_callbacks, default: true
 
+      # Attribute names (symbols or strings) that do NOT affect indexing, changes only
+      # to these attributes will not result in a re-index.
+      #
+      #     self.kithe_indexable_non_indexed_attributes = [:json_attributes, :internal_note]
+      #
+      class_attribute :kithe_indexable_non_indexed_attributes, default: nil
+
+      # An allow-list alternative to kithe_indexable_non_indexed_attributes. If set, ONLY
+      # changes to listed attributes will trigger reindex. Create and destroy still always do.
+      #
+      #     self.kithe_indexable_only_indexed_attributes = [:title, :description]
+      #
+      class_attribute :kithe_indexable_only_indexed_attributes, default: nil
+
+      # To support kithe_indexable_non_indexed_attributes and kithe_indexable_only_indexed_attributes,
+      # accumulate names of changed attributes across all saves in a transaction, since after_commit
+      # has lost access to them from multiple individual saves in a transaction.
+      after_save :_kithe_track_changed_attributes
+      after_touch :_kithe_track_changed_attributes
+      after_rollback { @_kithe_changed_attributes = nil }
+
       # after new, update, destroy, all of em. We'll figure out what to do
       # in the RecordIndexUpdater.
-      after_commit :update_index, if: -> { Kithe::Indexable.auto_callbacks?(self) }
+      #
+      # The changed attribute tracking check comes first, it must always run (and reset) even when
+      # auto_callbacks? is false.
+      after_commit :update_index, if: -> {
+        _kithe_check_possibly_indexed_changes_and_reset && Kithe::Indexable.auto_callbacks?(self)
+      }
     end
 
     # Update the Solr index for this object -- may remove it from index or add it to
@@ -125,6 +155,43 @@ module Kithe
     # compatibilty matters for semver with any change to method signature.
     def update_index(mapper: kithe_indexable_mapper, writer:nil)
       RecordIndexUpdater.new(self, mapper: mapper, writer: writer).update_index
+    end
+
+    private
+
+    def _kithe_track_changed_attributes
+      (@_kithe_changed_attributes ||= Set.new).merge(saved_changes.keys)
+    end
+
+    # For the after_commit callback condition: true if this was a destroy, or any attribute changed in
+    # this transaction is considered indexed. A save with no changes at all does not index.
+    # Also resets tracking for the next transaction, which is done here so it is read before it is
+    # reset, regardless of after_commit callback ordering.
+    def _kithe_check_possibly_indexed_changes_and_reset
+      changed = @_kithe_changed_attributes.to_a
+      @_kithe_changed_attributes = nil
+
+      # insist on including primary keys as indexed, to make sure we index on create.
+      primary_keys = Array(self.class.primary_key).map(&:to_s)
+
+      non_indexed = if kithe_indexable_non_indexed_attributes.present?
+        # if we are excluding any, we need to exclude updated_at too, or it will end up trigger anyway
+        kithe_indexable_non_indexed_attributes.map(&:to_s) - primary_keys + AUTO_TIMESTAMP_ATTRIBUTES
+      end
+
+      only_indexed = if kithe_indexable_only_indexed_attributes.present?
+        kithe_indexable_only_indexed_attributes.map(&:to_s) + primary_keys
+      end
+
+      if only_indexed
+        changed = changed & only_indexed
+      end
+
+      if non_indexed
+        changed = changed - non_indexed
+      end
+
+      destroyed? || changed.any?
     end
   end
 end
