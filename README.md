@@ -52,7 +52,7 @@ So you want to start an app that uses kithe. We should later provide better 'get
 
 ## Why kithe?
 
-Kithe tries to let you develop your app like "an ordinary Rails app" (in all it's possible variations), while handling some of the rough spots common to the kinds of modelling and administration common to digital collections domains.  But developers should be able to use standard Rails patterns and skills to develop an app to your specific local needs, familiar, no more complicated than building any other Rails app. You add features to a kithe app just like building Rails, using whatever patterns you like. We support modern Rails versions, 5.2+.
+Kithe tries to let you develop your app like "an ordinary Rails app" (in all it's possible variations), while handling some of the rough spots common to the kinds of modelling and administration common to digital collections domains.  But developers should be able to use standard Rails patterns and skills to develop an app to your specific local needs, familiar, no more complicated than building any other Rails app. You add features to a kithe app just like building Rails, using whatever patterns you like.
 
 In that kithe provides tools and not a turnkey app, develping an app based on kythe in some ways similar to developing an app based on [valkyrie](https://github.com/samvera-labs/valkyrie) (but not hyrax). They both provide basic architecture for modelling/persistence, although in quite different ways. Kithe also provides tools in addition to modelling/persistence, but does _not_ provide the data-mapper/repository pattern valkyrie does, or any built-in abstraction for persisting anywhere but a postgres DB.
 
